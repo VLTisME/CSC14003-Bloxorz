@@ -1,0 +1,42 @@
+{
+  "id": "sample04",
+  "board": [
+    "SO.BBBG",
+    "#######"
+  ],
+  "bridges": [
+    {
+      "id": "b1",
+      "cells": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          5
+        ]
+      ],
+      "active": false
+    }
+  ],
+  "switches": [
+    {
+      "at": [
+        0,
+        1
+      ],
+      "effects": [
+        {
+          "bridge": "b1",
+          "mode": "toggle"
+        }
+      ]
+    }
+  ],
+  "splitters": []
+}

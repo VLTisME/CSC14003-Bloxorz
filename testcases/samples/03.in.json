@@ -1,0 +1,10 @@
+{
+  "id": "sample03",
+  "board": [
+    "SFFG",
+    "####"
+  ],
+  "bridges": [],
+  "switches": [],
+  "splitters": []
+}

@@ -1,0 +1,777 @@
+{
+  "format_version": "1.0",
+  "verified_on": "2026-10-15",
+  "verification": "Every reference path replayed successfully with checker.py under the project rules. Stage 15 uses an independently shortest verified replacement. Other original-stage minimum lengths are upstream claims, not independently proved here.",
+  "source_repository": "https://github.com/tkoz0/bloxorz-solver",
+  "source_commit": "d203a25170085054fb3f39bd81b3509ee8cd9e47",
+  "source_license": "No license file or explicit license found in inspected revision.",
+  "source_files": {
+    "coolmath.json": {
+      "url": "https://github.com/tkoz0/bloxorz-solver/blob/d203a25170085054fb3f39bd81b3509ee8cd9e47/coolmath.json",
+      "git_blob_sha1": "376483e5cae1665b68fb23f15b0897717b225d51",
+      "sha256": "bc3856b280fe7a4d23c1a1da525347e3ddafeaf459554c8af5c78fb4f36f594a"
+    },
+    "solution.txt": {
+      "url": "https://github.com/tkoz0/bloxorz-solver/blob/d203a25170085054fb3f39bd81b3509ee8cd9e47/solution.txt",
+      "git_blob_sha1": "396509da4659052432f6c595fb2d60791ee61063",
+      "sha256": "9db53dd5308f14682d2d513779968f3edc15283c457bdaa91fa57a36caaf9eec"
+    },
+    "solver.py": {
+      "url": "https://github.com/tkoz0/bloxorz-solver/blob/d203a25170085054fb3f39bd81b3509ee8cd9e47/solver.py",
+      "git_blob_sha1": "8cfc006cb314ce1d2cadd789022c2bc3830d8986",
+      "sha256": "499a6947d04c2f2bd2a6f97cf89b04ca121c225af92316691d0abfa824660ff9"
+    }
+  },
+  "testcases": [
+    {
+      "id": "stage01",
+      "input": "original/01.in.json",
+      "output": "original/01.out.json",
+      "passcode": "780464",
+      "reference_length": 7,
+      "published_minimum_length": 7,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 6,
+      "columns": 10,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 0,
+        "heavy_switches": 0,
+        "splitters": 0,
+        "bridge_groups": 0
+      }
+    },
+    {
+      "id": "stage02",
+      "input": "original/02.in.json",
+      "output": "original/02.out.json",
+      "passcode": "290299",
+      "reference_length": 17,
+      "published_minimum_length": 17,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 6,
+      "columns": 15,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 1,
+        "heavy_switches": 1,
+        "splitters": 0,
+        "bridge_groups": 2
+      }
+    },
+    {
+      "id": "stage03",
+      "input": "original/03.in.json",
+      "output": "original/03.out.json",
+      "passcode": "918660",
+      "reference_length": 19,
+      "published_minimum_length": 19,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 6,
+      "columns": 15,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 0,
+        "heavy_switches": 0,
+        "splitters": 0,
+        "bridge_groups": 0
+      }
+    },
+    {
+      "id": "stage04",
+      "input": "original/04.in.json",
+      "output": "original/04.out.json",
+      "passcode": "520967",
+      "reference_length": 28,
+      "published_minimum_length": 28,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 9,
+      "columns": 14,
+      "features": {
+        "fragile_cells": 31,
+        "soft_switches": 0,
+        "heavy_switches": 0,
+        "splitters": 0,
+        "bridge_groups": 0
+      }
+    },
+    {
+      "id": "stage05",
+      "input": "original/05.in.json",
+      "output": "original/05.out.json",
+      "passcode": "028431",
+      "reference_length": 33,
+      "published_minimum_length": 33,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 15,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 4,
+        "heavy_switches": 0,
+        "splitters": 0,
+        "bridge_groups": 3
+      }
+    },
+    {
+      "id": "stage06",
+      "input": "original/06.in.json",
+      "output": "original/06.out.json",
+      "passcode": "524383",
+      "reference_length": 35,
+      "published_minimum_length": 35,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 15,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 0,
+        "heavy_switches": 0,
+        "splitters": 0,
+        "bridge_groups": 0
+      }
+    },
+    {
+      "id": "stage07",
+      "input": "original/07.in.json",
+      "output": "original/07.out.json",
+      "passcode": "189493",
+      "reference_length": 44,
+      "published_minimum_length": 44,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 8,
+      "columns": 15,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 0,
+        "heavy_switches": 1,
+        "splitters": 0,
+        "bridge_groups": 1
+      }
+    },
+    {
+      "id": "stage08",
+      "input": "original/08.in.json",
+      "output": "original/08.out.json",
+      "passcode": "499707",
+      "reference_length": 10,
+      "published_minimum_length": 10,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 9,
+      "columns": 15,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 0,
+        "heavy_switches": 0,
+        "splitters": 1,
+        "bridge_groups": 0
+      }
+    },
+    {
+      "id": "stage09",
+      "input": "original/09.in.json",
+      "output": "original/09.out.json",
+      "passcode": "074355",
+      "reference_length": 24,
+      "published_minimum_length": 24,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 5,
+      "columns": 15,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 0,
+        "heavy_switches": 0,
+        "splitters": 1,
+        "bridge_groups": 0
+      }
+    },
+    {
+      "id": "stage10",
+      "input": "original/10.in.json",
+      "output": "original/10.out.json",
+      "passcode": "300590",
+      "reference_length": 57,
+      "published_minimum_length": 57,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 14,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 1,
+        "heavy_switches": 1,
+        "splitters": 1,
+        "bridge_groups": 3
+      }
+    },
+    {
+      "id": "stage11",
+      "input": "original/11.in.json",
+      "output": "original/11.out.json",
+      "passcode": "291709",
+      "reference_length": 47,
+      "published_minimum_length": 47,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 12,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 1,
+        "heavy_switches": 0,
+        "splitters": 0,
+        "bridge_groups": 1
+      }
+    },
+    {
+      "id": "stage12",
+      "input": "original/12.in.json",
+      "output": "original/12.out.json",
+      "passcode": "958640",
+      "reference_length": 65,
+      "published_minimum_length": 65,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 13,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 0,
+        "heavy_switches": 2,
+        "splitters": 0,
+        "bridge_groups": 2
+      }
+    },
+    {
+      "id": "stage13",
+      "input": "original/13.in.json",
+      "output": "original/13.out.json",
+      "passcode": "448106",
+      "reference_length": 46,
+      "published_minimum_length": 46,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 14,
+      "features": {
+        "fragile_cells": 22,
+        "soft_switches": 0,
+        "heavy_switches": 0,
+        "splitters": 0,
+        "bridge_groups": 0
+      }
+    },
+    {
+      "id": "stage14",
+      "input": "original/14.in.json",
+      "output": "original/14.out.json",
+      "passcode": "210362",
+      "reference_length": 67,
+      "published_minimum_length": 67,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 14,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 0,
+        "heavy_switches": 2,
+        "splitters": 0,
+        "bridge_groups": 2
+      }
+    },
+    {
+      "id": "stage15",
+      "input": "original/15.in.json",
+      "output": "original/15.out.json",
+      "passcode": "098598",
+      "reference_length": 57,
+      "published_minimum_length": 57,
+      "reference_origin": "project-generated replacement",
+      "upstream_path_issue": {
+        "stage": 15,
+        "action_number": 27,
+        "action": "2D",
+        "state": "State(split=True, first=(1, 10), second=(2, 8), bridges=(False, True, False, True))",
+        "reason": "block falls through inactive bridge at (1, 10)"
+      },
+      "minimum_independently_verified": true,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 15,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 3,
+        "heavy_switches": 1,
+        "splitters": 1,
+        "bridge_groups": 4
+      }
+    },
+    {
+      "id": "stage16",
+      "input": "original/16.in.json",
+      "output": "original/16.out.json",
+      "passcode": "000241",
+      "reference_length": 28,
+      "published_minimum_length": 28,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 8,
+      "columns": 13,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 0,
+        "heavy_switches": 2,
+        "splitters": 5,
+        "bridge_groups": 2
+      }
+    },
+    {
+      "id": "stage17",
+      "input": "original/17.in.json",
+      "output": "original/17.out.json",
+      "passcode": "683596",
+      "reference_length": 106,
+      "published_minimum_length": 106,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 15,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 1,
+        "heavy_switches": 4,
+        "splitters": 0,
+        "bridge_groups": 4
+      }
+    },
+    {
+      "id": "stage18",
+      "input": "original/18.in.json",
+      "output": "original/18.out.json",
+      "passcode": "284933",
+      "reference_length": 85,
+      "published_minimum_length": 85,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 9,
+      "columns": 15,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 5,
+        "heavy_switches": 1,
+        "splitters": 0,
+        "bridge_groups": 4
+      }
+    },
+    {
+      "id": "stage19",
+      "input": "original/19.in.json",
+      "output": "original/19.out.json",
+      "passcode": "119785",
+      "reference_length": 67,
+      "published_minimum_length": 67,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 15,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 3,
+        "heavy_switches": 0,
+        "splitters": 0,
+        "bridge_groups": 2
+      }
+    },
+    {
+      "id": "stage20",
+      "input": "original/20.in.json",
+      "output": "original/20.out.json",
+      "passcode": "543019",
+      "reference_length": 56,
+      "published_minimum_length": 56,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 15,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 5,
+        "heavy_switches": 0,
+        "splitters": 1,
+        "bridge_groups": 3
+      }
+    },
+    {
+      "id": "stage21",
+      "input": "original/21.in.json",
+      "output": "original/21.out.json",
+      "passcode": "728724",
+      "reference_length": 71,
+      "published_minimum_length": 71,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 15,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 0,
+        "heavy_switches": 2,
+        "splitters": 0,
+        "bridge_groups": 2
+      }
+    },
+    {
+      "id": "stage22",
+      "input": "original/22.in.json",
+      "output": "original/22.out.json",
+      "passcode": "987319",
+      "reference_length": 65,
+      "published_minimum_length": 65,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 14,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 2,
+        "heavy_switches": 2,
+        "splitters": 0,
+        "bridge_groups": 3
+      }
+    },
+    {
+      "id": "stage23",
+      "input": "original/23.in.json",
+      "output": "original/23.out.json",
+      "passcode": "293486",
+      "reference_length": 75,
+      "published_minimum_length": 75,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 15,
+      "features": {
+        "fragile_cells": 18,
+        "soft_switches": 3,
+        "heavy_switches": 1,
+        "splitters": 1,
+        "bridge_groups": 6
+      }
+    },
+    {
+      "id": "stage24",
+      "input": "original/24.in.json",
+      "output": "original/24.out.json",
+      "passcode": "088198",
+      "reference_length": 57,
+      "published_minimum_length": 57,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 8,
+      "columns": 14,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 0,
+        "heavy_switches": 4,
+        "splitters": 1,
+        "bridge_groups": 4
+      }
+    },
+    {
+      "id": "stage25",
+      "input": "original/25.in.json",
+      "output": "original/25.out.json",
+      "passcode": "250453",
+      "reference_length": 55,
+      "published_minimum_length": 55,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 14,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 2,
+        "heavy_switches": 1,
+        "splitters": 0,
+        "bridge_groups": 5
+      }
+    },
+    {
+      "id": "stage26",
+      "input": "original/26.in.json",
+      "output": "original/26.out.json",
+      "passcode": "426329",
+      "reference_length": 104,
+      "published_minimum_length": 104,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 9,
+      "columns": 14,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 1,
+        "heavy_switches": 1,
+        "splitters": 1,
+        "bridge_groups": 3
+      }
+    },
+    {
+      "id": "stage27",
+      "input": "original/27.in.json",
+      "output": "original/27.out.json",
+      "passcode": "660141",
+      "reference_length": 71,
+      "published_minimum_length": 71,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 15,
+      "features": {
+        "fragile_cells": 27,
+        "soft_switches": 2,
+        "heavy_switches": 1,
+        "splitters": 0,
+        "bridge_groups": 2
+      }
+    },
+    {
+      "id": "stage28",
+      "input": "original/28.in.json",
+      "output": "original/28.out.json",
+      "passcode": "769721",
+      "reference_length": 100,
+      "published_minimum_length": 100,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 15,
+      "features": {
+        "fragile_cells": 7,
+        "soft_switches": 1,
+        "heavy_switches": 0,
+        "splitters": 1,
+        "bridge_groups": 2
+      }
+    },
+    {
+      "id": "stage29",
+      "input": "original/29.in.json",
+      "output": "original/29.out.json",
+      "passcode": "691859",
+      "reference_length": 104,
+      "published_minimum_length": 104,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 15,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 3,
+        "heavy_switches": 3,
+        "splitters": 0,
+        "bridge_groups": 9
+      }
+    },
+    {
+      "id": "stage30",
+      "input": "original/30.in.json",
+      "output": "original/30.out.json",
+      "passcode": "280351",
+      "reference_length": 114,
+      "published_minimum_length": 114,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 15,
+      "features": {
+        "fragile_cells": 40,
+        "soft_switches": 0,
+        "heavy_switches": 3,
+        "splitters": 0,
+        "bridge_groups": 4
+      }
+    },
+    {
+      "id": "stage31",
+      "input": "original/31.in.json",
+      "output": "original/31.out.json",
+      "passcode": "138620",
+      "reference_length": 91,
+      "published_minimum_length": 91,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 15,
+      "features": {
+        "fragile_cells": 8,
+        "soft_switches": 2,
+        "heavy_switches": 3,
+        "splitters": 0,
+        "bridge_groups": 6
+      }
+    },
+    {
+      "id": "stage32",
+      "input": "original/32.in.json",
+      "output": "original/32.out.json",
+      "passcode": "879021",
+      "reference_length": 129,
+      "published_minimum_length": 129,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 9,
+      "columns": 14,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 0,
+        "heavy_switches": 3,
+        "splitters": 0,
+        "bridge_groups": 4
+      }
+    },
+    {
+      "id": "stage33",
+      "input": "original/33.in.json",
+      "output": "original/33.out.json",
+      "passcode": "614955",
+      "reference_length": 65,
+      "published_minimum_length": 65,
+      "reference_origin": "upstream solution.txt, translated to cube-ID actions",
+      "upstream_path_issue": null,
+      "minimum_independently_verified": false,
+      "replay_verified": true,
+      "rows": 10,
+      "columns": 15,
+      "features": {
+        "fragile_cells": 0,
+        "soft_switches": 12,
+        "heavy_switches": 1,
+        "splitters": 0,
+        "bridge_groups": 3
+      }
+    },
+    {
+      "id": "sample01",
+      "input": "samples/01.in.json",
+      "output": "samples/01.out.json",
+      "reference_length": 2,
+      "reference_origin": "project-authored example",
+      "replay_verified": true
+    },
+    {
+      "id": "sample02",
+      "input": "samples/02.in.json",
+      "output": "samples/02.out.json",
+      "reference_length": 5,
+      "reference_origin": "project-authored example",
+      "replay_verified": true
+    },
+    {
+      "id": "sample03",
+      "input": "samples/03.in.json",
+      "output": "samples/03.out.json",
+      "reference_length": 2,
+      "reference_origin": "project-authored example",
+      "replay_verified": true
+    },
+    {
+      "id": "sample04",
+      "input": "samples/04.in.json",
+      "output": "samples/04.out.json",
+      "reference_length": 4,
+      "reference_origin": "project-authored example",
+      "replay_verified": true
+    },
+    {
+      "id": "sample05",
+      "input": "samples/05.in.json",
+      "output": "samples/05.out.json",
+      "reference_length": 4,
+      "reference_origin": "project-authored example",
+      "replay_verified": true
+    },
+    {
+      "id": "sample06",
+      "input": "samples/06.in.json",
+      "output": "samples/06.out.json",
+      "reference_length": 4,
+      "reference_origin": "project-authored example",
+      "replay_verified": true
+    }
+  ],
+  "original_count": 33,
+  "original_reference_moves_total": 1999,
+  "sample_count": 6
+}

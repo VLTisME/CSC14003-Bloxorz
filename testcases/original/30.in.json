@@ -1,0 +1,108 @@
+{
+  "id": "stage30",
+  "board": [
+    "###.....FF....#",
+    "###.G..#####F.#",
+    "###...######F.X",
+    "#######F..BB...",
+    "##S####FF#####.",
+    "#X.F###FF#####.",
+    "FFFF###..B##B..",
+    "FFF.F.FF.F##X.B",
+    ".FFFFFFFFFFF.##",
+    "#F.FFF##FFFF.##"
+  ],
+  "bridges": [
+    {
+      "id": "b1",
+      "cells": [
+        [
+          3,
+          10
+        ],
+        [
+          3,
+          11
+        ]
+      ],
+      "active": true
+    },
+    {
+      "id": "b2",
+      "cells": [
+        [
+          6,
+          9
+        ]
+      ],
+      "active": false
+    },
+    {
+      "id": "b3",
+      "cells": [
+        [
+          6,
+          12
+        ]
+      ],
+      "active": false
+    },
+    {
+      "id": "b4",
+      "cells": [
+        [
+          7,
+          14
+        ]
+      ],
+      "active": false
+    }
+  ],
+  "switches": [
+    {
+      "at": [
+        2,
+        14
+      ],
+      "effects": [
+        {
+          "bridge": "b1",
+          "mode": "off"
+        },
+        {
+          "bridge": "b2",
+          "mode": "on"
+        },
+        {
+          "bridge": "b3",
+          "mode": "on"
+        }
+      ]
+    },
+    {
+      "at": [
+        5,
+        1
+      ],
+      "effects": [
+        {
+          "bridge": "b1",
+          "mode": "on"
+        }
+      ]
+    },
+    {
+      "at": [
+        7,
+        12
+      ],
+      "effects": [
+        {
+          "bridge": "b4",
+          "mode": "toggle"
+        }
+      ]
+    }
+  ],
+  "splitters": []
+}

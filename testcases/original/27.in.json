@@ -1,0 +1,80 @@
+{
+  "id": "stage27",
+  "board": [
+    "...####........",
+    ".S.........##..",
+    "...####..####..",
+    "############.X.",
+    "############..#",
+    "...##FFFF.##OO#",
+    ".G.FFFFFFF##...",
+    "...FFFFFFFFF...",
+    "#####FFFFFFF...",
+    "######B..B#####"
+  ],
+  "bridges": [
+    {
+      "id": "b1",
+      "cells": [
+        [
+          9,
+          6
+        ]
+      ],
+      "active": true
+    },
+    {
+      "id": "b2",
+      "cells": [
+        [
+          9,
+          9
+        ]
+      ],
+      "active": true
+    }
+  ],
+  "switches": [
+    {
+      "at": [
+        3,
+        13
+      ],
+      "effects": [
+        {
+          "bridge": "b1",
+          "mode": "off"
+        },
+        {
+          "bridge": "b2",
+          "mode": "off"
+        }
+      ]
+    },
+    {
+      "at": [
+        5,
+        12
+      ],
+      "effects": [
+        {
+          "bridge": "b1",
+          "mode": "off"
+        }
+      ]
+    },
+    {
+      "at": [
+        5,
+        13
+      ],
+      "effects": [
+        {
+          "bridge": "b2",
+          "mode": "off"
+        }
+      ]
+    }
+  ],
+  "splitters": []
+}

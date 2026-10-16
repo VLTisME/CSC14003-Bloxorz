@@ -1,0 +1,155 @@
+{
+  "id": "stage18",
+  "board": [
+    "#######O#######",
+    "..O.###.#######",
+    ".....##.#######",
+    ".OS.....BB..BB.",
+    ".....B##.###.##",
+    "..O.####.###.##",
+    ".#######O##...#",
+    ".#########..G.#",
+    ".BBX######....#"
+  ],
+  "bridges": [
+    {
+      "id": "b1",
+      "cells": [
+        [
+          3,
+          8
+        ],
+        [
+          3,
+          9
+        ]
+      ],
+      "active": false
+    },
+    {
+      "id": "b2",
+      "cells": [
+        [
+          3,
+          12
+        ],
+        [
+          3,
+          13
+        ]
+      ],
+      "active": false
+    },
+    {
+      "id": "b3",
+      "cells": [
+        [
+          4,
+          5
+        ]
+      ],
+      "active": false
+    },
+    {
+      "id": "b4",
+      "cells": [
+        [
+          8,
+          1
+        ],
+        [
+          8,
+          2
+        ]
+      ],
+      "active": false
+    }
+  ],
+  "switches": [
+    {
+      "at": [
+        0,
+        7
+      ],
+      "effects": [
+        {
+          "bridge": "b1",
+          "mode": "on"
+        }
+      ]
+    },
+    {
+      "at": [
+        1,
+        2
+      ],
+      "effects": [
+        {
+          "bridge": "b2",
+          "mode": "off"
+        },
+        {
+          "bridge": "b4",
+          "mode": "off"
+        }
+      ]
+    },
+    {
+      "at": [
+        3,
+        1
+      ],
+      "effects": [
+        {
+          "bridge": "b1",
+          "mode": "off"
+        }
+      ]
+    },
+    {
+      "at": [
+        5,
+        2
+      ],
+      "effects": [
+        {
+          "bridge": "b2",
+          "mode": "off"
+        },
+        {
+          "bridge": "b4",
+          "mode": "off"
+        }
+      ]
+    },
+    {
+      "at": [
+        6,
+        8
+      ],
+      "effects": [
+        {
+          "bridge": "b2",
+          "mode": "on"
+        },
+        {
+          "bridge": "b4",
+          "mode": "on"
+        }
+      ]
+    },
+    {
+      "at": [
+        8,
+        3
+      ],
+      "effects": [
+        {
+          "bridge": "b3",
+          "mode": "toggle"
+        }
+      ]
+    }
+  ],
+  "splitters": []
+}

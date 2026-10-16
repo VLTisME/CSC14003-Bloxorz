@@ -1,0 +1,10 @@
+# Local report drafts: the report is edited in Prism first.
+/report/
+# Generated measurements and ad-hoc solver answers.
+/results/
+/answer.json
+/output.json
+/output.txt
+__pycache__/
+*.py[cod]
+.venv/

@@ -1,0 +1,28 @@
+{
+  "id": "sample06",
+  "board": [
+    "S..T",
+    "####",
+    "...G"
+  ],
+  "bridges": [],
+  "switches": [],
+  "splitters": [
+    {
+      "at": [
+        0,
+        3
+      ],
+      "destinations": [
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          2
+        ]
+      ]
+    }
+  ]
+}

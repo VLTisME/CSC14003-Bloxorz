@@ -1,0 +1,200 @@
+{
+  "id": "stage31",
+  "board": [
+    "###########...B",
+    "#...####X##.G.B",
+    "#...BB...BB...B",
+    "#...##...###.##",
+    "#FFF##O..###F##",
+    "##F###...##FFF#",
+    "##.###...##...#",
+    "B...BB.O.BB.S.#",
+    "B.X.##X####...#",
+    "B...###########"
+  ],
+  "bridges": [
+    {
+      "id": "b1",
+      "cells": [
+        [
+          0,
+          14
+        ],
+        [
+          1,
+          14
+        ],
+        [
+          2,
+          14
+        ]
+      ],
+      "active": false
+    },
+    {
+      "id": "b2",
+      "cells": [
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          5
+        ]
+      ],
+      "active": true
+    },
+    {
+      "id": "b3",
+      "cells": [
+        [
+          2,
+          9
+        ],
+        [
+          2,
+          10
+        ]
+      ],
+      "active": false
+    },
+    {
+      "id": "b4",
+      "cells": [
+        [
+          7,
+          0
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          9,
+          0
+        ]
+      ],
+      "active": true
+    },
+    {
+      "id": "b5",
+      "cells": [
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          5
+        ]
+      ],
+      "active": false
+    },
+    {
+      "id": "b6",
+      "cells": [
+        [
+          7,
+          9
+        ],
+        [
+          7,
+          10
+        ]
+      ],
+      "active": true
+    }
+  ],
+  "switches": [
+    {
+      "at": [
+        1,
+        8
+      ],
+      "effects": [
+        {
+          "bridge": "b3",
+          "mode": "toggle"
+        }
+      ]
+    },
+    {
+      "at": [
+        4,
+        6
+      ],
+      "effects": [
+        {
+          "bridge": "b2",
+          "mode": "off"
+        },
+        {
+          "bridge": "b3",
+          "mode": "off"
+        },
+        {
+          "bridge": "b5",
+          "mode": "off"
+        },
+        {
+          "bridge": "b6",
+          "mode": "off"
+        }
+      ]
+    },
+    {
+      "at": [
+        7,
+        7
+      ],
+      "effects": [
+        {
+          "bridge": "b2",
+          "mode": "off"
+        },
+        {
+          "bridge": "b3",
+          "mode": "off"
+        },
+        {
+          "bridge": "b5",
+          "mode": "off"
+        },
+        {
+          "bridge": "b6",
+          "mode": "off"
+        }
+      ]
+    },
+    {
+      "at": [
+        8,
+        2
+      ],
+      "effects": [
+        {
+          "bridge": "b1",
+          "mode": "on"
+        },
+        {
+          "bridge": "b2",
+          "mode": "off"
+        }
+      ]
+    },
+    {
+      "at": [
+        8,
+        6
+      ],
+      "effects": [
+        {
+          "bridge": "b5",
+          "mode": "toggle"
+        }
+      ]
+    }
+  ],
+  "splitters": []
+}

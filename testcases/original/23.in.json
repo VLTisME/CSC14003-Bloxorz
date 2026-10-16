@@ -1,0 +1,165 @@
+{
+  "id": "stage23",
+  "board": [
+    "#...########...",
+    "#.X.########.O.",
+    "#...###...BB...",
+    "B...B##.G.##..O",
+    ".###.##...####.",
+    "O###.##FFF####.",
+    ".BB...FFFFF...B",
+    "###.S.FFFFF.T.#",
+    "###...FFFFF...#",
+    "###.....B######"
+  ],
+  "bridges": [
+    {
+      "id": "b1",
+      "cells": [
+        [
+          2,
+          10
+        ],
+        [
+          2,
+          11
+        ]
+      ],
+      "active": true
+    },
+    {
+      "id": "b2",
+      "cells": [
+        [
+          3,
+          0
+        ]
+      ],
+      "active": false
+    },
+    {
+      "id": "b3",
+      "cells": [
+        [
+          3,
+          4
+        ]
+      ],
+      "active": false
+    },
+    {
+      "id": "b4",
+      "cells": [
+        [
+          6,
+          1
+        ],
+        [
+          6,
+          2
+        ]
+      ],
+      "active": false
+    },
+    {
+      "id": "b5",
+      "cells": [
+        [
+          6,
+          14
+        ]
+      ],
+      "active": true
+    },
+    {
+      "id": "b6",
+      "cells": [
+        [
+          9,
+          8
+        ]
+      ],
+      "active": false
+    }
+  ],
+  "switches": [
+    {
+      "at": [
+        1,
+        2
+      ],
+      "effects": [
+        {
+          "bridge": "b3",
+          "mode": "on"
+        }
+      ]
+    },
+    {
+      "at": [
+        1,
+        13
+      ],
+      "effects": [
+        {
+          "bridge": "b4",
+          "mode": "on"
+        },
+        {
+          "bridge": "b6",
+          "mode": "toggle"
+        }
+      ]
+    },
+    {
+      "at": [
+        3,
+        14
+      ],
+      "effects": [
+        {
+          "bridge": "b1",
+          "mode": "off"
+        },
+        {
+          "bridge": "b5",
+          "mode": "off"
+        }
+      ]
+    },
+    {
+      "at": [
+        5,
+        0
+      ],
+      "effects": [
+        {
+          "bridge": "b2",
+          "mode": "on"
+        },
+        {
+          "bridge": "b4",
+          "mode": "off"
+        }
+      ]
+    }
+  ],
+  "splitters": [
+    {
+      "at": [
+        7,
+        12
+      ],
+      "destinations": [
+        [
+          2,
+          2
+        ],
+        [
+          7,
+          12
+        ]
+      ]
+    }
+  ]
+}
