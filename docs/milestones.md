@@ -31,7 +31,7 @@ M3 and M4 can proceed in parallel after assignment. No implementation or perform
 - [x] Local files prepared for the documentation/test-case package — **2026-10-15**.
 - [x] Measurement-helper and output-guidance update prepared — **2026-10-16**.
 - [x] Final user review of the updated package — approved **2026-10-16**; correctness-first best-practice guidance added at the user's request.
-- [ ] GitHub push — authorized **2026-10-16**; publication verification pending. Report drafts and generated results are excluded.
+- [x] GitHub package published to `origin/main` — completed **2026-10-16**, package commit `b592fc0`. Includes specifications, correctness-first guidance, helper/template, checker, tests, and 39 stage input/reference-output pairs. Report drafts and generated results are excluded. Task allocation remains pending.
 - [ ] Source-data/GIF redistribution terms confirmed — upstream tkoz0 revision contains no stated license, and the user-supplied GIF has no recorded origin. Attribution is included; it does not establish a license.
 - [ ] Prism report synchronized — pending.
 
