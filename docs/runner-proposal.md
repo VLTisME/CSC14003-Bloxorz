@@ -1,36 +1,36 @@
-# Runner and checker
+# Runner và checker
 
-Specification v1.1 — 16 October 2026. The replay checker and shared measurement helper are implemented. The submission-executing checker, batch runner, and terminal visualizer remain Phase 1 deliverables.
+Đặc tả v1.1 — 16/10/2026; bản tiếng Việt ngày 17/10/2026. Checker phát lại và helper đo lường dùng chung đã được triển khai. Checker chạy bài nộp, runner chạy theo bộ và phần hiển thị trên terminal vẫn là sản phẩm cần hoàn thành trong giai đoạn 1.
 
-## How a run works
+## Quy trình một lần chạy
 
-1. The runner loads a selected stage and starts the selected Python algorithm.
-2. It sends that stage's JSON through the program's standard input.
-3. The algorithm prints the result JSON to standard output. It does not need to create a file itself.
-4. The runner captures the output, error messages, exit code, and elapsed time.
-5. The checker replays the actions and returns AC, WA, or RE.
-6. The runner prints per-stage results and total tests passed, then writes one combined JSON file for the entire run.
+1. Runner nạp stage được chọn và khởi chạy chương trình thuật toán Python được chọn.
+2. Runner gửi JSON của stage qua stdin của chương trình.
+3. Thuật toán in JSON kết quả ra stdout. Thuật toán không cần tự tạo file.
+4. Runner thu đầu ra, thông báo lỗi, mã thoát và thời gian thực thi.
+5. Checker phát lại hành động và trả về AC, WA hoặc RE.
+6. Runner in kết quả từng stage và tổng số testcase vượt qua, sau đó ghi một file JSON tổng hợp cho toàn bộ lần chạy.
 
-The algorithm may use any internal representation. No shared solver class is required. It must not read reference answers.
+Thuật toán có thể dùng cách biểu diễn nội bộ tùy ý. Không bắt buộc dùng một lớp solver chung. Thuật toán không được đọc lời giải tham chiếu.
 
-## Commands
+## Các lệnh
 
-Available now:
+Đã sử dụng được:
 
 ```bash
 python checker.py --input testcases/original/01.in.json --output answer.json
 python checker.py --all
 ```
 
-The second command replays every supplied reference answer, including the samples.
+Lệnh thứ hai phát lại mọi lời giải tham chiếu được cung cấp, bao gồm cả ví dụ mẫu.
 
-To run one future algorithm directly:
+Để chạy trực tiếp một thuật toán sau khi đã triển khai:
 
 ```bash
 python algorithms/DFS.py < testcases/original/01.in.json > answer.json
 ```
 
-Agreed submission-checker and runner commands (not yet implemented):
+Các lệnh checker chạy bài nộp và runner đã thống nhất (chưa triển khai):
 
 ```bash
 python checker.py --algorithm algorithms/BFS.py --test 01 --timeout 10
@@ -40,32 +40,32 @@ python run_tests.py --algorithm algorithms/BFS.py --test 06 --visualize_2d
 python run_tests.py --algorithm algorithms/BFS.py --suite samples --all
 ```
 
-The default suite is the 33 original stages; `--test 06` means original stage 6. Samples are selected explicitly. `--all` runs every stage in the selected suite. Require `--algorithm` and exactly one of `--test` or `--all`. Both tools accept `--suite original|samples` and `--timeout SECONDS`; document the default timeout when implementing it. Start a fresh algorithm process for each stage. The timeout applies separately to algorithm execution on each stage, excluding checking and animation.
+Bộ mặc định gồm 33 stage gốc; `--test 06` là stage gốc số 6. Muốn chạy ví dụ mẫu phải chọn bộ tương ứng. `--all` chạy mọi stage trong bộ được chọn. Bắt buộc có `--algorithm` và đúng một trong hai cờ `--test` hoặc `--all`. Cả hai công cụ nhận `--suite original|samples` và `--timeout SECONDS`; khi triển khai phải ghi rõ giới hạn thời gian mặc định. Mỗi stage chạy trong một tiến trình thuật toán mới. Giới hạn thời gian áp dụng riêng cho thực thi thuật toán trên từng stage, không gồm kiểm tra lời giải và hoạt ảnh.
 
-The submission checker launches the algorithm, captures its printed JSON, enforces timeouts, and reports per-stage AC/WA/RE/TLE, totals by verdict, and the relevant stage IDs. The runner shares this execution and replay logic, adding statistics, a combined results file, and optional visualization. Do not duplicate game rules or execution logic between the two tools.
+Checker chạy bài nộp khởi chạy thuật toán, thu JSON được in, áp dụng giới hạn thời gian và báo AC/WA/RE/TLE từng stage, tổng số theo verdict và các ID stage tương ứng. Runner dùng chung logic thực thi/phát lại, bổ sung thống kê, file kết quả tổng hợp và tùy chọn hiển thị. Không triển khai hai bộ luật chơi hay logic thực thi độc lập cho hai công cụ.
 
-For one stage, the runner shows the verdict, returned actions, action count, and measured times. For all stages, show per-stage times and action counts, total algorithm elapsed time, and fastest/slowest successfully solved stages with their IDs. Show failures and timeouts separately. If no stage succeeds, fastest/slowest successful-stage statistics are unavailable.
+Với một stage, runner hiển thị verdict, hành động trả về, số hành động và thời gian đo. Với toàn bộ bộ thử nghiệm, hiển thị thời gian/số hành động từng stage, tổng thời gian thực thi thuật toán và stage giải thành công nhanh nhất/chậm nhất kèm ID. Hiển thị riêng lỗi và trường hợp hết thời gian. Nếu không có stage nào giải thành công, thống kê stage thành công nhanh nhất/chậm nhất không có giá trị.
 
-`--visualize_2d` is runner-only and requires a single selected stage; reserve `--visualize_3d` for the later 3D implementation. The current `checker.py --all` remains a reference-data audit until the submission interface is implemented. Then move that audit to a separately named development command or test so the two meanings do not conflict.
+`--visualize_2d` chỉ dành cho runner và yêu cầu chọn một stage; dành `--visualize_3d` cho phần 3D ở giai đoạn sau. `checker.py --all` hiện vẫn là lệnh kiểm tra dữ liệu tham chiếu cho đến khi triển khai giao diện chạy bài nộp. Khi đó chuyển chức năng kiểm tra tham chiếu sang lệnh phát triển hoặc bài kiểm thử có tên riêng để tránh hai ý nghĩa mâu thuẫn.
 
-## A simple checker
+## Checker đơn giản
 
-The checker performs inexpensive structural checks on the input and replays the submitted action list. It does not search for a solution and does not require the answer to equal a reference string.
+Checker kiểm tra sơ bộ cấu trúc đầu vào rồi phát lại danh sách hành động được nộp. Nó không tìm lời giải và không yêu cầu đáp án trùng chuỗi tham chiếu.
 
-- AC: wins without falling; longer valid solutions are also accepted.
-- WA: loses, stops before the goal, uses a piece action in the wrong state, continues after winning, or reports `unsolvable`/`limit` without a solution.
-- RE: malformed JSON/schema, an unknown action token, or a crashed algorithm.
-- TLE: imposed by the runner, not inferred from the algorithm's answer.
+- AC: thắng mà không rơi; lời giải hợp lệ dài hơn cũng được chấp nhận.
+- WA: thua, dừng trước đích, dùng hành động của loại khối không phù hợp trạng thái, tiếp tục sau khi thắng hoặc báo `unsolvable`/`limit` mà không có lời giải.
+- RE: JSON/cấu trúc sai định dạng, mã hành động không được định nghĩa hoặc chương trình thuật toán gặp lỗi.
+- TLE: do runner áp dụng, không suy ra từ câu trả lời của thuật toán.
 
-A broken input file is INPUT_ERROR and must not be counted as an algorithm's WA. The current CLI exits with zero if all checked answers pass, otherwise nonzero.
+File đầu vào lỗi được ghi là INPUT_ERROR, không được tính là WA của thuật toán. CLI hiện tại thoát với mã 0 nếu mọi lời giải được kiểm tra đều đạt; ngược lại trả về mã khác 0.
 
-All 33 original stages now have replay-verified reference paths. That establishes solvability for this supplied set without making the checker run a search. Future generated stages need separate input validation and a solvability certification step. The same path checker can still validate their answers.
+Cả 33 stage gốc đều có chuỗi hành động tham chiếu đã kiểm chứng bằng phát lại. Điều này xác nhận bộ được cung cấp có lời giải mà không cần checker chạy tìm kiếm. Stage tự sinh trong tương lai cần bước kiểm tra đầu vào riêng và xác nhận tồn tại lời giải. Checker đường đi hiện tại vẫn có thể kiểm tra lời giải cho chúng.
 
-## One output file per run
+## Một file kết quả cho mỗi lần chạy
 
-Write `results/YYYY-MM-DD_HH-MM-SS-ffffff.json`, using Asia/Ho_Chi_Minh time. The microseconds avoid ordinary filename collisions; if a name already exists, choose a new timestamp rather than overwriting it.
+Ghi `results/YYYY-MM-DD_HH-MM-SS-ffffff.json`, dùng giờ Asia/Ho_Chi_Minh. Phần microsecond giúp tránh trùng tên trong trường hợp thông thường; nếu tên đã tồn tại, chọn thời điểm mới thay vì ghi đè.
 
-Illustrative structure (numbers are examples, not measurements):
+Cấu trúc minh họa (các con số là ví dụ, không phải số liệu đo):
 
 ```json
 {
@@ -98,9 +98,9 @@ Illustrative structure (numbers are examples, not measurements):
 }
 ```
 
-Include the configured timeout and relevant environment details in real runs. For RE, preserve the diagnostic and, when needed, a bounded copy of raw stdout. For WA, retain attempted actions but leave solution_length/cost null because they are not a successful solution. Keep reference answers unchanged.
+Trong các lần chạy thực tế, ghi thêm giới hạn thời gian đã cấu hình và thông tin môi trường liên quan. Với RE, giữ thông báo chẩn đoán và nếu cần, một bản sao stdout thô có giới hạn kích thước. Với WA, giữ các hành động đã thử nhưng đặt solution_length/cost là null vì đó chưa phải lời giải thành công. Không thay đổi lời giải tham chiếu.
 
-Console output should be easy to scan, for example:
+Đầu ra console nên dễ đọc, ví dụ sau vẫn giữ nguyên dạng thông báo kỹ thuật:
 
 ```text
 stage01: AC — solved with 7 steps
@@ -110,11 +110,13 @@ Passed 1/2 tests
 Saved results/2026-10-15_20-00-00-123456.json
 ```
 
-## Where measurements come from
+<a id="where-measurements-come-from"></a>
 
-The runner measures whole-process elapsed time from launch to exit. That includes startup, input parsing, searching, and serialization; call it `process_time_ms`, not search-only time.
+## Nguồn và cách thu thập số liệu đo
 
-The runner computes solution length and cost from an accepted action sequence. It cannot infer expanded nodes or search-only time from those actions. Algorithm implementations therefore additionally emit a `metrics` object:
+Runner đo thời gian toàn tiến trình từ khi khởi chạy đến khi kết thúc. Thời gian này gồm khởi động, phân tích đầu vào, tìm kiếm và chuyển kết quả thành dữ liệu để in; đặt tên là `process_time_ms`, không gọi là thời gian riêng cho tìm kiếm.
+
+Runner tính độ dài lời giải và chi phí từ chuỗi hành động được chấp nhận. Nó không thể suy ra số nút mở rộng hay thời gian riêng cho tìm kiếm từ các hành động này. Vì vậy, chương trình thuật toán in thêm đối tượng `metrics`:
 
 ```json
 {
@@ -129,30 +131,30 @@ The runner computes solution length and cost from an accepted action sequence. I
 }
 ```
 
-The numbers only illustrate the fields. Benchmark output fields are also documented in the problem statement. Fixed reference outputs and basic correctness submissions may omit metrics; actual benchmark submissions require them. Existing fixtures do not need conversion.
+Các con số chỉ minh họa trường dữ liệu. Các trường đầu ra benchmark cũng được mô tả trong phát biểu bài toán. Lời giải tham chiếu cố định và bài nộp chỉ kiểm tra tính đúng đắn có thể bỏ số liệu đo; bài nộp benchmark thực tế phải có. Không cần chuyển đổi các testcase hiện có.
 
-Use [solver_support.py](../algorithms/solver_support.py) and [the template](../algorithms/template.py); the [algorithm guide](algorithm-guide.md) explains integration. `SearchMetrics` measures a single solve and prints a combined solution/metrics object. It has no search implementation and no dependency on the game checker. Authors remain responsible for counting expansions at the correct location and keeping all search setup inside the measured region.
+Dùng [solver_support.py](../algorithms/solver_support.py) và [template](../algorithms/template.py); xem [hướng dẫn thuật toán](algorithm-guide.md) để tích hợp. `SearchMetrics` đo một lần giải và in đối tượng kết hợp lời giải/số liệu đo. Nó không chứa thuật toán tìm kiếm và không phụ thuộc checker game. Người triển khai phải đếm mở rộng đúng chỗ và đặt toàn bộ khởi tạo tìm kiếm trong vùng được đo.
 
-For the future runner, `metrics_issues(answer.get("metrics"))` returns a list of missing/invalid measurement errors. Record these separately from the replay verdict, for example `metrics_complete` and `metrics_errors` in each saved test result. A winning path with incomplete metrics remains AC, but cannot supply a complete benchmark record. Validate nonnegative finite timing, nonnegative integer counts/bytes (not booleans), and the agreed memory method. Structural validation cannot prove that a solver counted honestly or placed measurements correctly; review each algorithm's instrumentation.
+Đối với runner sau này, `metrics_issues(answer.get("metrics"))` trả về danh sách lỗi số liệu thiếu/không hợp lệ. Ghi chúng tách biệt với verdict phát lại, ví dụ bằng `metrics_complete` và `metrics_errors` trong kết quả từng testcase. Một đường đi thắng dù thiếu số liệu vẫn là AC, nhưng không tạo được bản ghi benchmark đầy đủ. Kiểm tra thời gian hữu hạn không âm, số lượng/byte là số nguyên không âm (không phải boolean) và phương pháp đo bộ nhớ đã thống nhất. Kiểm tra cấu trúc không chứng minh solver đếm đúng hay đặt ranh giới đo đúng; cần rà soát cách gắn bộ đo của từng thuật toán.
 
-On a crash or timeout, preserve externally measured elapsed time and the verdict. Missing internal measurements are null, not zero; never infer them from a partial output or replace them with reference-answer values.
+Khi chương trình gặp lỗi hoặc hết thời gian, giữ thời gian đo từ bên ngoài và verdict. Số liệu nội bộ không có phải là null, không phải 0; không suy ra từ đầu ra chưa hoàn chỉnh hay thay bằng giá trị trong lời giải tham chiếu.
 
-Use consistent definitions:
+Dùng các định nghĩa nhất quán:
 
-- Search time covers frontier setup, heuristic preprocessing for that solve, search, and path reconstruction. Exclude parsing, printing, checking, and animation.
-- An expansion is a non-goal node whose successors are generated. Skip stale queue entries without counting them. Count genuine re-expansions again.
-- The shared baseline is peak Python allocations traced with `tracemalloc`, started after JSON parsing and before search-state/frontier/heuristic construction. This includes allocations in instrumented Python search code and helper overhead, but excludes pre-existing allocations and is not whole-process resident memory. If process RSS is added later, record it separately with its method; do not mix it with traced allocation peaks.
-- Unknown measurements are null, never fabricated zeroes.
-- Record minimum-length comparisons as analysis, not AC/WA criteria. Published reference lengths are not automatically independent optimality proofs.
+- Thời gian tìm kiếm gồm khởi tạo frontier, tiền xử lý heuristic cho lần giải đó, tìm kiếm và truy vết đường đi. Không gồm phân tích đầu vào, in, chấm kết quả và hoạt ảnh.
+- Một lần mở rộng là khi sinh các trạng thái kế tiếp của nút không phải đích. Bỏ qua phần tử hàng đợi lỗi thời mà không đếm. Các lần thực sự mở rộng lại được đếm thêm.
+- Phương pháp cơ sở dùng chung là đỉnh cấp phát Python được theo dõi bằng `tracemalloc`, bắt đầu sau khi phân tích JSON và trước khi tạo trạng thái tìm kiếm/frontier/heuristic. Bao gồm các cấp phát trong code Python đang được đo và chi phí helper, nhưng không gồm cấp phát đã có trước đó và không phải toàn bộ bộ nhớ thường trú của tiến trình. Nếu bổ sung RSS tiến trình sau này, ghi riêng cùng phương pháp đo; không trộn với đỉnh cấp phát được theo dõi.
+- Giá trị chưa biết là null, không tự điền 0.
+- So sánh với độ dài tối thiểu thuộc phần phân tích, không phải tiêu chí AC/WA. Độ dài tham chiếu đã công bố không tự động là bằng chứng độc lập về tính tối ưu.
 
-Default `SearchMetrics()` records time and memory together. Its `search_time_ms` includes memory-tracing overhead. Use this same baseline for all four algorithms; do not compare a traced timing against an untraced timing without labelling the difference.
+Mặc định, `SearchMetrics()` đo thời gian và bộ nhớ cùng lúc. `search_time_ms` khi đó gồm chi phí theo dõi bộ nhớ. Dùng cùng phương pháp cơ sở cho cả bốn thuật toán; không so sánh thời gian có theo dõi với thời gian không theo dõi mà không ghi rõ khác biệt.
 
-For final experiments, prefer separate timing and memory runs. `SearchMetrics(track_memory=False)` supports an untraced timing run: memory fields are null, so it is intentionally incomplete as a standalone full benchmark record. Pair it with a separately identified default memory run using the same stage, algorithm version, settings, and successor order; retain both raw records and label the measurement mode in experiment configuration. The template defaults to full measurement; runner support for paired passes is future work. For short searches, repeat runs and document the aggregation policy.
+Trong thực nghiệm cuối cùng, ưu tiên tách lần đo thời gian và lần đo bộ nhớ. `SearchMetrics(track_memory=False)` hỗ trợ đo thời gian không theo dõi cấp phát: các trường bộ nhớ là null, nên bản ghi riêng lẻ này cố ý chưa đủ cho benchmark đầy đủ. Ghép với một lần đo bộ nhớ mặc định được định danh riêng, dùng cùng stage, phiên bản thuật toán, cấu hình và thứ tự sinh trạng thái kế tiếp; giữ cả hai bản ghi thô và ghi chế độ đo trong cấu hình thực nghiệm. Template mặc định đo đầy đủ; runner hỗ trợ chạy theo cặp là công việc tương lai. Với tìm kiếm rất ngắn, chạy lặp lại và mô tả cách tổng hợp số liệu.
 
-## Terminal visualization
+## Hiển thị trên terminal
 
-`--visualize_2d` replays the returned actions after search and checking. Show the board, both cube IDs when split, bridge states, move count, and outcome. The terminal view is sufficient for Phase 1; the final project still needs the required 3D GUI and automatic playback.
+`--visualize_2d` phát lại hành động trả về sau khi tìm kiếm và chấm kết quả. Hiển thị bàn chơi, ID cả hai khối khi đang tách, trạng thái cầu, số bước và kết quả. Hiển thị terminal đủ cho giai đoạn 1; sản phẩm cuối vẫn cần GUI 3D và phát lại tự động theo yêu cầu.
 
-## Report progress
+## Tiến độ báo cáo
 
-The runner/checker implementation contributes to system design and experimental methodology. Saved measurements feed results and discussion. Document the current known-solvable assumption and future generated-stage validation in the report, edited in Prism.
+Triển khai runner/checker đóng góp vào phần thiết kế hệ thống và phương pháp thực nghiệm. Số liệu đã lưu phục vụ phần kết quả/thảo luận. Ghi rõ giả thiết bộ stage hiện có đã biết là giải được và việc kiểm tra stage tự sinh trong tương lai vào báo cáo chỉnh sửa trên Prism.

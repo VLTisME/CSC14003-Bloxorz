@@ -1,54 +1,54 @@
-# Test cases
+# Bộ testcase
 
-Final supplied set v1.0 — 15 October 2026.
+Bộ dữ liệu chốt v1.0 — 15/10/2026; hướng dẫn tiếng Việt ngày 17/10/2026.
 
-- **original/**: all 33 original-game stages, converted to the project format.
-- **samples/**: six small, solvable examples for understanding and debugging.
-- **manifest.json**: provenance, stage IDs, passcodes, features, reference lengths, and verification details.
+- **original/**: đủ 33 stage của game gốc, đã chuyển sang định dạng dự án.
+- **samples/**: sáu ví dụ nhỏ có lời giải để tìm hiểu và debug.
+- **manifest.json**: nguồn gốc, ID stage, mã truy cập màn chơi, đặc điểm, độ dài tham chiếu và thông tin kiểm chứng.
 
-Each stage has `NN.in.json` and `NN.out.json`. The algorithm receives only the input file. The output file is one working reference path, not the only accepted answer. All 39 paths pass the replay checker.
+Mỗi stage có `NN.in.json` và `NN.out.json`. Thuật toán chỉ nhận file đầu vào. File đầu ra chứa một chuỗi hành động tham chiếu hợp lệ, không phải lời giải duy nhất được chấp nhận. Cả 39 chuỗi đều vượt qua checker phát lại.
 
 ```bash
 python checker.py --all
 python checker.py --input testcases/original/01.in.json --output answer.json
 ```
 
-An accepted answer reaches the goal without losing. It may be longer than the reference. Report length comparisons separately from AC/WA. An `unsolvable` claim is WA for every supplied stage.
+Lời giải được chấp nhận phải đến đích mà không thua. Lời giải có thể dài hơn tham chiếu. So sánh độ dài cần được báo cáo riêng, không gộp vào AC/WA. Báo `unsolvable` là WA đối với mọi stage được cung cấp.
 
-## Samples
+## Các ví dụ mẫu
 
-| File number | Stage ID | Feature | Reference actions | Length |
+| Số file | ID stage | Đặc điểm | Hành động tham chiếu | Độ dài |
 |---|---|---|---|---:|
-| 01 | sample01 | Basic rolling | R R | 2 |
-| 02 | sample02 | Rolling sideways and turning | R D D D R | 5 |
-| 03 | sample03 | Fragile tiles while lying | R R | 2 |
-| 04 | sample04 | Soft switch toggles a bridge | R R R R | 4 |
-| 05 | sample05 | Upright block presses a heavy switch | R R R R | 4 |
-| 06 | sample06 | Teleport, select cube, merge | R R 1R R | 4 |
+| 01 | sample01 | Lăn cơ bản | R R | 2 |
+| 02 | sample02 | Lăn sang bên và đổi hướng | R D D D R | 5 |
+| 03 | sample03 | Nằm trên ô dễ vỡ | R R | 2 |
+| 04 | sample04 | Công tắc nhẹ đảo trạng thái cầu | R R R R | 4 |
+| 05 | sample05 | Khối đứng thẳng nhấn công tắc nặng | R R R R | 4 |
+| 06 | sample06 | Dịch chuyển, chọn khối nhỏ và ghép lại | R R 1R R | 4 |
 
-Every sample has multiple board rows. Sample 01 is distinct from original stage 1. The earlier unsolvable examples were removed from the supplied suite.
+Mỗi ví dụ mẫu có nhiều hàng trên bàn chơi. Sample 01 không phải stage gốc số 1. Các ví dụ không có lời giải trước đó đã được loại khỏi bộ cung cấp.
 
-## Original-stage reference lengths
+## Độ dài tham chiếu của các stage gốc
 
-| Stages | Directional moves, in stage order |
+| Stage | Số bước di chuyển theo hướng, theo thứ tự stage |
 |---|---|
 | 01–10 | 7, 17, 19, 28, 33, 35, 44, 10, 24, 57 |
 | 11–20 | 47, 65, 46, 67, 57, 28, 106, 85, 67, 56 |
 | 21–30 | 71, 65, 75, 57, 55, 104, 71, 100, 104, 114 |
 | 31–33 | 91, 129, 65 |
 
-Total: 1,999 moves. These are published minimum-length claims except for the independently checked stage-15 replacement. All supplied paths are verified solutions, but replay does not prove minimum length for the other original stages.
+Tổng cộng: 1.999 bước. Đây là các độ dài được nguồn công bố là tối thiểu, trừ lời giải thay thế stage 15 đã được kiểm tra độc lập. Mọi đường đi được cung cấp đều là lời giải đã kiểm chứng, nhưng phát lại không chứng minh độ dài tối thiểu cho các stage gốc còn lại.
 
 ## Stage 15
 
-The original reference path turns off a bridge under a parked cube at move 27. It was replaced by a different valid 57-move path. See [the source notes](../docs/stage-sources.md) for the exact finding and provenance.
+Đường đi tham chiếu ban đầu tắt cầu dưới khối đứng yên ở bước 27. Đã thay bằng đường đi hợp lệ khác gồm 57 bước. Xem [ghi chú nguồn](../docs/stage-sources.md) để biết phát hiện cụ thể và nguồn gốc.
 
-## Coverage and limits
+## Phạm vi bao phủ và giới hạn
 
-The original set includes fragile tiles, soft and heavy switches, active and inactive bridges, toggle/on/off operations, splitters, and rejoining. The checker regression tests also cover losing paths, unknown actions, longer valid paths, small cubes on fragile/goal tiles, shared switch targets, and a bridge losing support under a stationary cube.
+Bộ stage gốc có ô dễ vỡ, công tắc nhẹ/nặng, cầu bật/tắt ban đầu, thao tác toggle/on/off, tách khối và ghép lại. Các bài kiểm thử hồi quy checker còn bao phủ đường đi gây thua, mã hành động không được định nghĩa, đường đi hợp lệ dài hơn, khối nhỏ trên ô dễ vỡ/ô đích, nhiều công tắc cùng tác động một cầu và cầu mất khả năng đỡ khối đang đứng yên.
 
-This suite is known solvable because each input has a replay-verified witness. The current checker does not decide solvability of an arbitrary new map.
+Bộ testcase được xác nhận có lời giải vì mỗi đầu vào có một chuỗi hành động minh chứng đã phát lại thành công. Checker hiện tại không quyết định được một bản đồ mới tùy ý có lời giải hay không.
 
-## Sources
+## Nguồn
 
-Stage data and published reference solutions: [tkoz0/bloxorz-solver](https://github.com/tkoz0/bloxorz-solver), commit d203a25170085054fb3f39bd81b3509ee8cd9e47. Original game: Damien Clarke. No license was stated in the inspected reference revision. See [source notes](../docs/stage-sources.md) and the manifest before publishing.
+Dữ liệu stage và lời giải tham chiếu đã công bố: [tkoz0/bloxorz-solver](https://github.com/tkoz0/bloxorz-solver), commit d203a25170085054fb3f39bd81b3509ee8cd9e47. Game gốc: Damien Clarke. Phiên bản nguồn đã kiểm tra không nêu giấy phép. Xem [ghi chú nguồn](../docs/stage-sources.md) và manifest khi đưa dữ liệu lên repo.

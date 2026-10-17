@@ -1,55 +1,55 @@
 # Bloxorz Solver
 
-Version 1.1 — 16 October 2026. Gameplay and stage inputs are unchanged; this revision adds submission commands and benchmark-output guidance.
+Phiên bản 1.1 — 16/10/2026; bản tiếng Việt ngày 17/10/2026. Luật chơi và dữ liệu stage không thay đổi; phiên bản này bổ sung lệnh chạy bài nộp và hướng dẫn đầu ra benchmark.
 
-## Problem
+## Phát biểu bài toán
 
-You are given a board and a rectangular block of size **1 × 1 × 2**. The block starts standing upright on the starting tile. Find a sequence of moves that makes the complete rectangular block stand upright on the goal.
+Cho một bàn chơi và một khối hộp chữ nhật kích thước **1 × 1 × 2**. Ban đầu, khối hộp đứng thẳng trên ô xuất phát. Hãy tìm một chuỗi di chuyển đưa toàn bộ khối hộp đứng thẳng trên ô đích.
 
-**Every stage supplied with this project is solvable.** Different sequences may solve the same stage. Any sequence that reaches the goal without losing is accepted.
+**Mọi stage được cung cấp trong dự án đều có lời giải.** Một stage có thể có nhiều chuỗi hành động giải được. Bất kỳ chuỗi nào đưa khối hộp đến đích mà không thua đều được chấp nhận.
 
-## How the block moves
+## Cách khối hộp di chuyển
 
-The block can be upright, lying horizontally, or lying vertically. Each directional move rolls it 90 degrees around an edge:
+Khối hộp có thể đứng thẳng, nằm ngang theo hàng hoặc nằm dọc theo cột. Mỗi bước di chuyển theo một hướng làm khối hộp lăn 90 độ quanh một cạnh:
 
-- An upright block tips over and occupies the next two cells in that direction.
-- A lying block rolled along its length stands upright on the next cell beyond its end.
-- A lying block rolled sideways stays lying and shifts by one cell.
+- Khối đang đứng thẳng đổ xuống và chiếm hai ô tiếp theo theo hướng di chuyển.
+- Khối đang nằm nếu lăn theo chiều dài sẽ đứng thẳng trên ô tiếp theo nằm ngoài đầu khối.
+- Khối đang nằm nếu lăn sang bên sẽ tiếp tục nằm và dịch đi một ô.
 
-![The block tipping, rolling, and standing upright](assets/Bloxorz.gif)
+![Khối hộp đổ xuống, lăn và đứng thẳng](assets/Bloxorz.gif)
 
-The animation illustrates the movement. The input board specifies the actual layout of each stage.
+Ảnh động minh họa cách di chuyển. Bố cục thực tế của mỗi stage được xác định bởi bàn chơi trong dữ liệu vào.
 
-## Tiles, switches, and small cubes
+## Các loại ô, công tắc và khối nhỏ
 
-| Tile | Behaviour |
+| Loại ô | Hành vi |
 |---|---|
-| Normal floor | Supports the block in every orientation |
-| Void | No floor; moving any part of the block here loses |
-| Goal | Only the complete 1 × 1 × 2 block standing upright here wins |
-| Fragile floor | Supports a lying rectangular block or a small cube; breaks under the upright rectangular block, causing a loss |
-| Bridge | Supports pieces when active; behaves like void when inactive |
-| Soft switch | Pressed by any part of the piece that moves onto it, including a small cube |
-| Heavy switch | Pressed only by the upright complete rectangular block |
-| Splitter | When the complete block stands upright here, teleports it into two 1 × 1 × 1 cubes |
+| Ô thường | Đỡ khối ở mọi tư thế |
+| Khoảng trống | Không có mặt sàn; bất kỳ phần nào của khối đi vào đây đều gây thua |
+| Ô đích | Chỉ thắng khi toàn bộ khối 1 × 1 × 2 đứng thẳng tại đây |
+| Ô dễ vỡ | Đỡ khối hộp đang nằm hoặc một khối nhỏ; vỡ khi khối hộp hoàn chỉnh đứng thẳng lên, gây thua |
+| Cầu | Đỡ khối khi bật; tương đương khoảng trống khi tắt |
+| Công tắc nhẹ | Được nhấn khi bất kỳ phần nào của khối đang di chuyển đặt lên, kể cả khối nhỏ |
+| Công tắc nặng | Chỉ được nhấn bởi khối hộp hoàn chỉnh đang đứng thẳng |
+| Ô tách khối | Khi khối hộp hoàn chỉnh đứng thẳng tại đây, dịch chuyển và tách thành hai khối lập phương 1 × 1 × 1 |
 
-Switches can toggle a bridge, activate it, or deactivate it. Their effects remain after the block leaves. Different switches may control the same bridge.
+Công tắc có thể đảo trạng thái, bật hoặc tắt cầu. Tác dụng vẫn giữ sau khi khối rời đi. Các công tắc khác nhau có thể điều khiển cùng một cầu.
 
-After splitting, move either small cube one cell at a time. Small cubes may stand on fragile tiles and the goal. **A small cube on the goal does not win.** They can press soft switches, but cannot activate heavy switches or splitters. When the two cubes occupy horizontally or vertically adjacent cells, they automatically rejoin into a lying rectangular block. Diagonal contact does not join them.
+Sau khi tách, mỗi lần di chuyển một trong hai khối nhỏ đi một ô. Khối nhỏ có thể đứng trên ô dễ vỡ và ô đích. **Một khối nhỏ đứng trên ô đích không tạo ra chiến thắng.** Khối nhỏ nhấn được công tắc nhẹ nhưng không kích hoạt công tắc nặng hay ô tách khối. Khi hai khối nhỏ ở hai ô kề nhau theo hàng hoặc cột, chúng tự ghép thành một khối hộp đang nằm. Kề chéo không làm chúng ghép lại.
 
-A cube that remains on a soft switch does not press it again when the other cube moves.
+Khối nhỏ đang đứng yên trên công tắc nhẹ không nhấn lại công tắc khi khối còn lại di chuyển.
 
-## Moves and cost
+## Di chuyển và chi phí
 
-Every directional move costs **1**. Changing which small cube is selected costs **0**. Teleportation, bridge changes, switch effects, and automatic rejoining also cost **0**. The total cost is the number of directional moves.
+Mỗi bước di chuyển theo hướng có chi phí **1**. Đổi khối nhỏ được chọn có chi phí **0**. Dịch chuyển tức thời, đổi trạng thái cầu, tác dụng công tắc và tự ghép khối cũng có chi phí **0**. Tổng chi phí bằng số bước di chuyển theo hướng.
 
-Moving off the board, onto void, or onto an inactive bridge loses the game. Standing the complete rectangular block on fragile floor also loses. These are recognizable game moves with losing outcomes, so a solver must avoid them in its answer.
+Đi ra ngoài bàn chơi, vào khoảng trống hoặc lên cầu đang tắt đều gây thua. Để khối hộp hoàn chỉnh đứng thẳng trên ô dễ vỡ cũng gây thua. Đây vẫn là các hành động trong game có thể nhận diện, nhưng kết quả là thua; solver phải tránh chúng trong lời giải.
 
-BFS and UCS find a shortest solution under this unit-cost model. A* does so when its heuristic and implementation satisfy the usual optimality conditions. “Optimal cost” therefore means the fewest directional moves. DFS may find a longer solution. The checker accepts any winning path; solution lengths are compared separately in the experiments.
+BFS và UCS tìm được lời giải ngắn nhất với mô hình mỗi hành động có chi phí một. A* cũng đạt điều đó khi heuristic và cách triển khai thỏa các điều kiện bảo đảm tính tối ưu. Vì vậy, “chi phí tối ưu” nghĩa là ít bước di chuyển theo hướng nhất. DFS có thể tìm ra lời giải dài hơn. Checker chấp nhận mọi đường đi dẫn đến chiến thắng; độ dài lời giải được so sánh riêng trong thực nghiệm.
 
-## Input
+## Dữ liệu vào
 
-Read one JSON object from standard input:
+Đọc một đối tượng JSON từ stdin (luồng nhập chuẩn):
 
 ```json
 {
@@ -68,85 +68,85 @@ Read one JSON object from standard input:
 }
 ```
 
-### Input fields
+### Các trường dữ liệu vào
 
-Every input object must contain the keys **`id`, `board`, `bridges`, `switches`, and `splitters`**. A stage may have no bridge, switch, or splitter ("[ ]").
+Mỗi đối tượng đầu vào phải có đủ các khóa **`id`, `board`, `bridges`, `switches` và `splitters`**. Nếu stage không có cầu, công tắc hoặc ô tách khối, trường tương ứng là mảng rỗng (`[]`).
 
-- `id`: the stage's name or identifier.
-- `board`: a two-dimensional board represented by an array of row strings.
-- `bridges`: the cells in each bridge group and whether it is initially active.
-- `switches`: the position and bridge effects of each soft/heavy switch.
-- `splitters`: the position and two teleport destinations of each splitter.
+- `id`: tên hoặc mã định danh stage.
+- `board`: bàn chơi hai chiều, biểu diễn bằng một mảng chuỗi, mỗi chuỗi là một hàng.
+- `bridges`: các ô thuộc từng nhóm cầu và trạng thái bật/tắt ban đầu.
+- `switches`: vị trí và tác dụng lên cầu của từng công tắc nhẹ/nặng.
+- `splitters`: vị trí và hai điểm đến dịch chuyển của từng ô tách khối.
 
-Coordinates are **[row, column]**, starting at zero. Up decreases the row; right increases the column. All switch effects and teleport destinations are supplied; there is no hidden information.
+Tọa độ có dạng **[hàng, cột]**, đánh số từ 0. Đi lên làm giảm chỉ số hàng; đi sang phải làm tăng chỉ số cột. Toàn bộ tác dụng công tắc và điểm đến dịch chuyển đều được cung cấp; không có thông tin ẩn.
 
-### Board symbols
+### Ký hiệu trên bàn chơi
 
-| Symbol | Meaning |
+| Ký hiệu | Ý nghĩa |
 |---|---|
-| `#` | Void |
-| `.` | Normal floor |
-| `S` | Start; normal floor after the block moves away |
-| `G` | Goal |
-| `F` | Fragile floor |
-| `B` | Bridge cell |
-| `O` | Soft switch |
-| `X` | Heavy switch |
-| `T` | Splitter |
+| `#` | Khoảng trống |
+| `.` | Ô thường |
+| `S` | Ô xuất phát; là ô thường sau khi khối rời đi |
+| `G` | Ô đích |
+| `F` | Ô dễ vỡ |
+| `B` | Ô cầu |
+| `O` | Công tắc nhẹ |
+| `X` | Công tắc nặng |
+| `T` | Ô tách khối |
 
-### Bridges and switch effects
+### Cầu và tác dụng công tắc
 
-A bridge definition contains a unique `id`, a nonempty array of `cells`, and an initial boolean `active`. Active means the bridge supports a piece.
+Định nghĩa một cầu gồm `id` duy nhất, mảng `cells` không rỗng và giá trị boolean `active` ban đầu. Khi `active` là true, cầu đỡ được khối.
 
-A switch's `at` identifies its cell. The board symbol determines whether it is soft or heavy. Each item in `effects` names a bridge and an operation:
+Trường `at` xác định ô của công tắc. Ký hiệu trên bàn chơi xác định công tắc nhẹ hay nặng. Mỗi phần tử trong `effects` chỉ ra một cầu và thao tác:
 
-- `toggle`: reverse its active state.
-- `on`: set it active.
-- `off`: set it inactive.
+- `toggle`: đảo trạng thái bật/tắt.
+- `on`: bật cầu.
+- `off`: tắt cầu.
 
-An `on` or `off` operation does not lock the bridge forever; another switch may change it later. Leaving a switch does not undo its effect.
+Thao tác `on` hoặc `off` không khóa trạng thái cầu vĩnh viễn; công tắc khác vẫn có thể thay đổi sau đó. Rời khỏi công tắc không hoàn tác tác dụng của nó.
 
-### Splitters
+### Ô tách khối
 
 ```json
 {"at": [0, 3], "destinations": [[2, 0], [2, 2]]}
 ```
 
-Standing upright on `T` at (0,3) splits the block. Cube **1** appears at (2,0), and cube **2** appears at (2,2). These IDs remain fixed until rejoining. A later split assigns IDs from that splitter's destination order.
+Đứng thẳng trên `T` tại (0,3) làm khối tách ra. Khối nhỏ **1** xuất hiện tại (2,0), khối nhỏ **2** tại (2,2). Các ID giữ nguyên đến khi ghép lại. Lần tách tiếp theo gán ID theo thứ tự điểm đến của ô tách khối tương ứng.
 
-## Constraints
+## Ràng buộc
 
-- 1 ≤ number of rows, number of columns ≤ 30.
-- The board contains exactly one `S` and one `G`, at different positions.
-- Rows have equal lengths, use only the listed symbols, and all coordinates refer to cells inside the board.
-- Every `B` belongs to exactly one bridge group. Groups do not overlap.
-- Every `O`/`X` has exactly one switch definition. Every `T` has exactly one splitter definition.
-- Each switch has a nonempty list of effects. Its bridge IDs exist and are not repeated within that switch's effects.
-- Split destinations are distinct, non-adjacent tiles. They must support their cubes when the teleport occurs.
-- Different switches may affect the same bridge.
-- All supplied stages have a solution.
+- 1 ≤ số hàng, số cột ≤ 30.
+- Bàn chơi có đúng một `S` và một `G`, ở hai vị trí khác nhau.
+- Các hàng dài bằng nhau, chỉ dùng ký hiệu đã liệt kê; mọi tọa độ đều nằm trong bàn chơi.
+- Mỗi `B` thuộc đúng một nhóm cầu. Các nhóm không chồng lấn.
+- Mỗi `O`/`X` có đúng một định nghĩa công tắc. Mỗi `T` có đúng một định nghĩa ô tách khối.
+- Mỗi công tắc có danh sách tác dụng không rỗng. Các ID cầu được tham chiếu phải tồn tại và không lặp lại trong danh sách tác dụng của cùng công tắc.
+- Hai điểm đến khi tách là các ô khác nhau, không kề cạnh. Các ô phải đỡ được khối nhỏ khi dịch chuyển xảy ra.
+- Các công tắc khác nhau có thể tác động lên cùng một cầu.
+- Tất cả stage được cung cấp đều có lời giải.
 
-The 30 × 30 bound is the project's chosen input limit.
+Giới hạn 30 × 30 là giới hạn đầu vào do dự án lựa chọn.
 
-## Game resolution
+## Thứ tự xử lý một bước chơi
 
-1. Move the rectangular block, or move the selected small cube.
-2. Check support using the current bridge states. A fall or an upright complete block on fragile floor loses. Small cubes may stand on `F` and `G`; neither position makes them win. Cubes cannot overlap.
-3. Apply switches pressed by the piece that moved. A stationary cube does not press its switch again. If multiple switches are pressed, process them by increasing row, then column; within a switch, use the listed effect order.
-4. If the complete block stands upright on a splitter, teleport and split it.
-5. Check support again after bridge changes and teleportation, including any stationary cube. Losing support loses the game.
-6. Join orthogonally adjacent small cubes. Joining does not press switches a second time.
-7. Win if the complete block is upright on the goal. Otherwise await a move.
+1. Di chuyển khối hộp hoặc khối nhỏ đang được chọn.
+2. Kiểm tra các ô có đỡ được khối không theo trạng thái cầu hiện tại. Rơi hoặc để khối hộp hoàn chỉnh đứng thẳng trên ô dễ vỡ đều gây thua. Khối nhỏ được đứng trên `F` và `G`, nhưng không thắng ở cả hai vị trí. Các khối nhỏ không được chồng lên nhau.
+3. Áp dụng các công tắc được khối vừa di chuyển nhấn. Khối đứng yên không nhấn lại công tắc. Nếu nhấn nhiều công tắc, xử lý theo thứ tự hàng tăng dần, rồi cột tăng dần; trong mỗi công tắc, dùng thứ tự tác dụng được liệt kê.
+4. Nếu khối hộp hoàn chỉnh đứng thẳng trên ô tách khối, thực hiện dịch chuyển và tách.
+5. Kiểm tra lại khả năng đỡ khối sau khi cầu thay đổi và dịch chuyển xảy ra, kể cả với khối đứng yên. Không còn được đỡ thì thua.
+6. Ghép hai khối nhỏ kề cạnh theo hàng hoặc cột. Việc ghép không nhấn công tắc thêm lần nữa.
+7. Thắng nếu khối hộp hoàn chỉnh đang đứng thẳng trên ô đích. Nếu chưa thắng, chờ hành động tiếp theo.
 
-## Output
+## Kết quả đầu ra
 
-Print one JSON object containing `status` and `actions` to standard output. This minimal form is sufficient for correctness testing and fixed reference examples:
+In một đối tượng JSON chứa `status` và `actions` ra stdout (luồng xuất chuẩn). Dạng tối giản này đủ để kiểm tra tính đúng đắn và dùng trong ví dụ tham chiếu cố định:
 
 ```json
 {"status": "solved", "actions": ["R", "R", "R", "R"]}
 ```
 
-Your algorithm only needs to print its answer; it does not need to create an output file. After constructing the Python list `actions`, use:
+Thuật toán chỉ cần in lời giải, không cần tạo file đầu ra. Sau khi tạo danh sách Python `actions`, dùng:
 
 ```python
 import json
@@ -154,11 +154,11 @@ import json
 print(json.dumps({"status": "solved", "actions": actions}))
 ```
 
-Print exactly one JSON object to standard output. The submission checker or runner will capture it directly; the runner saves the combined results file. Diagnostic messages should go to standard error, for example `print("Searching...", file=sys.stderr)` after importing `sys`.
+Chỉ in đúng một đối tượng JSON ra stdout. Checker chạy bài nộp hoặc runner sẽ thu trực tiếp phần được in; runner lưu file kết quả tổng hợp. Thông báo chẩn đoán nên đưa ra stderr (luồng lỗi chuẩn), ví dụ `print("Searching...", file=sys.stderr)` sau khi nhập `sys`.
 
-### Required measurements for benchmarking
+### Số liệu bắt buộc khi benchmark
 
-For benchmark runs used in the report, also include `metrics` in the same printed JSON object. The values below illustrate the format; they are not measured results:
+Với các lần benchmark dùng trong báo cáo, thêm `metrics` vào cùng đối tượng JSON được in. Các giá trị dưới đây chỉ minh họa định dạng, không phải số liệu thực nghiệm:
 
 ```json
 {
@@ -173,34 +173,36 @@ For benchmark runs used in the report, also include `metrics` in the same printe
 }
 ```
 
-| Field | Meaning |
+| Trường | Ý nghĩa |
 |---|---|
-| `search_time_ms` | Finite, nonnegative elapsed milliseconds for search setup, heuristic preprocessing, search, and path reconstruction; excludes JSON parsing and printing |
-| `expanded_nodes` | Nonnegative integer count of non-goal nodes whose successors are generated; skip stale/duplicate entries, but count actual re-expansions and all IDS iterations |
-| `peak_memory_bytes` | Nonnegative integer peak of Python allocations traced during the search; excludes allocations made before measurement and is not total process memory |
-| `memory_method` | `"tracemalloc"` for the shared measurement baseline |
+| `search_time_ms` | Số mili giây trôi qua hữu hạn, không âm, cho khởi tạo tìm kiếm, tiền xử lý heuristic, tìm kiếm và truy vết đường đi; không gồm phân tích JSON và in kết quả |
+| `expanded_nodes` | Số nguyên không âm đếm các nút không phải đích có sinh trạng thái kế tiếp; bỏ qua phần tử lỗi thời/trùng lặp bị bỏ qua, nhưng tính các lần thực sự mở rộng lại và mọi vòng lặp IDS |
+| `peak_memory_bytes` | Số nguyên không âm biểu diễn đỉnh cấp phát bộ nhớ Python được theo dõi trong tìm kiếm; không gồm cấp phát có trước khi đo và không phải toàn bộ bộ nhớ tiến trình |
+| `memory_method` | `"tracemalloc"` cho phương pháp đo cơ sở dùng chung |
 
-Use the provided [algorithm template](../algorithms/template.py) and [helper guide](algorithm-guide.md) to collect these fields consistently. The helper times the search, tracks allocation peaks, and prints the JSON; you call `metrics.expanded()` immediately before generating each non-goal node's successors. It does not implement your search or constrain your state representation.
+Dùng [template thuật toán](../algorithms/template.py) và [hướng dẫn helper](algorithm-guide.md) để thu thập các trường này nhất quán. Helper đo thời gian tìm kiếm, theo dõi đỉnh cấp phát và in JSON; bạn gọi `metrics.expanded()` ngay trước khi sinh trạng thái kế tiếp của mỗi nút không phải đích. Helper không triển khai tìm kiếm hay áp đặt cách biểu diễn trạng thái của bạn.
 
-Missing or invalid metrics do not turn a winning path into WA. They make the run incomplete for benchmarking, which the future runner must flag separately. Reference outputs remain unchanged and omit measured values. The runner derives solution length and cost from the accepted actions and measures whole-process elapsed time itself. See [the runner specification](runner-proposal.md) for measurement overhead and separate timing runs.
+Thiếu số liệu hoặc số liệu không hợp lệ không biến một lời giải thắng thành WA. Khi đó bản ghi không đủ điều kiện làm kết quả benchmark đầy đủ và runner sau này phải báo riêng. Đầu ra tham chiếu giữ nguyên, không chứa giá trị đo. Runner suy ra độ dài/chi phí từ hành động được chấp nhận và tự đo thời gian toàn tiến trình. Xem [đặc tả runner](runner-proposal.md) về chi phí đo lường và các lần chỉ đo thời gian.
 
-### Actions
+### Hành động
 
-| Piece to move | Up | Down | Left | Right |
+| Khối cần di chuyển | Lên | Xuống | Trái | Phải |
 |---|---|---|---|---|
-| Complete block | `U` | `D` | `L` | `R` |
-| Small cube 1 | `1U` | `1D` | `1L` | `1R` |
-| Small cube 2 | `2U` | `2D` | `2L` | `2R` |
+| Khối hộp hoàn chỉnh | `U` | `D` | `L` | `R` |
+| Khối nhỏ 1 | `1U` | `1D` | `1L` | `1R` |
+| Khối nhỏ 2 | `2U` | `2D` | `2L` | `2R` |
 
-For example, `1R` selects small cube 1 for free and moves it right at cost 1. There is no separate action for switching the selected cube.
+Ví dụ, `1R` chọn khối nhỏ 1 miễn phí rồi di chuyển sang phải với chi phí 1. Không có hành động riêng chỉ để đổi khối được chọn.
 
-Use small-cube actions only while split, and complete-block actions only while joined. Stop the action list when the goal is reached.
+Chỉ dùng hành động khối nhỏ khi đang tách, và hành động khối hộp hoàn chỉnh khi đang ghép. Kết thúc danh sách hành động ngay khi đạt đích.
 
-## Judging
+<a id="judging"></a>
 
-### Running your algorithm
+## Chấm kết quả
 
-These are the agreed commands for the game designer to implement; they are **not available yet**. Run them from the repository root once implemented:
+### Chạy thuật toán của bạn
+
+Đây là các lệnh đã thống nhất để người phụ trách game triển khai; chúng **chưa sử dụng được**. Sau khi triển khai, chạy từ thư mục gốc của repo. Các ví dụ lần lượt chấm một stage, chấm toàn bộ stage gốc, chạy một stage kèm thống kê/hiển thị 2D và chạy toàn bộ để lưu thống kê:
 
 ```bash
 # Judge one original stage
@@ -216,40 +218,40 @@ python run_tests.py --algorithm algorithms/BFS.py --test 01 --visualize_2d
 python run_tests.py --algorithm algorithms/BFS.py --all
 ```
 
-- `--algorithm PATH`: Python algorithm to execute.
-- `--test NN`: one stage; use this or `--all`, not both.
-- `--all`: every stage in the selected suite.
-- `--suite original|samples`: suite to use; defaults to `original`.
-- `--timeout SECONDS`: maximum algorithm execution time per stage, excluding checking and visualization. The implementation must document its default.
-- `--visualize_2d`: runner-only playback for a single stage. A later `--visualize_3d` flag will provide 3D playback.
+- `--algorithm PATH`: chương trình thuật toán Python cần chạy.
+- `--test NN`: chọn một stage; dùng cờ này hoặc `--all`, không dùng cả hai.
+- `--all`: chạy mọi stage trong bộ được chọn.
+- `--suite original|samples`: chọn bộ testcase; mặc định là `original`.
+- `--timeout SECONDS`: thời gian chạy thuật toán tối đa cho mỗi stage, không gồm kiểm tra kết quả và hiển thị. Khi triển khai phải nêu rõ giá trị mặc định.
+- `--visualize_2d`: chỉ dành cho runner, phát lại một stage. Cờ `--visualize_3d` sẽ cung cấp phát lại 3D ở giai đoạn sau.
 
-Both commands report per-stage verdicts and totals. The runner additionally displays statistics and saves one combined results JSON. A fresh algorithm process receives one stage through standard input and prints one JSON answer, even when the command selects all stages.
+Cả hai công cụ báo verdict từng stage và tổng số theo kết quả. Runner hiển thị thêm thống kê và lưu một JSON tổng hợp. Mỗi tiến trình thuật toán mới nhận một stage qua stdin và in một lời giải JSON, kể cả khi lệnh bên ngoài chọn toàn bộ stage.
 
-Until these commands are implemented, use the current file-based replay check:
+Trước khi các lệnh trên được triển khai, dùng checker phát lại qua file hiện có:
 
 ```bash
 python algorithms/BFS.py < testcases/original/01.in.json > answer.json
 python checker.py --input testcases/original/01.in.json --output answer.json
 ```
 
-The shell's `>` saves the printed answer; your algorithm still does not write a file itself. The current `python checker.py --all` only verifies stored reference answers, not a submission. See [the runner specification](runner-proposal.md) for implementation guidance.
+Ký hiệu `>` của shell lưu lời giải được in; thuật toán vẫn không tự ghi file. Lệnh `python checker.py --all` hiện chỉ kiểm tra lời giải tham chiếu đã lưu, không kiểm tra bài nộp thuật toán. Xem [đặc tả runner](runner-proposal.md) để biết hướng dẫn triển khai.
 
-### Verdicts
+### Verdict
 
-- **Accepted (AC):** replay finishes with the complete block upright on the goal and never loses.
-- **Wrong Answer (WA):** the path loses, uses the wrong piece for the current state, stops before winning, continues after winning, or claims the stage is unsolvable.
-- **Runtime Error (RE):** the program crashes, its output is malformed, or its action list contains an unknown token such as `JUMP`. The runner prints the error and identifies the offending action where possible.
-- **Time Limit Exceeded (TLE):** the runner stops a program that exceeds its configured time limit.
+- **Accepted (AC) — chấp nhận:** phát lại kết thúc với khối hộp hoàn chỉnh đứng thẳng trên ô đích và không thua ở bất kỳ bước nào.
+- **Wrong Answer (WA) — lời giải không hợp lệ:** đường đi gây thua, dùng hành động sai loại khối so với trạng thái, dừng trước khi thắng, tiếp tục sau khi thắng hoặc báo stage không có lời giải.
+- **Runtime Error (RE) — lỗi chương trình/đầu ra:** chương trình gặp lỗi, đầu ra sai định dạng hoặc danh sách hành động chứa mã không được định nghĩa như `JUMP`. Runner in lỗi và chỉ ra hành động gây lỗi nếu có thể.
+- **Time Limit Exceeded (TLE) — vượt giới hạn thời gian:** runner dừng chương trình khi vượt giới hạn thời gian đã cấu hình.
 
-The checker replays the actions. It does not compare action strings with a single expected answer, and it does not solve the stage itself. Reference outputs provide one working solution for each stage.
+Checker phát lại các hành động. Nó không so sánh chuỗi hành động với một đáp án duy nhất và không tự giải stage. Đầu ra tham chiếu cung cấp một lời giải hợp lệ cho mỗi stage.
 
-## Examples
+## Ví dụ
 
-These small examples are separate from the original game's 33 stages.
+Các ví dụ nhỏ này tách biệt với 33 stage của game gốc.
 
-### Example 1 — rolling upright and sideways
+### Ví dụ 1 — lăn để đứng thẳng và lăn sang bên
 
-Input:
+Dữ liệu vào:
 
 ```json
 {
@@ -266,17 +268,17 @@ Input:
 }
 ```
 
-Output:
+Kết quả đầu ra:
 
 ```json
 {"status":"solved","actions":["R","D","D","D","R"]}
 ```
 
-Right makes the block lie across columns 1–2. Three down moves roll it sideways to row 3. The last right move stands it on the goal. Cost: 5.
+Bước sang phải làm khối nằm trên cột 1–2. Ba bước xuống lăn khối sang bên đến hàng 3. Bước sang phải cuối cùng dựng khối đứng trên ô đích. Chi phí: 5.
 
-### Example 2 — fragile floor
+### Ví dụ 2 — ô dễ vỡ
 
-Input:
+Dữ liệu vào:
 
 ```json
 {
@@ -291,29 +293,29 @@ Input:
 }
 ```
 
-Output:
+Kết quả đầu ra:
 
 ```json
 {"status":"solved","actions":["R","R"]}
 ```
 
-The block lies on the fragile cells, then stands on the goal. Cost: 2.
+Khối nằm trên các ô dễ vỡ rồi đứng thẳng trên ô đích. Chi phí: 2.
 
-### Example 3 — soft switch and bridge
+### Ví dụ 3 — công tắc nhẹ và cầu
 
-Use the complete input shown in the Input section.
+Dùng toàn bộ dữ liệu vào đã trình bày trong phần Dữ liệu vào.
 
-Output:
+Kết quả đầu ra:
 
 ```json
 {"status":"solved","actions":["R","R","R","R"]}
 ```
 
-The first roll presses `O`, activating all three bridge cells. The remaining rolls cross them and reach the goal. Cost: 4.
+Lần lăn đầu nhấn `O`, bật cả ba ô cầu. Các bước còn lại đi qua cầu và đến đích. Chi phí: 4.
 
-### Example 4 — splitting and rejoining
+### Ví dụ 4 — tách và ghép khối
 
-Input:
+Dữ liệu vào:
 
 ```json
 {
@@ -331,19 +333,19 @@ Input:
 }
 ```
 
-Output:
+Kết quả đầu ra:
 
 ```json
 {"status":"solved","actions":["R","R","1R","R"]}
 ```
 
-Two right moves reach `T`. The cubes appear at (2,0) and (2,2). Cube 1 moves right, making them adjacent and joining them. The complete block then rolls right onto the goal. Cost: 4.
+Hai bước sang phải đến `T`. Hai khối nhỏ xuất hiện tại (2,0) và (2,2). Khối nhỏ 1 sang phải, làm chúng kề nhau và ghép lại. Khối hộp hoàn chỉnh lăn sang phải lên ô đích. Chi phí: 4.
 
-## Orientation reference
+## Bảng tham chiếu tư thế
 
-This table is for implementing movement. It does not prescribe internal classes. Horizontal(r,c) occupies (r,c),(r,c+1); Vertical(r,c) occupies (r,c),(r+1,c).
+Bảng này hỗ trợ triển khai di chuyển, không quy định phải dùng lớp nội bộ nào. Quy ước Upright(r,c) là đứng thẳng; Horizontal(r,c) là nằm ngang, chiếm (r,c),(r,c+1); Vertical(r,c) là nằm dọc, chiếm (r,c),(r+1,c).
 
-| Current placement | Up | Down | Left | Right |
+| Tư thế hiện tại | Lên | Xuống | Trái | Phải |
 |---|---|---|---|---|
 | Upright(r,c) | Vertical(r−2,c) | Vertical(r+1,c) | Horizontal(r,c−2) | Horizontal(r,c+1) |
 | Horizontal(r,c) | Horizontal(r−1,c) | Horizontal(r+1,c) | Upright(r,c−1) | Upright(r,c+2) |

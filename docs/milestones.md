@@ -1,38 +1,40 @@
-# Project milestones
+# Các mốc tiến độ dự án
 
-Updated 16 October 2026. Dates use Asia/Ho_Chi_Minh. Check an item only when its listed deliverables exist and verification passes. A completed repository milestone does not imply its prose has already been transferred to Prism; report synchronization is tracked separately below.
+Cập nhật ngày 17/10/2026. Ngày tháng dùng múi giờ Asia/Ho_Chi_Minh. Chỉ đánh dấu hoàn thành khi đã có đủ sản phẩm được liệt kê và kiểm chứng thành công. Hoàn thành một mốc trong repo không có nghĩa nội dung tương ứng đã được chuyển vào Prism; việc đồng bộ báo cáo được theo dõi riêng bên dưới.
 
-## Completed preparation
+## Các bước chuẩn bị đã hoàn thành
 
-- [x] **M0 — Finalize problem formulation v1.0.** Completed **2026-10-15**. JSON input/output, movement illustration, special tiles, free cube selection, one cost per directional move, small-cube fragile/goal behaviour, and AC/WA/RE rules are documented. Report structure has been accepted. Evidence: [statement](problem-statement.md), [runner plan](runner-proposal.md). Report contribution ready: problem formulation and system-boundary description.
+- [x] **M0 — Chốt phát biểu bài toán v1.0.** Hoàn thành **2026-10-15**. Đã mô tả JSON đầu vào/đầu ra, minh họa di chuyển, ô đặc biệt, chọn khối nhỏ không tốn chi phí, mỗi bước theo hướng có chi phí một, hành vi của khối nhỏ trên ô dễ vỡ/ô đích và quy tắc AC/WA/RE. Cấu trúc báo cáo đã được duyệt. Bằng chứng: [phát biểu bài toán](problem-statement.md), [kế hoạch runner](runner-proposal.md). Nội dung sẵn sàng cho báo cáo: phát biểu bài toán và phạm vi trách nhiệm của các thành phần hệ thống.
 
-- [x] **M1 — Build the supplied test suite and simple checker.** Completed **2026-10-15**. 33 original-stage input/output pairs and six solvable examples are present. All 39 reference paths pass replay; ten checker regression tests pass. Stage 15 has a verified 57-move replacement for the problematic upstream path. Provenance and reference-length limits are recorded. Evidence: [test guide](../testcases/README.md), [manifest](../testcases/manifest.json), [source notes](stage-sources.md), [checker](../checker.py). Report contribution ready: dataset provenance, checker method, and validation notes.
+- [x] **M1 — Xây dựng bộ testcase và checker đơn giản.** Hoàn thành **2026-10-15**. Đã có 33 cặp đầu vào/đầu ra stage gốc và sáu ví dụ có lời giải. Cả 39 chuỗi hành động tham chiếu vượt qua phát lại; mười bài kiểm thử hồi quy checker đều đạt. Stage 15 có lời giải thay thế 57 bước đã kiểm chứng cho chuỗi hành động nguồn có vấn đề. Đã ghi nguồn gốc và giới hạn của các tuyên bố về độ dài tham chiếu. Bằng chứng: [hướng dẫn testcase](../testcases/README.md), [manifest](../testcases/manifest.json), [ghi chú nguồn](stage-sources.md), [checker](../checker.py). Nội dung sẵn sàng cho báo cáo: nguồn dữ liệu, phương pháp checker và ghi chú kiểm chứng.
 
-- [x] **M1.1 — Shared measurement helper and author handoff.** Completed **2026-10-16**. Added the helper, copyable algorithm template, required benchmark-output fields, metric definitions, and author guide. All 21 regression tests pass, including 11 helper tests; all 39 reference paths still pass replay. Agreed submission commands are documented but not implemented. Evidence: [helper](../algorithms/solver_support.py), [template](../algorithms/template.py), [guide](algorithm-guide.md), [tests](../tests/test_solver_support.py). Report contribution ready: measurement protocol, benchmark-completeness policy, and verification evidence.
+- [x] **M1.1 — Helper đo lường dùng chung và hướng dẫn bàn giao.** Hoàn thành **2026-10-16**. Đã thêm helper, template thuật toán có thể sao chép, các trường đầu ra benchmark bắt buộc, định nghĩa số liệu đo và hướng dẫn triển khai. Cả 21 bài kiểm thử hồi quy đều đạt, gồm 11 bài cho helper; cả 39 lời giải tham chiếu vẫn vượt qua phát lại. Các lệnh chạy bài nộp đã được mô tả nhưng chưa triển khai. Bằng chứng: [helper](../algorithms/solver_support.py), [template](../algorithms/template.py), [hướng dẫn](algorithm-guide.md), [kiểm thử](../tests/test_solver_support.py). Nội dung sẵn sàng cho báo cáo: quy trình đo, quy tắc kiểm tra tính đầy đủ của số liệu benchmark và bằng chứng kiểm chứng.
 
-## Remaining milestones
+- [x] **M1.2 — Chuyển tài liệu repo sang tiếng Việt.** Hoàn thành **2026-10-17**. Đã dịch README, phát biểu bài toán, đặc tả runner/checker, hướng dẫn thuật toán, mốc tiến độ, ghi chú nguồn và hướng dẫn testcase theo quy ước thuật ngữ đã duyệt. Giữ nguyên code, lệnh, JSON, dữ liệu stage và các định danh; bảo toàn liên kết đến các mục đang được tham chiếu. Không thay đổi Google Docs hay báo cáo trên Prism.
 
-- [ ] **M2 — Assign work and transfer the preparation into Prism.** Completion date: pending. Allocate all four algorithms and the engine work after the formulation/test review. Keep names, personal checklists, and completion percentages in the report only. Update Google Docs when separately requested. Report: planning table, formulation, test-suite provenance, and future-work note.
+## Các mốc còn lại
 
-- [ ] **M3 — Game engine and terminal 2D visualization.** Completion date: pending. Manual play and replay work with all required mechanics; state transitions agree with the checker and examples. Report: state/transition design, implementation decisions, verification evidence.
+- [ ] **M2 — Phân công công việc và chuyển phần chuẩn bị vào Prism.** Ngày hoàn thành: chưa có. Phân công đủ bốn thuật toán và phần engine sau khi duyệt phát biểu bài toán/testcase. Chỉ ghi tên, checklist cá nhân và phần trăm hoàn thành trong báo cáo. Chỉ cập nhật Google Docs khi được yêu cầu riêng. Báo cáo: bảng kế hoạch, phát biểu bài toán, nguồn testcase và hướng phát triển.
 
-- [ ] **M4 — Four standalone Python search programs.** Completion date: pending. BFS, DFS/IDS, UCS, and A* consume stage JSON and return replayable JSON. Each records the required search metrics. Explain unit-cost UCS/BFS equivalence and justify the A* heuristic. Report: four algorithm subsections, costs, correctness conditions, complexity.
+- [ ] **M3 — Game engine và hiển thị 2D trên terminal.** Ngày hoàn thành: chưa có. Chơi thủ công và phát lại hoạt động với đầy đủ cơ chế yêu cầu; chuyển trạng thái khớp checker và ví dụ. Báo cáo: thiết kế trạng thái/chuyển trạng thái, các lựa chọn triển khai và bằng chứng kiểm chứng.
 
-- [ ] **M5 — Complete Phase 1 integration.** Completion date: pending. The submission checker and runner share program execution, limits, and replay. Both report verdict totals; the runner additionally records benchmark completeness, statistics, one timestamped results JSON, and terminal replay. Report: experiment method and first measured tables; no invented results.
+- [ ] **M4 — Bốn chương trình tìm kiếm Python độc lập.** Ngày hoàn thành: chưa có. BFS, DFS/IDS, UCS và A* đọc stage JSON, trả về JSON có thể phát lại. Mỗi chương trình ghi các số liệu tìm kiếm bắt buộc. Giải thích sự tương đương về mục tiêu giữa UCS/BFS khi mỗi hành động có chi phí một và lập luận cho heuristic của A*. Báo cáo: bốn phần thuật toán, chi phí, điều kiện đúng đắn và độ phức tạp.
 
-- [ ] **M6 — 3D GUI and final evaluation.** Completion date: pending. 3D manual play and automatic solution playback work. Run a fixed benchmark, generate charts, discuss time/memory/expansion/length tradeoffs. Report: GUI description, final results and discussion.
+- [ ] **M5 — Hoàn tất tích hợp giai đoạn 1.** Ngày hoàn thành: chưa có. Checker chạy bài nộp và runner dùng chung phần thực thi chương trình, giới hạn tài nguyên và phát lại. Cả hai thống kê verdict; runner ghi thêm mức độ đầy đủ của số liệu benchmark, thống kê, một file JSON theo thời điểm và phát lại trên terminal. Báo cáo: phương pháp thực nghiệm và các bảng đo đầu tiên; không tự tạo số liệu.
 
-- [ ] **M7 — Submission package and demo.** Completion date: pending. Reproducible source, setup instructions, PDF, citations, AI-use appendix, public narrated/subtitled demo link, and correctly named archive are complete. Report: final cross-check against the assignment rubric.
+- [ ] **M6 — GUI 3D và đánh giá cuối cùng.** Ngày hoàn thành: chưa có. Chơi thủ công 3D và phát lại lời giải tự động hoạt động. Chạy một bộ benchmark cố định, tạo biểu đồ, thảo luận đánh đổi giữa thời gian/bộ nhớ/số nút mở rộng/độ dài lời giải. Báo cáo: mô tả GUI, kết quả cuối cùng và thảo luận.
 
-M3 and M4 can proceed in parallel after assignment. No implementation or performance milestone has been marked complete merely because a plan exists. The earlier 15–20 October Phase 1 window was a planning target; an absolute submission deadline has not been verified.
+- [ ] **M7 — Gói nộp bài và demo.** Ngày hoàn thành: chưa có. Hoàn tất mã nguồn có thể tái chạy, hướng dẫn thiết lập, PDF, trích dẫn, phụ lục sử dụng AI, liên kết demo công khai có thuyết minh/phụ đề và file nén đúng tên. Báo cáo: đối chiếu lần cuối với tiêu chí chấm bài.
 
-## Publication status
+M3 và M4 có thể thực hiện song song sau khi phân công. Không đánh dấu hoàn thành mốc triển khai hay hiệu năng chỉ vì đã có kế hoạch. Khoảng 15–20/10 từng đề xuất cho giai đoạn 1 chỉ là mục tiêu lập kế hoạch; chưa xác minh hạn nộp chính thức.
 
-- [x] Local files prepared for the documentation/test-case package — **2026-10-15**.
-- [x] Measurement-helper and output-guidance update prepared — **2026-10-16**.
-- [x] Final user review of the updated package — approved **2026-10-16**; correctness-first best-practice guidance added at the user's request.
-- [x] GitHub package published to `origin/main` — completed **2026-10-16**, package commit `b592fc0`. Includes specifications, correctness-first guidance, helper/template, checker, tests, and 39 stage input/reference-output pairs. Report drafts and generated results are excluded. Task allocation remains pending.
-- [ ] Source-data/GIF redistribution terms confirmed — upstream tkoz0 revision contains no stated license, and the user-supplied GIF has no recorded origin. Attribution is included; it does not establish a license.
-- [ ] Prism report synchronized — pending.
+## Trạng thái đưa lên GitHub
 
-The report is excluded from this repository package for now. Milestones will be mirrored in the report, but personal assignments will not be duplicated in GitHub documentation or issues.
+- [x] Chuẩn bị cục bộ gói tài liệu/testcase — **2026-10-15**.
+- [x] Chuẩn bị bản cập nhật helper đo lường và hướng dẫn đầu ra — **2026-10-16**.
+- [x] Người dùng duyệt lần cuối gói cập nhật — **2026-10-16**; bổ sung cách làm ưu tiên tính đúng đắn theo yêu cầu.
+- [x] Đã đưa gói lên `origin/main` — hoàn thành **2026-10-16**, commit gói `b592fc0`. Bao gồm đặc tả, hướng dẫn ưu tiên tính đúng đắn, helper/template, checker, kiểm thử và 39 cặp đầu vào/lời giải tham chiếu. Không đưa bản nháp báo cáo và kết quả chạy sinh ra lên GitHub. Chưa phân công nhiệm vụ.
+- [ ] Xác nhận điều kiện phân phối lại dữ liệu nguồn/GIF — phiên bản tkoz0 đã kiểm tra không nêu giấy phép, GIF người dùng cung cấp chưa có thông tin nguồn gốc. Đã ghi nhận tác giả; việc ghi nhận không tự tạo quyền sử dụng.
+- [ ] Đồng bộ báo cáo Prism — chưa thực hiện.
+
+Báo cáo hiện không nằm trong gói repo này. Các mốc tiến độ sẽ được phản ánh trong báo cáo, nhưng phân công cá nhân không được sao chép vào tài liệu GitHub hay issues.

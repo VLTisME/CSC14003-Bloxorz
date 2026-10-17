@@ -1,15 +1,15 @@
 # CSC14003 Bloxorz Solver
 
-Phase 1 specification, verified test cases, and measurement helper — 16 October 2026.
+Đặc tả giai đoạn 1, bộ testcase đã kiểm chứng và helper đo lường — bản tiếng Việt ngày 17/10/2026.
 
-Start with [the problem statement](docs/problem-statement.md), [the test-case guide](testcases/README.md), and [the runner/checker specification](docs/runner-proposal.md). See [milestones](docs/milestones.md) for progress and [stage sources](docs/stage-sources.md) for provenance.
+Bắt đầu với [phát biểu bài toán](docs/problem-statement.md), [hướng dẫn testcase](testcases/README.md) và [đặc tả runner/checker](docs/runner-proposal.md). Xem [các mốc tiến độ](docs/milestones.md) để theo dõi công việc và [nguồn dữ liệu stage](docs/stage-sources.md) để biết nguồn gốc dữ liệu.
 
-## Available now
+## Những phần đã có
 
-- JSON input/output specification, movement illustration, and worked examples.
-- 33 original stages with replay-verified outputs, plus six solvable examples.
-- A simple replay checker, including error messages and a total pass count.
-- A shared measurement/JSON-output helper and a copyable algorithm template; start with [the algorithm guide](docs/algorithm-guide.md).
+- Đặc tả dữ liệu vào/đầu ra JSON, hình minh họa chuyển động và các ví dụ có giải thích.
+- 33 stage (màn chơi) gốc với lời giải tham chiếu đã kiểm chứng bằng phát lại, cùng sáu testcase (ca kiểm thử) mẫu có lời giải.
+- Checker đơn giản kiểm tra bằng cách phát lại hành động, có thông báo lỗi và tổng số testcase vượt qua.
+- Helper đo lường/in JSON dùng chung và template thuật toán có thể sao chép; xem [hướng dẫn triển khai thuật toán](docs/algorithm-guide.md).
 
 ```bash
 python checker.py --all
@@ -17,13 +17,13 @@ python checker.py --input testcases/original/01.in.json --output answer.json
 python -m unittest discover -s tests -v
 ```
 
-Requires Python 3.10 or later; the checker and helper use only the standard library. The current `checker.py --all` audits stored reference answers, not an algorithm submission.
+Yêu cầu Python 3.10 trở lên; checker và helper chỉ dùng thư viện chuẩn. Lệnh `checker.py --all` hiện tại kiểm tra các lời giải tham chiếu đã lưu, không chạy một bài nộp thuật toán.
 
-## Phase 1 workflow
+## Quy trình giai đoạn 1
 
-Each algorithm is a standalone Python program. It reads one JSON stage from stdin and prints one JSON result to stdout. Internal data structures are free choices. The checker replays actions; a runner will invoke algorithms and save one combined results JSON per run. The game engine and terminal 2D display come before the final 3D GUI.
+Mỗi thuật toán là một chương trình Python độc lập. Chương trình đọc một stage JSON từ stdin (luồng nhập chuẩn) và in một kết quả JSON ra stdout (luồng xuất chuẩn). Người viết tự chọn cấu trúc dữ liệu nội bộ. Checker phát lại các hành động; runner sẽ gọi thuật toán và lưu một file JSON tổng hợp cho mỗi lần chạy. Game engine và phần hiển thị 2D trên terminal được triển khai trước GUI 3D cuối cùng.
 
-Planned commands, after those programs are implemented:
+Các lệnh dự kiến, chỉ dùng sau khi chương trình tương ứng được triển khai:
 
 ```bash
 python algorithms/BFS.py < testcases/original/01.in.json > answer.json
@@ -32,7 +32,7 @@ python run_tests.py --algorithm algorithms/DFS.py --all
 python run_tests.py --algorithm algorithms/BFS.py --test 06 --visualize_2d
 ```
 
-## Repository structure
+## Cấu trúc repo
 
 ```text
 docs/
@@ -59,12 +59,14 @@ run_tests.py                # planned batch runner
 results/                    # generated datetime.json files; ignored by Git
 ```
 
-The report will be edited in Prism first. Local report drafts are excluded from this GitHub package. Member assignments and completion percentages belong only in the report. Milestones are tracked here and later mirrored in the report.
+Trong sơ đồ trên, `implemented` là phần đã triển khai, `planned` là phần dự kiến; `template.py` mới là khung code, chưa có thuật toán tìm kiếm. Giữ nguyên tên file và đường dẫn khi sử dụng.
 
-Every implementation task includes its corresponding report explanation and verification evidence. No task assignments have been added to GitHub.
+Báo cáo được chỉnh sửa trên Prism trước. Bản nháp báo cáo cục bộ không nằm trong gói đưa lên GitHub. Phân công thành viên và phần trăm hoàn thành chỉ ghi trong báo cáo. Các mốc tiến độ được theo dõi tại đây và sau đó đồng bộ vào báo cáo.
 
-Benchmark submissions include search time, expanded nodes, and peak traced Python allocations in their printed JSON. Basic correctness submissions and reference fixtures may omit metrics. The helper does not implement a search algorithm; the submission-executing checker, runner, and visualizers remain future work.
+Mỗi công việc triển khai đều phải có phần giải thích và bằng chứng kiểm chứng tương ứng trong báo cáo. Chưa đưa phân công nhiệm vụ lên GitHub.
 
-## Attribution
+Bài nộp phục vụ benchmark (đánh giá hiệu năng trên bộ thử nghiệm thống nhất) phải in kèm thời gian tìm kiếm, số nút được mở rộng và đỉnh cấp phát bộ nhớ Python được theo dõi trong JSON. Bài nộp chỉ kiểm tra tính đúng đắn và các lời giải tham chiếu có thể không có số liệu đo. Helper không triển khai thuật toán tìm kiếm; checker có khả năng chạy bài nộp, runner và phần hiển thị vẫn là công việc cần làm.
 
-Stage encodings and reference paths are adapted from [tkoz0/bloxorz-solver](https://github.com/tkoz0/bloxorz-solver). The original game is by Damien Clarke. The reference repository does not state a license in the inspected revision; see the source notes for the exact revision, attribution, and the stage-15 path correction. The movement GIF was supplied by the project owner; its original creator/license has not been identified here.
+## Ghi nhận nguồn
+
+Dữ liệu mã hóa stage và chuỗi hành động tham chiếu được chuyển đổi từ [tkoz0/bloxorz-solver](https://github.com/tkoz0/bloxorz-solver). Game gốc do Damien Clarke tạo ra. Phiên bản repo nguồn đã kiểm tra không nêu giấy phép; xem ghi chú nguồn để biết commit cụ thể, thông tin ghi nhận tác giả và bản sửa lời giải stage 15. GIF minh họa chuyển động do chủ dự án cung cấp; chưa xác định tác giả gốc và giấy phép của GIF trong tài liệu này.
