@@ -1,0 +1,826 @@
+"""Ứng dụng giao diện 3D chính (Main Ursina Application) cho Bloxorz Studio.
+
+Điều phối toàn bộ các thành phần:
+- BloxorzEngine (logic trò chơi chuẩn)
+- StageCatalog (39 màn chơi & tiến độ hoàn thành)
+- BoardView (bàn cờ 3D, cầu, công tắc, hố đích)
+- BlockView (khối gỗ 3D và 2 khối tách rời)
+- BlobShadow (bóng mềm siêu nhẹ)
+- CameraRig (camera Isometric)
+- AnimationManager (lăn Rodrigues, rơi vực, chiến thắng)
+- ParticlePool (hạt bụi tiếp đất & pháo giấy chiến thắng)
+- UIManager (HUD đỉnh, Replay đáy, Bảng chọn màn, Hướng dẫn)
+"""
+from __future__ import annotations
+
+import json
+import math
+from pathlib import Path
+from typing import TYPE_CHECKING
+from ursina import (
+    AmbientLight,
+    DirectionalLight,
+    Entity,
+    Ursina,
+    Vec2,
+    Vec3,
+    application,
+    camera,
+    color,
+    destroy,
+    time,
+    window,
+)
+
+from game.engine import BloxorzEngine, Posture
+from game.stage_catalog import StageCatalog
+from game.theme import get_theme, get_ursina_config, setup_ui_font
+from game.ursina_ui.anim import AnimationManager
+from game.ursina_ui.block_view import BlockView
+from game.ursina_ui.board_view import BoardView
+from game.ursina_ui.camera_rig import CameraRig
+from game.ursina_ui.input_controller import InputController
+from game.ursina_ui.materials import get_custom_background_texture
+from game.ursina_ui.particles import ParticlePool
+from game.ursina_ui.screens.lose_screen import LoseScreen
+from game.ursina_ui.screens.main_menu import MainMenuScreen
+from game.ursina_ui.screens.pause_menu import PauseMenuScreen
+from game.ursina_ui.screens.win_screen import WinScreen
+from game.ursina_ui.shadows import BlobShadow
+from game.ursina_ui.state_manager import GameState, StateManager
+from game.ursina_ui.ui import UIManager
+
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+
+
+class BloxorzUrsinaApp(Entity):
+    """Lớp điều khiển chính của toàn bộ trò chơi Bloxorz trên nền Ursina."""
+
+    def __init__(
+        self,
+        stage_path: Path | None = None,
+        replay_path: Path | None = None,
+        theme_name: str = "toy",
+        start_in_menu: bool = False,
+        debug: bool = False,
+    ) -> None:
+        super().__init__(name="bloxorz_game_controller")
+
+        # Khởi tạo font chữ Be Vietnam Pro hỗ trợ tiếng Việt toàn diện cho Ursina
+        setup_ui_font()
+
+        self.debug = debug
+        self.theme_name = theme_name
+        self.theme = get_theme(theme_name)
+        self.cfg = get_ursina_config()
+
+        # Thiết lập cửa sổ
+        window.title = "Bloxorz 3D Studio (Ursina Engine)"
+        window.borderless = False
+        window.fullscreen = False
+        window.exit_button.visible = False
+        window.fps_counter.enabled = False
+        window.entity_counter.enabled = False
+        window.collider_counter.enabled = False
+        window.vsync = True
+        window.color = color.hex("#4E6075")
+
+        # Ánh sáng 3D
+        self.setup_lighting()
+
+        # Nền pixel art hoàng hôn (Sunset Clouds) làm mờ nhẹ Depth of Field
+        bg_blur = int(self.cfg.get("bg_blur_radius", 4))
+        self.bg_glow = Entity(
+            name="sunset_bg_glow",
+            parent=camera,
+            model="quad",
+            scale=Vec2(100, 100),
+            z=70,
+            texture=get_custom_background_texture(blur_radius=bg_blur),
+            color=color.white,
+            transparent=False,
+            unlit=True,
+        )
+
+        # Khởi tạo dữ liệu và hệ thống con
+        self.catalog = StageCatalog()
+        self.engine = BloxorzEngine()
+
+        self.camera_rig = CameraRig()
+        self.board_view = BoardView(theme_name=self.theme_name)
+        self.block_view = BlockView(theme_name=self.theme_name)
+        self.shadow = BlobShadow()
+        self.particles = ParticlePool(capacity=60)
+
+        self.anim = AnimationManager(
+            block_view=self.block_view,
+            board_view=self.board_view,
+            shadow=self.shadow,
+            particles=self.particles,
+        )
+
+        # Quản lý trạng thái FSM (State Machine)
+        self.state_manager = StateManager(
+            initial_state=GameState.MAIN_MENU if start_in_menu else GameState.PLAYING
+        )
+
+        # Bộ điều khiển nhập liệu và watchdog an toàn
+        self.input_controller = InputController(
+            on_move=self.make_move,
+            is_busy_fn=lambda: self.anim.is_busy,
+            is_playing_fn=lambda: self.engine.is_playing and self.state_manager.is_playing,
+            on_watchdog_timeout=self._on_watchdog_timeout,
+            max_queue_size=2,
+            initial_repeat_delay=0.22,
+            repeat_interval=0.16,
+            max_lock_duration=2.5,
+            debug=self.debug,
+
+        )
+
+        # Quản lý Replay tự động
+        self.replay_actions: list[str] = []
+        self.replay_index: int = 0
+        self.is_replay_playing: bool = False
+        self.replay_timer: float = 0.0
+        self.replay_interval: float = 0.35
+        self.current_replay_file: str | None = None
+
+        # Giao diện HUD 2D
+        self.ui = UIManager(
+            catalog=self.catalog,
+            on_select_stage=self.load_stage_by_id,
+            on_undo=self.action_undo,
+            on_reset=self.action_reset,
+            on_toggle_cube=self.action_toggle_cube,
+            on_replay_play_pause=self.action_replay_toggle,
+            on_replay_step_forward=self.action_replay_step_forward,
+            on_replay_step_back=self.action_replay_step_back,
+            on_replay_jump_start=self.action_replay_jump_start,
+            on_replay_jump_end=self.action_replay_jump_end,
+            on_replay_load_file=self.action_replay_load_custom,
+            on_speed_change=self.set_speed_mult,
+        )
+
+        # Màn hình Menu chính và các Menu trạng thái
+        self.main_menu_screen = MainMenuScreen(
+            on_play=self._menu_play,
+            on_select_stage=self._menu_select_stage,
+            on_help=self._menu_help,
+            on_quit=application.quit,
+        )
+        self.pause_screen = PauseMenuScreen(
+            on_resume=self.action_resume,
+            on_restart=self.action_reset,
+            on_select_stage=self._menu_select_stage,
+            on_help=self._menu_help,
+            on_main_menu=self.action_main_menu,
+        )
+        self.win_screen = WinScreen(
+            on_next_stage=self.action_next_stage,
+            on_restart=self.action_reset,
+            on_select_stage=self._menu_select_stage,
+            on_main_menu=self.action_main_menu,
+        )
+        self.lose_screen = LoseScreen(
+            on_retry=self.action_reset,
+            on_undo=self.action_undo,
+            on_select_stage=self._menu_select_stage,
+            on_main_menu=self.action_main_menu,
+        )
+
+        # Bọc hook đóng modal của UIManager để đồng bộ trạng thái FSM
+        orig_close_stages = self.ui.close_stage_selector
+        def wrapped_close_stages() -> None:
+            orig_close_stages()
+            self._on_modal_closed()
+        self.ui.close_stage_selector = wrapped_close_stages
+
+        orig_close_help = self.ui.close_help_modal
+        def wrapped_close_help() -> None:
+            orig_close_help()
+            self._on_modal_closed()
+        self.ui.close_help_modal = wrapped_close_help
+
+        # Nạp màn chơi ban đầu
+        if stage_path and stage_path.exists():
+            self.load_stage_from_file(stage_path, replay_path=replay_path)
+        else:
+            self.load_stage_by_id("01", replay_path=replay_path)
+
+        # Áp dụng tỉ lệ nền ban đầu
+        self._update_background_scale()
+
+        # Hiển thị Menu chính nếu khởi động ở chế độ Menu
+        if start_in_menu:
+            self.ui.ui_root.enabled = False
+            self.main_menu_screen.show()
+            self.state_manager.transition_to(GameState.MAIN_MENU)
+        else:
+            self.ui.ui_root.enabled = True
+            self.main_menu_screen.hide()
+
+
+
+    def setup_lighting(self) -> None:
+        """Thiết lập hệ thống ánh sáng 3D Isometric hài hòa."""
+        self.dlight = DirectionalLight(y=24, z=18, x=-12, shadows=False)
+        self.dlight.look_at(Vec3(0, 0, 0))
+        self.alight = AmbientLight(color=color.rgba(0.55, 0.60, 0.60, 1.0))
+
+    def load_stage_by_id(self, stage_id: str, replay_path: Path | None = None) -> None:
+        """Nạp màn chơi dựa trên ID (ví dụ: '01', 'sample04')."""
+        meta = self.catalog.stage_by_id.get(stage_id)
+        if meta and meta["input_path"].exists():
+            # Tự động nạp file .out.json tương ứng nếu không truyền file replay ngoài
+            rep = replay_path or (meta["output_path"] if meta["output_path"].exists() else None)
+            self.load_stage_from_file(meta["input_path"], replay_path=rep)
+        else:
+            # Fallback tìm kiếm trong thư mục testcases
+            for s in ("original", "samples"):
+                cand = ROOT_DIR / "testcases" / s / f"{stage_id}.in.json"
+                if cand.exists():
+                    rep = replay_path or cand.with_name(f"{stage_id}.out.json")
+                    self.load_stage_from_file(cand, replay_path=rep if rep.exists() else None)
+                    return
+
+    def load_stage_from_file(self, stage_path: Path, replay_path: Path | None = None) -> None:
+        """Nạp màn chơi từ đường dẫn file .in.json cụ thể."""
+        self.anim.stop_all()
+        self.is_replay_playing = False
+        self.ui.set_replay_play_state(False)
+        self.input_controller.reset()
+
+        if hasattr(self, "pause_screen"):
+            self.pause_screen.hide()
+        if hasattr(self, "win_screen"):
+            self.win_screen.hide()
+        if hasattr(self, "lose_screen"):
+            self.lose_screen.hide()
+        if hasattr(self, "main_menu_screen"):
+            self.main_menu_screen.hide()
+        if hasattr(self, "state_manager"):
+            self.state_manager.transition_to(GameState.PLAYING)
+        if hasattr(self, "ui") and hasattr(self.ui, "ui_root"):
+            self.ui.ui_root.enabled = True
+
+        stage_data = json.loads(stage_path.read_text(encoding="utf-8"))
+        self.engine.load_stage(stage_data)
+
+        # Dựng lại bàn cờ và khối 3D
+        self.board_view.load_stage(self.engine)
+        self.block_view.sync_from_engine(self.engine)
+
+        # Canh giữa Camera theo kích thước sàn
+        self.camera_rig.focus_board(
+            min_r=self.board_view.min_r,
+            max_r=self.board_view.max_r,
+            min_c=self.board_view.min_c,
+            max_c=self.board_view.max_c,
+        )
+
+        # Cập nhật bóng ban đầu
+        self._update_shadow_state()
+
+        # Tự động tìm nạp file lời giải .out.json tương ứng nếu chưa có
+        if replay_path is None:
+            auto_rep = stage_path.with_name(stage_path.name.replace(".in.json", ".out.json"))
+            if auto_rep.exists():
+                replay_path = auto_rep
+
+        if replay_path and replay_path.exists():
+            self._load_replay_file(replay_path)
+        else:
+            self.replay_actions.clear()
+            self.replay_index = 0
+            self.current_replay_file = None
+            self.ui.inp_replay_path.text = ""
+            self.ui.update_replay_status(0, 0)
+
+        # Cập nhật HUD
+        self.ui.update_hud(self.engine)
+
+    def _load_replay_file(self, replay_path: Path) -> None:
+        """Đọc danh sách các bước đi từ file .out.json."""
+        try:
+            ans_data = json.loads(replay_path.read_text(encoding="utf-8"))
+            self.replay_actions = ans_data.get("actions", [])
+            self.replay_index = 0
+            self.current_replay_file = replay_path.name
+            self.ui.inp_replay_path.text = replay_path.name
+            self.ui.update_replay_status(0, len(self.replay_actions), self.current_replay_file)
+        except Exception as ex:
+            print(f"[REPLAY] Lỗi khi nạp file replay: {ex}")
+            self.replay_actions.clear()
+            self.replay_index = 0
+            self.ui.update_replay_status(0, 0)
+
+    def action_replay_load_custom(self, path_str: str) -> None:
+        """Nạp file replay do người dùng gõ vào ô nhập."""
+        p = Path(path_str)
+        if not p.is_absolute():
+            p = ROOT_DIR / p
+        if p.exists() and p.is_file():
+            self._load_replay_file(p)
+        else:
+            print(f"[REPLAY] Không tìm thấy file: {p}")
+
+    def make_move(self, direction: str) -> bool:
+        """Thực hiện một bước di chuyển (U/D/L/R) có hoạt ảnh 3D."""
+        if self.anim.is_busy or not self.engine.is_playing or not self.state_manager.is_playing:
+            return False
+
+        is_split = self.engine.is_split
+        is_cube_2 = (self.engine.selected_cube == 2) if is_split else False
+        if is_split:
+            from_cells = [self.engine.state.second] if is_cube_2 else [self.engine.state.first]
+        else:
+            from_cells = list(self.engine.block_cells)
+
+        # Thử di chuyển trên engine
+        success = self.engine.step(direction)
+
+        if success:
+            # 1. Bước đi hợp lệ
+            self.anim.start_roll(
+                from_cells=from_cells,
+                direction=direction,
+                is_cube_2=is_cube_2,
+                is_split=is_split,
+                on_complete=self._on_move_finished,
+            )
+            return True
+
+        elif self.engine.is_lost:
+            # 2. Bước đi gây thua (rơi xuống vực hoặc vỡ gạch mỏng)
+            reason = self.engine.lost_reason or ""
+            is_fragile = "fragile" in reason.lower()
+
+            fragile_pos = None
+            if is_fragile:
+                import re
+                m = re.search(r"\((\d+),\s*(\d+)\)", reason)
+                if m:
+                    fragile_pos = (int(m.group(1)), int(m.group(2)))
+                elif from_cells:
+                    fragile_pos = from_cells[0]
+
+            self.anim.start_roll(
+                from_cells=from_cells,
+                direction=direction,
+                is_cube_2=is_cube_2,
+                is_split=is_split,
+                is_losing_move=True,
+                on_complete=lambda: self.anim.start_fall(
+                    direction=direction,
+                    reason=reason,
+                    fragile_pos=fragile_pos,
+                    on_complete=self._on_fall_finished,
+                ),
+            )
+            self.ui.update_hud(self.engine)
+            return False
+
+        return False
+
+    def _update_shadow_state(self) -> None:
+        """Cập nhật bóng đổ blob khớp hoàn hảo theo vị trí các khối (kể cả khi split tách rời)."""
+        if self.engine.is_split and self.engine.state is not None:
+            r1, c1 = self.engine.state.first
+            r2, c2 = self.engine.state.second
+            c1_y = self.block_view.cube_1.y if self.block_view.cube_1 else 0.5
+            c2_y = self.block_view.cube_2.y if self.block_view.cube_2 else 0.5
+            self.shadow.update_transform(
+                world_x=float(c1),
+                world_z=-float(r1),
+                block_y=c1_y,
+                posture=Posture.SPLIT,
+                is_split=True,
+                cube_2_pos=(float(c2), c2_y, -float(r2)),
+            )
+        else:
+            w_bounds = self.block_view.get_world_bounds(self.engine)
+            self.shadow.update_transform(
+                world_x=w_bounds[0],
+                world_z=w_bounds[2],
+                block_y=w_bounds[1],
+                posture=w_bounds[3],
+                is_split=False,
+                cube_2_pos=None,
+            )
+
+    def _on_move_finished(self) -> None:
+        """Gọi khi khối vừa hoàn thành cú lăn chạm đất."""
+        self.block_view.sync_from_engine(self.engine)
+        self.ui.update_hud(self.engine)
+        self._update_shadow_state()
+
+        # Kiểm tra chiến thắng
+        if self.engine.is_won:
+            self.catalog.record_win(self.engine.stage_id, self.engine.move_count)
+            self.catalog.save_progress()
+            self.anim.start_victory(on_complete=self._on_victory_finished)
+
+        # Thông báo hoàn tất nước đi cho hàng đợi input
+        self.input_controller.on_animation_complete()
+
+
+    def _on_watchdog_timeout(self) -> None:
+        """Giải phóng khẩn cấp khi animation bị kẹt quá lâu."""
+        if self.debug:
+            print("[WATCHDOG] Cảnh báo: Animation bị kẹt, gọi anim.stop_all() để khôi phục điều khiển.")
+        self.anim.stop_all()
+        self.block_view.sync_from_engine(self.engine)
+
+    def action_undo(self) -> None:
+        """Hoàn tác bước đi gần nhất."""
+        self.input_controller.reset()
+        if self.anim.is_busy:
+            self.anim.stop_all()
+
+        if hasattr(self, "lose_screen"):
+            self.lose_screen.hide()
+        if hasattr(self, "pause_screen"):
+            self.pause_screen.hide()
+        if hasattr(self, "win_screen"):
+            self.win_screen.hide()
+        if hasattr(self, "state_manager") and not self.state_manager.is_playing:
+            self.state_manager.transition_to(GameState.PLAYING)
+
+        if self.engine.undo():
+            self.board_view.reset_fragile_tiles()
+            self.block_view.sync_from_engine(self.engine)
+            self.ui.update_hud(self.engine)
+            self._update_shadow_state()
+            if self.replay_index > 0:
+                self.replay_index -= 1
+                self.ui.update_replay_status(self.replay_index, len(self.replay_actions), self.current_replay_file)
+
+    def action_reset(self) -> None:
+        """Đặt lại ván chơi về trạng thái ban đầu."""
+        self.input_controller.reset()
+        self.anim.stop_all()
+        self.is_replay_playing = False
+        self.ui.set_replay_play_state(False)
+        self.replay_index = 0
+
+        if hasattr(self, "lose_screen"):
+            self.lose_screen.hide()
+        if hasattr(self, "pause_screen"):
+            self.pause_screen.hide()
+        if hasattr(self, "win_screen"):
+            self.win_screen.hide()
+        if hasattr(self, "state_manager") and not self.state_manager.is_playing:
+            self.state_manager.transition_to(GameState.PLAYING)
+
+        self.engine.reset()
+        self.board_view.reset_fragile_tiles()
+        self.block_view.sync_from_engine(self.engine)
+        self.board_view.update_bridges(self.engine, dt=1.0)
+        self.ui.update_hud(self.engine)
+        self.ui.update_replay_status(0, len(self.replay_actions), self.current_replay_file)
+        self._update_shadow_state()
+
+    def action_toggle_cube(self) -> None:
+        """Chuyển đổi khối được chọn khi đang ở trạng thái split (Phím Space)."""
+        if self.engine.is_split:
+            self.engine.toggle_cube()
+            self.block_view.sync_from_engine(self.engine)
+            self._update_shadow_state()
+            self.ui.update_hud(self.engine)
+
+    def action_replay_toggle(self) -> None:
+        """Bật/tắt tự động phát Replay."""
+        if not self.replay_actions:
+            return
+        self.is_replay_playing = not self.is_replay_playing
+        self.ui.set_replay_play_state(self.is_replay_playing)
+        self.replay_timer = 0.0
+
+    def action_replay_step_forward(self) -> None:
+        """Tua tới 1 bước trong lời giải."""
+        if self.anim.is_busy or self.replay_index >= len(self.replay_actions):
+            return
+
+        act = self.replay_actions[self.replay_index]
+        # Nếu đang split mà action có dạng '1U' hoặc '2U', chọn cube tương ứng
+        if self.engine.is_split and len(act) == 2:
+            cube_target = int(act[0])
+            if self.engine.selected_cube != cube_target:
+                self.engine.selected_cube = cube_target
+
+        direction = act[-1]
+        self.replay_index += 1
+        self.ui.update_replay_status(self.replay_index, len(self.replay_actions), self.current_replay_file)
+        self.make_move(direction)
+
+    def action_replay_step_back(self) -> None:
+        """Lùi lại 1 bước trong lời giải."""
+        self.action_undo()
+
+    def action_replay_jump_start(self) -> None:
+        """Nhảy về bước đầu tiên."""
+        self.action_reset()
+
+    def action_replay_jump_end(self) -> None:
+        """Tua nhanh về bước kết thúc lời giải."""
+        while self.replay_index < len(self.replay_actions) and self.engine.is_playing:
+            act = self.replay_actions[self.replay_index]
+            if self.engine.is_split and len(act) == 2:
+                self.engine.selected_cube = int(act[0])
+            self.engine.step(act[-1])
+            self.replay_index += 1
+
+        self.block_view.sync_from_engine(self.engine)
+        self.ui.update_hud(self.engine)
+        self.ui.update_replay_status(self.replay_index, len(self.replay_actions), self.current_replay_file)
+
+    def set_speed_mult(self, speed: float) -> None:
+        """Cài đặt tốc độ hoạt ảnh và tốc độ phát replay."""
+        self.anim.speed_mult = speed
+        self.replay_interval = 0.35 / max(0.1, speed)
+
+    def _on_victory_finished(self) -> None:
+        """Gọi khi kết thúc hoạt ảnh chiến thắng."""
+        if hasattr(self, "lose_screen"):
+            self.lose_screen.hide()
+        if hasattr(self, "pause_screen"):
+            self.pause_screen.hide()
+        self.ui.update_hud(self.engine)
+        self.state_manager.transition_to(GameState.WIN)
+        best_moves = self.catalog.get_best_moves(self.engine.stage_id)
+        stage_title = f"Màn {self.engine.stage_id}" if self.engine.stage_id else "Màn chơi"
+        self.win_screen.show(
+            stage_name=stage_title,
+            moves=self.engine.move_count,
+            best_moves=best_moves,
+        )
+
+    def _on_fall_finished(self) -> None:
+        """Gọi khi kết thúc hoạt ảnh rơi."""
+        if hasattr(self, "win_screen"):
+            self.win_screen.hide()
+        if hasattr(self, "pause_screen"):
+            self.pause_screen.hide()
+        self.ui.update_hud(self.engine)
+        self.state_manager.transition_to(GameState.LOSE)
+        reason = self.engine.lost_reason or "Khối đã bị rơi khỏi sàn đấu!"
+        self.lose_screen.show(reason=reason)
+
+    def _menu_play(self) -> None:
+        """Bắt đầu chơi game từ menu chính."""
+        self.main_menu_screen.hide()
+        self.ui.ui_root.enabled = True
+        self.state_manager.transition_to(GameState.PLAYING)
+
+    def _menu_select_stage(self) -> None:
+        """Mở bảng chọn màn chơi."""
+        self.main_menu_screen.hide()
+        self.pause_screen.hide()
+        self.win_screen.hide()
+        self.lose_screen.hide()
+        self.state_manager.transition_to(GameState.LEVEL_SELECT)
+        self.ui.open_stage_selector()
+
+    def _menu_help(self) -> None:
+        """Mở modal hướng dẫn & phím tắt."""
+        self.state_manager.push_state(GameState.HELP)
+        self.ui.open_help_modal()
+
+    def action_resume(self) -> None:
+        """Tiếp tục ván chơi từ menu tạm dừng."""
+        self.pause_screen.hide()
+        self.state_manager.pop_state()
+
+    def action_main_menu(self) -> None:
+        """Quay trở về Menu chính."""
+        self.pause_screen.hide()
+        self.win_screen.hide()
+        self.lose_screen.hide()
+        if self.ui.is_stage_selector_open:
+            self.ui.close_stage_selector()
+        if self.ui.is_help_modal_open:
+            self.ui.close_help_modal()
+        self.anim.stop_all()
+        self.ui.ui_root.enabled = False
+        self.main_menu_screen.show()
+        self.state_manager.transition_to(GameState.MAIN_MENU)
+
+    def action_next_stage(self) -> None:
+        """Chuyển sang màn chơi kế tiếp."""
+        self.win_screen.hide()
+        next_id = self.catalog.get_next_stage_id(self.engine.stage_id)
+        if next_id:
+            self.load_stage_by_id(next_id)
+        else:
+            self.action_main_menu()
+
+    def _on_modal_closed(self) -> None:
+        """Khôi phục trạng thái phù hợp khi đóng modal chọn màn hoặc modal trợ giúp."""
+        if self.state_manager.current_state in (GameState.LEVEL_SELECT, GameState.HELP):
+            self.state_manager.pop_state()
+            if self.state_manager.current_state == GameState.MAIN_MENU:
+                self.main_menu_screen.show()
+                self.ui.ui_root.enabled = False
+            elif self.state_manager.current_state == GameState.PAUSED:
+                st_name = f"Màn {self.engine.stage_id}" if self.engine.stage_id else "Màn chơi"
+                self.pause_screen.show(stage_name=st_name, move_count=self.engine.move_count)
+            elif self.state_manager.current_state == GameState.WIN:
+                best_moves = self.catalog.get_best_moves(self.engine.stage_id)
+                st_name = f"Màn {self.engine.stage_id}" if self.engine.stage_id else "Màn chơi"
+                self.win_screen.show(stage_name=st_name, moves=self.engine.move_count, best_moves=best_moves)
+            elif self.state_manager.current_state == GameState.LOSE:
+                reason = self.engine.lost_reason or "Khối đã bị rơi khỏi sàn đấu!"
+                self.lose_screen.show(reason=reason)
+
+    def _update_background_scale(self) -> None:
+        """Đảm bảo ảnh nền phủ kín góc nhìn camera cả ở Orthographic và Perspective."""
+        aspect = max(window.aspect_ratio, 16.0 / 9.0)
+        img_aspect = 988.0 / 556.0
+
+        if camera.orthographic:
+            bg_h = camera.fov * 1.05
+        else:
+            bg_h = 2.0 * self.bg_glow.z * math.tan(math.radians(camera.fov / 2.0)) * 1.05
+
+        bg_w = bg_h * max(aspect, img_aspect)
+        self.bg_glow.scale = Vec2(bg_w, bg_h)
+
+    def input(self, key: str) -> None:
+        """Lắng nghe phím bấm từ người chơi."""
+        if self.debug:
+            print(f"[DEBUG INPUT] Phím: {key!r} | Bận: {self.anim.is_busy} | Trạng thái: {self.engine.status.value} | FSM: {self.state_manager.current_state.value}")
+
+        # Khi click chuột trái ra ngoài vùng input field, tự động nhả focus
+        if key == "left mouse down":
+            if getattr(self.ui.inp_replay_path, "active", False):
+                if not getattr(self.ui.inp_replay_path, "hovered", False):
+                    self.ui.inp_replay_path.active = False
+
+        # 0. Bỏ qua phím khi đang nhập liệu trong ô input
+        if getattr(self.ui.inp_replay_path, "active", False):
+            if key == "enter":
+                self.ui._submit_custom_replay()
+                self.ui.inp_replay_path.active = False
+            elif key == "escape":
+                self.ui.inp_replay_path.active = False
+            return
+
+        # 0b. Khi modal đang mở, nhận ESC / phím tắt để đóng modal
+        if self.ui.is_stage_selector_open or self.ui.is_help_modal_open:
+            if key in ("escape", "tab", "m", "h", "f1"):
+                if self.ui.is_stage_selector_open:
+                    self.ui.close_stage_selector()
+                elif self.ui.is_help_modal_open:
+                    self.ui.close_help_modal()
+            return
+
+        # 0c. Điều hướng theo trạng thái StateManager
+        if self.state_manager.current_state == GameState.MAIN_MENU:
+            if key in ("enter", "space"):
+                self._menu_play()
+            elif key in ("tab", "m"):
+                self._menu_select_stage()
+            elif key in ("h", "f1"):
+                self._menu_help()
+            elif key == "escape":
+                application.quit()
+            return
+
+        elif self.state_manager.current_state == GameState.PAUSED:
+            if key == "escape":
+                self.action_resume()
+            elif key == "r":
+                self.pause_screen.hide()
+                self.action_reset()
+                self.state_manager.transition_to(GameState.PLAYING)
+            elif key in ("tab", "m"):
+                self._menu_select_stage()
+            elif key in ("h", "f1"):
+                self._menu_help()
+            return
+
+        elif self.state_manager.current_state == GameState.WIN:
+            if key in ("enter", "space"):
+                self.action_next_stage()
+            elif key == "r":
+                self.win_screen.hide()
+                self.action_reset()
+                self.state_manager.transition_to(GameState.PLAYING)
+            elif key in ("tab", "m"):
+                self._menu_select_stage()
+            elif key == "escape":
+                self.action_main_menu()
+            return
+
+        elif self.state_manager.current_state == GameState.LOSE:
+            if key in ("r", "enter", "space"):
+                self.lose_screen.hide()
+                self.action_reset()
+                self.state_manager.transition_to(GameState.PLAYING)
+            elif key == "u":
+                self.lose_screen.hide()
+                self.action_undo()
+                self.state_manager.transition_to(GameState.PLAYING)
+            elif key in ("tab", "m"):
+                self._menu_select_stage()
+            elif key == "escape":
+                self.action_main_menu()
+            return
+
+        # 1. Trạng thái PLAYING: Phím ESC tạm dừng game
+        if key == "escape":
+            self.state_manager.push_state(GameState.PAUSED)
+            st_name = f"Màn {self.engine.stage_id}" if self.engine.stage_id else "Màn chơi"
+            self.pause_screen.show(stage_name=st_name, move_count=self.engine.move_count)
+            return
+
+        # 2. Xử lý nhả phím di chuyển (để dừng lặp hold-to-repeat)
+        if key.endswith(" up"):
+            self.input_controller.handle_key_up(key)
+            return
+
+        # 3. Xử lý phím di chuyển (WASD / Mũi tên qua InputController)
+        if self.input_controller.handle_key_down(key):
+            return
+
+        # 4. Đổi khối khi split
+        if key == "space":
+            self.action_toggle_cube()
+
+        # 5. Phím tắt chức năng
+        elif key == "u":
+            self.action_undo()
+        elif key == "r":
+            self.action_reset()
+        elif key == "p":
+            self.action_replay_toggle()
+        elif key in ("tab", "m"):
+            self._menu_select_stage()
+        elif key in ("h", "f1"):
+            self._menu_help()
+        elif key == "c":
+            self.camera_rig.reset_view()
+            self._update_background_scale()
+        elif key == "v":
+            self.camera_rig.toggle_projection()
+            self._update_background_scale()
+
+        # 6. Chuyển tiếp sự kiện zoom/cuộn chuột cho camera rig
+        self.camera_rig.input(key)
+        self._update_background_scale()
+
+    def update(self) -> None:
+        """Vòng lặp cập nhật chính của trò chơi mỗi khung hình."""
+        dt = time.dt
+
+        # Cập nhật tỉ lệ nền
+        self._update_background_scale()
+
+        # Cập nhật bộ điều khiển nhập liệu (hold-to-repeat và watchdog)
+        self.input_controller.update(dt)
+
+        # Cập nhật camera
+        self.camera_rig.update(dt)
+
+        # Cập nhật hoạt ảnh
+        self.anim.update(dt, self.engine)
+
+        # Cập nhật bàn cờ (cầu, công tắc, xoay sao đích)
+        self.board_view.update(dt)
+        self.board_view.update_bridges(self.engine, dt)
+        self.board_view.update_switches(self.engine, dt)
+
+        # Cập nhật các hạt hiệu ứng
+        self.particles.update(dt)
+
+        # Tự động phát Replay theo khoảng thời gian
+        if self.is_replay_playing:
+            if not self.anim.is_busy:
+                self.replay_timer += dt
+                if self.replay_timer >= self.replay_interval:
+                    self.replay_timer = 0.0
+                    if self.replay_index < len(self.replay_actions) and self.engine.is_playing:
+                        self.action_replay_step_forward()
+                    else:
+                        # Kết thúc replay
+                        self.is_replay_playing = False
+                        self.ui.set_replay_play_state(False)
+
+
+def launch_ursina_gui(
+    stage_path: Path | None = None,
+    replay_path: Path | None = None,
+    start_in_menu: bool = False,
+    debug: bool = False,
+) -> None:
+    """Hàm khởi chạy cửa sổ game Bloxorz bằng Ursina Engine."""
+    app = Ursina()
+    BloxorzUrsinaApp(
+        stage_path=stage_path,
+        replay_path=replay_path,
+        start_in_menu=start_in_menu,
+        debug=debug,
+    )
+    app.run()
+
