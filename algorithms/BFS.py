@@ -11,9 +11,10 @@ from bloxorz_model import (
     parse_stage,
     reconstruct_path,
 )
+from solver_support import SearchMetrics
 
 
-def solve(stage: dict) -> list[str]:
+def solve(stage: dict, metrics: SearchMetrics) -> list[str]:
     """Find a shortest valid action sequence for one Bloxorz stage."""
     model = parse_stage(stage)
     start = initial_state(model)
@@ -27,6 +28,8 @@ def solve(stage: dict) -> list[str]:
 
         if is_goal(current_state, model):
             return reconstruct_path(parents, current_state)
+
+        metrics.expanded()
 
         for successor_state, action in next_states(current_state, model):
             if successor_state in visited:
@@ -42,8 +45,11 @@ def solve(stage: dict) -> list[str]:
 def main() -> None:
     """Read one stage from stdin and print one solution JSON object."""
     stage = json.load(sys.stdin)
-    actions = solve(stage)
-    print(json.dumps({"status": "solved", "actions": actions}))
+
+    with SearchMetrics() as metrics:
+        actions = solve(stage, metrics)
+
+    metrics.print_solution(actions)
 
 
 if __name__ == "__main__":
