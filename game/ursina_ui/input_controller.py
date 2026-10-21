@@ -16,44 +16,28 @@ class InputController:
     """Quản lý và điều phối logic nhập liệu bàn phím, hàng đợi và watchdog an toàn."""
 
     # Bảng ánh xạ phím di chuyển sang 4 hướng U / D / L / R
-    # Hỗ trợ cả tên phím tiêu chuẩn của Ursina ("up arrow", ...) và các biến thể thông dụng
+    # Tên event bàn phím chuẩn của Ursina.
     MOVE_KEY_MAP: dict[str, str] = {
         "w": "U",
-        "W": "U",
         "up arrow": "U",
-        "up": "U",
         "s": "D",
-        "S": "D",
         "down arrow": "D",
-        "down": "D",
         "a": "L",
-        "A": "L",
         "left arrow": "L",
-        "left": "L",
         "d": "R",
-        "D": "R",
         "right arrow": "R",
-        "right": "R",
     }
 
     # Bảng nhận diện sự kiện nhả phím (key up) để ngắt cơ chế giữ phím
     KEY_UP_MAP: dict[str, str] = {
         "w up": "U",
-        "W up": "U",
         "up arrow up": "U",
-        "up up": "U",
         "s up": "D",
-        "S up": "D",
         "down arrow up": "D",
-        "down up": "D",
         "a up": "L",
-        "A up": "L",
         "left arrow up": "L",
-        "left up": "L",
         "d up": "R",
-        "D up": "R",
         "right arrow up": "R",
-        "right up": "R",
     }
 
     def __init__(
@@ -66,6 +50,7 @@ class InputController:
         initial_repeat_delay: float = 0.22,
         repeat_interval: float = 0.16,
         max_lock_duration: float = 1.0,
+        enable_hold_repeat: bool = True,
         debug: bool = False,
     ) -> None:
         self.on_move = on_move
@@ -77,6 +62,7 @@ class InputController:
         self.initial_repeat_delay = initial_repeat_delay
         self.repeat_interval = repeat_interval
         self.max_lock_duration = max_lock_duration
+        self.enable_hold_repeat = enable_hold_repeat
         self.debug = debug
 
         # Hàng đợi các nước đi đệm (buffer)
@@ -115,8 +101,9 @@ class InputController:
                 print(f"[INPUT_CONTROLLER] Từ chối phím '{key}' ({direction}): Ván chơi không ở trạng thái PLAYING.")
             return False
 
-        # Thiết lập hướng giữ phím
-        self.held_direction = direction
+        # Chỉ lưu hướng đang giữ khi chế độ lặp được bật. GUI mặc định tắt
+        # chế độ này để một lần nhấn chỉ tạo một nước đi.
+        self.held_direction = direction if self.enable_hold_repeat else None
         self.hold_time = 0.0
         self.last_repeat_time = 0.0
 
@@ -183,7 +170,7 @@ class InputController:
             self.busy_timer = 0.0
 
         # 2. Xử lý giữ phím để lăn liên tục (Hold-to-repeat)
-        if self.held_direction and self.is_playing_fn():
+        if self.enable_hold_repeat and self.held_direction and self.is_playing_fn():
             self.hold_time += dt
             if self.hold_time >= self.initial_repeat_delay:
                 time_since_repeat = self.hold_time - self.initial_repeat_delay - self.last_repeat_time

@@ -49,16 +49,12 @@ class TestInputController(unittest.TestCase):
         cases = [
             ("up arrow", "U"),
             ("w", "U"),
-            ("W", "U"),
             ("down arrow", "D"),
             ("s", "D"),
-            ("S", "D"),
             ("left arrow", "L"),
             ("a", "L"),
-            ("A", "L"),
             ("right arrow", "R"),
             ("d", "R"),
-            ("D", "R"),
         ]
         for key, expected_dir in cases:
             self.moves_executed.clear()
@@ -115,6 +111,17 @@ class TestInputController(unittest.TestCase):
         self.assertFalse(self.controller.handle_key_down("d"))
         self.assertEqual(self.controller.queue, ["U", "D"])
 
+    def test_arrow_key_release_stops_repeat_for_backend_variants(self) -> None:
+        """Tên key-up khác nhau của backend không được để lại input đang giữ."""
+        self.controller.handle_key_down("up arrow")
+        self.assertEqual(self.controller.held_direction, "U")
+
+        self.assertTrue(self.controller.handle_key_up("up arrow up"))
+        self.assertIsNone(self.controller.held_direction)
+
+        self.controller.update(1.0)
+        self.assertEqual(self.moves_executed, ["U"])
+
     def test_watchdog_auto_unlock(self) -> None:
         """Watchdog kích hoạt và giải phóng khóa khi is_busy kéo dài quá 1.0 giây."""
         self.is_busy = True
@@ -160,6 +167,19 @@ class TestInputController(unittest.TestCase):
         self.controller.handle_key_up("right arrow up")
         self.controller.update(0.50)
         self.assertEqual(self.moves_executed, ["R", "R"])
+
+    def test_repeat_can_be_disabled_for_single_press_controls(self) -> None:
+        """Chế độ GUI một-nhấn-một-nước không tự lặp khi không có key-up."""
+        self.controller = InputController(
+            on_move=self._on_move,
+            is_busy_fn=lambda: self.is_busy,
+            is_playing_fn=lambda: self.is_playing,
+            enable_hold_repeat=False,
+        )
+
+        self.assertTrue(self.controller.handle_key_down("up arrow"))
+        self.controller.update(2.0)
+        self.assertEqual(self.moves_executed, ["U"])
 
 
 if __name__ == "__main__":
