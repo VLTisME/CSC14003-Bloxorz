@@ -327,10 +327,17 @@ class UIManager:
         if raw_path:
             self.on_replay_load_file(raw_path)
 
-    def set_replay_play_state(self, is_playing: bool) -> None:
-        """Đổi nhãn nút phát Replay."""
-        self.btn_replay_play.text = "Tạm Dừng" if is_playing else "Phát"
-        self.btn_replay_play.color = rgba255(230, 126, 34, 230) if is_playing else rgba255(0, 150, 136, 230)
+    def set_replay_play_state(self, is_playing: bool, is_reset_mode: bool = False) -> None:
+        """Đổi nhãn và màu sắc nút phát Replay."""
+        if is_playing:
+            self.btn_replay_play.text = "Tạm Dừng"
+            self.btn_replay_play.color = rgba255(230, 126, 34, 230)  # Cam
+        elif is_reset_mode:
+            self.btn_replay_play.text = "Đặt Lại"
+            self.btn_replay_play.color = rgba255(192, 57, 43, 230)   # Đỏ gạch
+        else:
+            self.btn_replay_play.text = "Phát"
+            self.btn_replay_play.color = rgba255(0, 150, 136, 230)   # Teal ngọc
 
     def update_hud(self, engine: BloxorzEngine) -> None:
         """Cập nhật các số liệu trên thanh HUD theo trạng thái ván chơi."""

@@ -154,6 +154,119 @@ class TestAnimationIntegrity(unittest.TestCase):
             self.assertIsNotNone(self.block_view.block_entity)
             self.assertGreater(self.board_view.tile_size, 0)
 
+    def test_main_menu_escape_and_replay_resets_block_after_lose(self) -> None:
+        """Kiểm tra sau khi thua ván và nhấn ESC về Main Menu, bấm Chơi ngay sẽ reset lại khối."""
+        from game.ursina_ui.app import BloxorzUrsinaApp
+        from game.ursina_ui.state_manager import GameState
+
+        app = BloxorzUrsinaApp(start_in_menu=False)
+        app.load_stage_by_id("01")
+
+        # 1. Thực hiện nước đi thua (U tại ô 1,1)
+        app.make_move("U")
+        self.assertTrue(app.engine.is_lost)
+
+        # Mô phỏng hoạt ảnh rơi kết thúc -> hiện màn hình Lose
+        app.anim.block_view.block_entity.y = -25.0
+        app._on_fall_finished()
+        self.assertEqual(app.state_manager.current_state, GameState.LOSE)
+
+        # 2. Người chơi nhấn ESC để về Main Menu
+        app.input("escape")
+        self.assertEqual(app.state_manager.current_state, GameState.MAIN_MENU)
+
+        # Trạng thái khối và engine phải được khôi phục tại Main Menu
+        self.assertTrue(app.engine.is_playing)
+        self.assertEqual(app.engine.move_count, 0)
+        self.assertAlmostEqual(app.block_view.block_entity.y, 0.0, places=2)
+        self.assertAlmostEqual(app.block_view.block_entity.scale.x, 1.0, places=2)
+
+        # 3. Người chơi bấm "CHƠI NGAY"
+        app._menu_play()
+        self.assertEqual(app.state_manager.current_state, GameState.PLAYING)
+        self.assertTrue(app.engine.is_playing)
+
+        # Khối lăn bình thường từ ô xuất phát
+        self.assertTrue(app.make_move("R"))
+
+    def test_main_menu_escape_and_replay_resets_block_after_win(self) -> None:
+        """Kiểm tra sau khi thắng ván và nhấn ESC về Main Menu, bấm Chơi ngay sẽ reset lại khối."""
+        from game.engine import GameStatus
+        from game.ursina_ui.app import BloxorzUrsinaApp
+        from game.ursina_ui.state_manager import GameState
+
+        app = BloxorzUrsinaApp(start_in_menu=False)
+        app.load_stage_by_id("01")
+
+        # Mô phỏng chiến thắng
+        app.engine.status = GameStatus.WON
+        app.anim.block_view.block_entity.y = -2.5
+        app.anim.block_view.block_entity.scale = Vec3(0.2, 0.2, 0.2)
+        app._on_victory_finished()
+        self.assertEqual(app.state_manager.current_state, GameState.WIN)
+
+        # Nhấn ESC về Main Menu
+        app.input("escape")
+        self.assertEqual(app.state_manager.current_state, GameState.MAIN_MENU)
+
+        # Khối và engine phải được khôi phục
+        self.assertTrue(app.engine.is_playing)
+        self.assertEqual(app.engine.move_count, 0)
+        self.assertAlmostEqual(app.block_view.block_entity.y, 0.0, places=2)
+        self.assertAlmostEqual(app.block_view.block_entity.scale.x, 1.0, places=2)
+
+        # Bấm "CHƠI NGAY"
+        app._menu_play()
+        self.assertEqual(app.state_manager.current_state, GameState.PLAYING)
+        self.assertTrue(app.engine.is_playing)
+        self.assertTrue(app.make_move("R"))
+
+    def test_stage_selector_close_returns_to_main_menu(self) -> None:
+        """Kiểm tra khi mở bảng chọn màn từ Menu chính rồi đóng lại, Menu chính phải xuất hiện lại."""
+        from game.ursina_ui.app import BloxorzUrsinaApp
+        from game.ursina_ui.state_manager import GameState
+
+        app = BloxorzUrsinaApp(start_in_menu=True)
+        self.assertEqual(app.state_manager.current_state, GameState.MAIN_MENU)
+
+        # Mở chọn màn
+        app._menu_select_stage()
+        self.assertEqual(app.state_manager.current_state, GameState.LEVEL_SELECT)
+        self.assertTrue(app.ui.is_stage_selector_open)
+
+        # Đóng chọn màn mà không chọn stage nào
+        app.ui.close_stage_selector()
+        self.assertEqual(app.state_manager.current_state, GameState.MAIN_MENU)
+        self.assertTrue(app.main_menu_screen.enabled)
+
+    def test_replay_button_switches_to_reset_when_moves_deviate(self) -> None:
+        """Kiểm tra nếu người chơi tự đi trước 1-2 bước, nút Phát Replay biến thành nút Đặt Lại."""
+        from game.ursina_ui.app import BloxorzUrsinaApp
+
+        app = BloxorzUrsinaApp(start_in_menu=False)
+        app.load_stage_by_id("01")
+
+        self.assertEqual(app.ui.btn_replay_play.text, "Phát")
+
+        # Đi tay 1 bước
+        app.make_move("R")
+        app.anim.stop_all()
+        app._on_move_finished()
+
+        # Nút chuyển thành "Đặt Lại"
+        self.assertEqual(app.ui.btn_replay_play.text, "Đặt Lại")
+
+        # Bấm nút Đặt Lại -> ván chơi được reset về đầu và nút chuyển lại thành "Phát"
+        app.action_replay_toggle()
+        self.assertEqual(app.ui.btn_replay_play.text, "Phát")
+        self.assertEqual(app.engine.move_count, 0)
+        self.assertEqual(app.replay_index, 0)
+
+        # Bấm Phát -> chạy replay tự động
+        app.action_replay_toggle()
+        self.assertEqual(app.ui.btn_replay_play.text, "Tạm Dừng")
+        self.assertTrue(app.is_replay_playing)
+
 
 if __name__ == "__main__":
     unittest.main()
