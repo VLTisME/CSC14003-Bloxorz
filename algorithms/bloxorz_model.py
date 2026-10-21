@@ -28,7 +28,9 @@ tự cài BFS/DFS/UCS/A*.
 """
 from __future__ import annotations
 
+# Kiểu dữ liệu cho iterator trả về và bảng ánh xạ parents
 from collections.abc import Iterator, Mapping
+# Xác định thư mục gốc dự án để import checker.py
 from pathlib import Path
 import sys
 
@@ -43,16 +45,19 @@ from checker import Lost, Replay, State
 
 # Alias này giúp code solver diễn đạt rõ ý nghĩa hơn mà không bọc lại engine.
 BloxorzModel = Replay
+# Bốn hướng lăn block hợp lệ; thứ tự này cũng quyết định thứ tự sinh successor.
 ACTION_DIRECTIONS = ("U", "D", "L", "R")
 
 
 def parse_stage(stage: dict) -> BloxorzModel:
     """Kiểm tra dữ liệu stage và tạo model luật chơi chuẩn."""
+    # Replay kiểm tra stage và giữ toàn bộ luật/chỉ số cần để mô phỏng màn chơi.
     return Replay(stage)
 
 
 def initial_state(model: BloxorzModel) -> State:
     """Trả về state ban đầu của stage."""
+    # State ban đầu do engine tạo sẵn, bao gồm vị trí và trạng thái tách/gộp cube.
     return model.initial
 
 
@@ -64,21 +69,28 @@ def next_states(state: State, model: BloxorzModel) -> Iterator[tuple[State, str]
     ứng sau khi di chuyển, gồm switch, splitter, kiểm tra support lần hai và
     tự ghép cube.
     """
+    # Khi block tách, mỗi cube được di chuyển độc lập nên action kèm ID cube.
     if state.split:
         actions = (f"{cube}{direction}" for cube in (1, 2) for direction in ACTION_DIRECTIONS)
     else:
+        # Block chưa tách chỉ cần chọn một trong bốn hướng lăn.
         actions = iter(ACTION_DIRECTIONS)
 
+    # Thử từng action để tạo state kế tiếp.
     for action in actions:
         try:
+            # Engine áp dụng đầy đủ luật Bloxorz rồi trả state sau khi di chuyển.
             successor, _ = model.step(state, action)
         except Lost:
+            # Action làm thua không phải là cạnh hợp lệ trong không gian tìm kiếm.
             continue
+        # Trả từng cặp (state mới, action dẫn tới state đó) cho thuật toán search.
         yield successor, action
 
 
 def is_goal(state: State, model: BloxorzModel) -> bool:
     """True khi block nguyên đứng thẳng đúng ô goal."""
+    # Dùng cùng điều kiện thắng với checker và gameplay.
     return model.won(state)
 
 
@@ -87,22 +99,31 @@ def reconstruct_path(
     goal_state: State,
 ) -> list[str]:
     """Lần ngược parent map từ goal về start để trả chuỗi action theo thứ tự đi."""
+    # Danh sách tạm được xây theo chiều từ goal về start.
     actions: list[str] = []
+    # Bắt đầu truy vết từ state đích mà thuật toán vừa tìm thấy.
     state = goal_state
 
+    # Dừng khi gặp state gốc (có previous là None).
     while True:
         try:
+            # Mỗi state lưu state cha và action đã đi từ cha tới nó.
             previous, action = parents[state]
         except KeyError as exc:
+            # Parent map thiếu state đích nghĩa là kết quả search không nhất quán.
             raise ValueError("goal_state không có trong parent map") from exc
         if previous is None:
+            # Start phải là nút duy nhất không có cha và cũng không có action vào.
             if action is not None:
                 raise ValueError("start state phải có parent/action là None")
             break
         if action is None:
+            # Mọi state khác start đều phải được tạo bởi chính xác một action.
             raise ValueError("non-start state phải có action dẫn đến nó")
+        # Ghi lại action theo chiều ngược và tiếp tục về state cha.
         actions.append(action)
         state = previous
 
+    # Đảo lại để người chơi/solver nhận action theo thứ tự start -> goal.
     actions.reverse()
     return actions
