@@ -5,6 +5,8 @@
 /answer.json
 /output.json
 /output.txt
+# Personal AI-use notes for the report appendix; never commit credentials or private data.
+/AI_prompts.md
 __pycache__/
 *.py[cod]
 .venv/
