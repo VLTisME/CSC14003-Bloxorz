@@ -75,6 +75,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help=f"Per-stage algorithm execution timeout in seconds (default: {DEFAULT_TIMEOUT})",
     )
     parser.add_argument(
+        "--require-optimal",
+        action="store_true",
+        help="Require solution length to equal each test's reference optimum (for BFS/UCS/A*)",
+    )
+    parser.add_argument(
         "--visualize_2d",
         action="store_true",
         help="Replay solution visually on 2D terminal after checking (requires --test)",
@@ -111,6 +116,10 @@ def run(args: argparse.Namespace) -> int:
         print(f"Error resolving testcases: {exc}", file=sys.stderr)
         return 1
 
+    if args.require_optimal and any(tc.get("reference_length") is None for tc in testcases):
+        print("Error: --require-optimal needs a reference_length for every selected test.", file=sys.stderr)
+        return 1
+
     results_list = []
     is_single_test = bool(args.test)
 
@@ -120,6 +129,26 @@ def run(args: argparse.Namespace) -> int:
             stage_data = read_json(stage_path)
         except (OSError, ValueError) as exc:
             print(f"{tc['id']}: INPUT_ERROR — cannot read input stage: {exc}")
+            results_list.append({
+                "test_id": tc["id"],
+                "verdict": "INPUT_ERROR",
+                "message": f"cannot read input stage: {exc}",
+                "actions": None,
+                "statistics": {
+                    "process_time_ms": 0.0,
+                    "search_time_ms": None,
+                    "peak_memory_bytes": None,
+                    "memory_method": None,
+                    "expanded_nodes": None,
+                    "solution_length": None,
+                    "cost": None,
+                    "reference_length": tc.get("reference_length"),
+                },
+                "metrics_complete": False,
+                "metrics_errors": [f"cannot read input stage: {exc}"],
+                "exit_code": None,
+                "stderr": "",
+            })
             continue
 
         ref_len = tc.get("reference_length")
@@ -128,6 +157,7 @@ def run(args: argparse.Namespace) -> int:
             stage_data,
             timeout=args.timeout,
             reference_length=ref_len,
+            require_optimal=args.require_optimal,
         )
         results_list.append(res)
 
@@ -143,13 +173,14 @@ def run(args: argparse.Namespace) -> int:
         else:
             print(f"{test_id}: {verdict} — {message} ({proc_time:.2f} ms)")
 
-    total = len(results_list)
+    total = len(testcases)
     passed = sum(1 for r in results_list if r["verdict"] == "AC")
     failed = total - passed
     ac = passed
     wa = sum(1 for r in results_list if r["verdict"] == "WA")
     re = sum(1 for r in results_list if r["verdict"] == "RE")
     tle = sum(1 for r in results_list if r["verdict"] == "TLE")
+    input_error = sum(1 for r in results_list if r["verdict"] == "INPUT_ERROR")
     total_process_time_ms = round(sum(r["statistics"]["process_time_ms"] for r in results_list), 3)
 
     ac_tests = [r for r in results_list if r["verdict"] == "AC"]
@@ -162,7 +193,7 @@ def run(args: argparse.Namespace) -> int:
 
     print(f"Passed {passed}/{total} tests")
     if total > 1:
-        print(f"Summary: AC={ac}, WA={wa}, RE={re}, TLE={tle}")
+        print(f"Summary: AC={ac}, WA={wa}, RE={re}, TLE={tle}, INPUT_ERROR={input_error}")
         print(f"Total process time: {total_process_time_ms:.2f} ms")
         if ac > 0:
             fastest_item = min(ac_tests, key=lambda r: r["statistics"]["process_time_ms"])
@@ -205,6 +236,7 @@ def run(args: argparse.Namespace) -> int:
             "wa": wa,
             "re": re,
             "tle": tle,
+            "input_error": input_error,
             "total_process_time_ms": total_process_time_ms,
             "fastest_test": fastest_test,
             "slowest_test": slowest_test,
@@ -220,7 +252,7 @@ def run(args: argparse.Namespace) -> int:
         display_path = result_path
     print(f"Saved {display_path}")
 
-    if args.visualize_2d and results_list:
+    if args.visualize_2d and results_list and results_list[0]["verdict"] != "INPUT_ERROR":
         first_tc = testcases[0]
         first_res = results_list[0]
         actions = first_res.get("actions") or []
@@ -235,7 +267,7 @@ def run(args: argparse.Namespace) -> int:
             except Exception as exc:
                 print(f"Visualization error: {exc}", file=sys.stderr)
 
-    return 0 if passed == total else 1
+    return 0 if passed == total and input_error == 0 else 1
 
 
 def main() -> int:

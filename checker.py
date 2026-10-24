@@ -197,7 +197,12 @@ class Replay:
         return candidate, split_at
 
 
-def check(stage: dict, answer: object) -> dict:
+def check(
+    stage: dict,
+    answer: object,
+    reference_length: int | None = None,
+    require_optimal: bool = False,
+) -> dict:
     model = Replay(stage)
     result = {"test_id": model.stage_id, "verdict": "RE", "message": "", "steps_checked": 0,
               "solution_length": None, "cost": None}
@@ -229,7 +234,24 @@ def check(stage: dict, answer: object) -> dict:
     if not model.won(state):
         result.update(verdict="WA", message="actions end before the rectangular block stands on the goal")
         return result
-    result.update(verdict="AC", message=f"solved with {len(actions)} steps", solution_length=len(actions), cost=len(actions))
+    solution_length = len(actions)
+    if require_optimal:
+        if reference_length is None:
+            result.update(verdict="RE", message="optimality check requires a reference solution length")
+            return result
+        if solution_length != reference_length:
+            detail = "longer than" if solution_length > reference_length else "shorter than"
+            result.update(
+                verdict="WA",
+                message=(
+                    f"valid solution uses {solution_length} steps, {detail} the "
+                    f"reference optimum of {reference_length} steps"
+                ),
+                solution_length=solution_length,
+                cost=solution_length,
+            )
+            return result
+    result.update(verdict="AC", message=f"solved with {solution_length} steps", solution_length=solution_length, cost=solution_length)
     return result
 
 
@@ -368,6 +390,7 @@ def execute_and_check(
     stage_data: dict,
     timeout: float = DEFAULT_TIMEOUT,
     reference_length: int | None = None,
+    require_optimal: bool = False,
 ) -> dict:
     test_id = stage_data.get("id", "unknown")
     run_res = run_algorithm_subprocess(algorithm_path, stage_data, timeout=timeout)
@@ -447,7 +470,12 @@ def execute_and_check(
             "answer": None,
         }
 
-    check_res = check(stage_data, answer)
+    check_res = check(
+        stage_data,
+        answer,
+        reference_length=reference_length,
+        require_optimal=require_optimal,
+    )
     verdict = check_res["verdict"]
     message = check_res["message"]
     actions = answer.get("actions") if isinstance(answer, dict) and isinstance(answer.get("actions"), list) else None
@@ -468,8 +496,8 @@ def execute_and_check(
         peak_memory_bytes = metrics_data.get("peak_memory_bytes") if isinstance(metrics_data, dict) else None
         memory_method = metrics_data.get("memory_method") if isinstance(metrics_data, dict) else None
         expanded_nodes = metrics_data.get("expanded_nodes") if isinstance(metrics_data, dict) else None
-        solution_length = None
-        cost = None
+        solution_length = check_res.get("solution_length")
+        cost = check_res.get("cost")
     else:  # RE
         search_time_ms = None
         peak_memory_bytes = None
@@ -513,6 +541,11 @@ def main() -> int:
     parser.add_argument("--test", type=str, help="Stage ID or number (e.g. 01, stage01)")
     parser.add_argument("--suite", type=str, choices=["original", "samples"], default="original", help="Test suite to run (default: original)")
     parser.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT, help=f"Timeout per test in seconds (default: {DEFAULT_TIMEOUT})")
+    parser.add_argument(
+        "--require-optimal",
+        action="store_true",
+        help="Require the solution length to equal the manifest reference optimum (for BFS/UCS/A*)",
+    )
     args = parser.parse_args()
 
     if args.algorithm:
@@ -528,6 +561,9 @@ def main() -> int:
         except Exception as exc:
             parser.error(str(exc))
 
+        if args.require_optimal and any(tc.get("reference_length") is None for tc in cases):
+            parser.error("--require-optimal needs a reference_length for every selected test")
+
         counts = {"AC": 0, "WA": 0, "RE": 0, "TLE": 0}
         for tc in cases:
             input_path = ROOT_DIR / "testcases" / tc["input"]
@@ -538,7 +574,13 @@ def main() -> int:
                 continue
 
             ref_len = tc.get("reference_length")
-            res = execute_and_check(args.algorithm, stage, timeout=args.timeout, reference_length=ref_len)
+            res = execute_and_check(
+                args.algorithm,
+                stage,
+                timeout=args.timeout,
+                reference_length=ref_len,
+                require_optimal=args.require_optimal,
+            )
             verdict = res["verdict"]
             counts[verdict] = counts.get(verdict, 0) + 1
             print(f"{res['test_id']}: {verdict} — {res['message']}")
@@ -548,6 +590,8 @@ def main() -> int:
         print(f"Passed {passed}/{total} tests (AC: {counts['AC']}, WA: {counts['WA']}, RE: {counts['RE']}, TLE: {counts['TLE']})")
         return 0 if passed == total else 1
 
+    if args.require_optimal:
+        parser.error("--require-optimal currently requires --algorithm so the test manifest can supply the reference length")
     if args.test:
         parser.error("--test requires --algorithm")
 

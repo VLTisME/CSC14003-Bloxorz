@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -151,6 +152,38 @@ class SubprocessAndExecutionTests(unittest.TestCase):
         self.assertTrue(res["metrics_complete"])
         self.assertEqual(res["metrics_errors"], [])
 
+    def test_require_optimal_rejects_longer_valid_solution(self):
+        code = (
+            "import json\n"
+            "print(json.dumps({'status': 'solved', 'actions': ['R', 'L', 'R', 'R']}))\n"
+        )
+        script = self._create_mock_script(code)
+        res = execute_and_check(
+            script,
+            self.sample1_stage,
+            timeout=5.0,
+            reference_length=2,
+            require_optimal=True,
+        )
+        self.assertEqual(res["verdict"], "WA")
+        self.assertIn("longer than the reference optimum", res["message"])
+        self.assertEqual(res["statistics"]["solution_length"], 4)
+
+    def test_require_optimal_accepts_reference_length(self):
+        code = (
+            "import json\n"
+            "print(json.dumps({'status': 'solved', 'actions': ['R', 'R']}))\n"
+        )
+        script = self._create_mock_script(code)
+        res = execute_and_check(
+            script,
+            self.sample1_stage,
+            timeout=5.0,
+            reference_length=2,
+            require_optimal=True,
+        )
+        self.assertEqual(res["verdict"], "AC")
+
     def test_subprocess_ac_without_metrics_is_still_ac_but_metrics_incomplete(self):
         code = (
             "import json\n"
@@ -248,11 +281,50 @@ class ResultFileAndRunTests(unittest.TestCase):
             self.assertIsNone(payload["summary"]["fastest_test"])
             self.assertIsNone(payload["summary"]["slowest_test"])
 
+    def test_runner_counts_unreadable_input_as_failed_test(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            results_dir = Path(tmpdir)
+            tmp_algo = tempfile.NamedTemporaryFile("w", suffix=".py", delete=False)
+            tmp_algo.write("print('{}')\n")
+            tmp_algo.close()
+            self.addCleanup(lambda: Path(tmp_algo.name).unlink(missing_ok=True))
+
+            args = parse_args([
+                "--algorithm", tmp_algo.name,
+                "--suite", "samples",
+                "--test", "01",
+                "--results_dir", str(results_dir),
+            ])
+            with patch("run_tests.resolve_manifest_testcases", return_value=[{
+                "id": "sample01",
+                "input": "samples/missing.in.json",
+                "reference_length": 2,
+            }]), patch("run_tests.read_json", side_effect=OSError("missing fixture")):
+                exit_code = run(args)
+
+            self.assertEqual(exit_code, 1)
+            payload_path = next(results_dir.glob("*.json"))
+            payload = json.loads(payload_path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["summary"]["total"], 1)
+            self.assertEqual(payload["summary"]["passed"], 0)
+            self.assertEqual(payload["summary"]["failed"], 1)
+            self.assertEqual(payload["summary"]["input_error"], 1)
+            self.assertEqual(payload["tests"][0]["verdict"], "INPUT_ERROR")
+
 
 class CheckerCliTests(unittest.TestCase):
     def test_checker_cli_algorithm_single(self):
         proc = subprocess.run(
             [sys.executable, str(ROOT / "checker.py"), "--algorithm", "algorithms/BFS.py", "--suite", "samples", "--test", "01"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("sample01: AC", proc.stdout)
+
+    def test_checker_cli_require_optimal(self):
+        proc = subprocess.run(
+            [sys.executable, str(ROOT / "checker.py"), "--algorithm", "algorithms/BFS.py", "--suite", "samples", "--test", "01", "--require-optimal"],
             capture_output=True,
             text=True,
         )
