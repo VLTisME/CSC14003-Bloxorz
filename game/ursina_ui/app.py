@@ -134,6 +134,7 @@ class BloxorzUrsinaApp(Entity):
             initial_repeat_delay=0.22,
             repeat_interval=0.16,
             max_lock_duration=2.5,
+            enable_hold_repeat=False,
             debug=self.debug,
 
         )
@@ -189,17 +190,35 @@ class BloxorzUrsinaApp(Entity):
             on_main_menu=self.action_main_menu,
         )
 
-        # Bọc hook đóng modal của UIManager để đồng bộ trạng thái FSM
+        # Bọc hook mở/đóng modal của UIManager để đồng bộ trạng thái FSM
+        orig_open_stages = self.ui.open_stage_selector
+        def wrapped_open_stages() -> None:
+            if self.state_manager.current_state != GameState.LEVEL_SELECT:
+                self.state_manager.push_state(GameState.LEVEL_SELECT)
+            orig_open_stages()
+        self.ui.open_stage_selector = wrapped_open_stages
+
         orig_close_stages = self.ui.close_stage_selector
         def wrapped_close_stages() -> None:
+            was_open = self.ui.is_stage_selector_open
             orig_close_stages()
-            self._on_modal_closed()
+            if was_open:
+                self._on_modal_closed()
         self.ui.close_stage_selector = wrapped_close_stages
+
+        orig_open_help = self.ui.open_help_modal
+        def wrapped_open_help() -> None:
+            if self.state_manager.current_state != GameState.HELP:
+                self.state_manager.push_state(GameState.HELP)
+            orig_open_help()
+        self.ui.open_help_modal = wrapped_open_help
 
         orig_close_help = self.ui.close_help_modal
         def wrapped_close_help() -> None:
+            was_open = self.ui.is_help_modal_open
             orig_close_help()
-            self._on_modal_closed()
+            if was_open:
+                self._on_modal_closed()
         self.ui.close_help_modal = wrapped_close_help
 
         # Nạp màn chơi ban đầu
@@ -299,6 +318,7 @@ class BloxorzUrsinaApp(Entity):
 
         # Cập nhật HUD
         self.ui.update_hud(self.engine)
+        self._sync_replay_button()
 
     def _load_replay_file(self, replay_path: Path) -> None:
         """Đọc danh sách các bước đi từ file .out.json."""
@@ -314,6 +334,7 @@ class BloxorzUrsinaApp(Entity):
             self.replay_actions.clear()
             self.replay_index = 0
             self.ui.update_replay_status(0, 0)
+        self._sync_replay_button()
 
     def action_replay_load_custom(self, path_str: str) -> None:
         """Nạp file replay do người dùng gõ vào ô nhập."""
@@ -414,6 +435,7 @@ class BloxorzUrsinaApp(Entity):
         self.block_view.sync_from_engine(self.engine)
         self.ui.update_hud(self.engine)
         self._update_shadow_state()
+        self._sync_replay_button()
 
         # Kiểm tra chiến thắng
         if self.engine.is_won:
@@ -452,16 +474,16 @@ class BloxorzUrsinaApp(Entity):
             self.block_view.sync_from_engine(self.engine)
             self.ui.update_hud(self.engine)
             self._update_shadow_state()
-            if self.replay_index > 0:
+            if self.replay_index > 0 and self.engine.move_count < self.replay_index:
                 self.replay_index -= 1
                 self.ui.update_replay_status(self.replay_index, len(self.replay_actions), self.current_replay_file)
+            self._sync_replay_button()
 
     def action_reset(self) -> None:
         """Đặt lại ván chơi về trạng thái ban đầu."""
         self.input_controller.reset()
         self.anim.stop_all()
         self.is_replay_playing = False
-        self.ui.set_replay_play_state(False)
         self.replay_index = 0
 
         if hasattr(self, "lose_screen"):
@@ -470,6 +492,10 @@ class BloxorzUrsinaApp(Entity):
             self.pause_screen.hide()
         if hasattr(self, "win_screen"):
             self.win_screen.hide()
+        if hasattr(self, "main_menu_screen"):
+            self.main_menu_screen.hide()
+        if hasattr(self, "ui") and hasattr(self.ui, "ui_root"):
+            self.ui.ui_root.enabled = True
         if hasattr(self, "state_manager") and not self.state_manager.is_playing:
             self.state_manager.transition_to(GameState.PLAYING)
 
@@ -480,6 +506,7 @@ class BloxorzUrsinaApp(Entity):
         self.ui.update_hud(self.engine)
         self.ui.update_replay_status(0, len(self.replay_actions), self.current_replay_file)
         self._update_shadow_state()
+        self._sync_replay_button()
 
     def action_toggle_cube(self) -> None:
         """Chuyển đổi khối được chọn khi đang ở trạng thái split (Phím Space)."""
@@ -489,18 +516,51 @@ class BloxorzUrsinaApp(Entity):
             self._update_shadow_state()
             self.ui.update_hud(self.engine)
 
+    def _is_replay_out_of_sync(self) -> bool:
+        """Kiểm tra xem trạng thái ván chơi có bị lệch khỏi chuỗi Replay hay không."""
+        if not self.engine.is_playing:
+            return True
+        if self.engine.move_count != self.replay_index:
+            return True
+        if self.replay_actions and self.replay_index >= len(self.replay_actions):
+            return True
+        return False
+
+    def _sync_replay_button(self) -> None:
+        """Đồng bộ trạng thái nút Phát/Đặt Lại/Tạm Dừng của Replay."""
+        if not hasattr(self, "ui") or not hasattr(self.ui, "btn_replay_play"):
+            return
+        is_out_of_sync = self._is_replay_out_of_sync()
+        self.ui.set_replay_play_state(
+            is_playing=self.is_replay_playing,
+            is_reset_mode=is_out_of_sync and not self.is_replay_playing and bool(self.replay_actions),
+        )
+
     def action_replay_toggle(self) -> None:
         """Bật/tắt tự động phát Replay."""
         if not self.replay_actions:
             return
+
+        # Nếu ván chơi bị lệch vị trí Replay (ví dụ đã tự đi 1-2 bước hoặc đã thắng/thua),
+        # nút này chuyển thành nút Đặt Lại để đưa ván về vị trí đầu trước khi cho phép phát
+        if self._is_replay_out_of_sync() and not self.is_replay_playing:
+            self.action_reset()
+            return
+
         self.is_replay_playing = not self.is_replay_playing
-        self.ui.set_replay_play_state(self.is_replay_playing)
+        self._sync_replay_button()
         self.replay_timer = 0.0
 
     def action_replay_step_forward(self) -> None:
         """Tua tới 1 bước trong lời giải."""
         if self.anim.is_busy or self.replay_index >= len(self.replay_actions):
             return
+
+        # Nếu trạng thái bị lệch so với bước replay tiếp theo, reset trước khi bước
+        if self.engine.move_count != self.replay_index:
+            self.action_reset()
+            if not self.replay_actions:
+                return
 
         act = self.replay_actions[self.replay_index]
         # Nếu đang split mà action có dạng '1U' hoặc '2U', chọn cube tương ứng
@@ -513,6 +573,7 @@ class BloxorzUrsinaApp(Entity):
         self.replay_index += 1
         self.ui.update_replay_status(self.replay_index, len(self.replay_actions), self.current_replay_file)
         self.make_move(direction)
+        self._sync_replay_button()
 
     def action_replay_step_back(self) -> None:
         """Lùi lại 1 bước trong lời giải."""
@@ -524,6 +585,9 @@ class BloxorzUrsinaApp(Entity):
 
     def action_replay_jump_end(self) -> None:
         """Tua nhanh về bước kết thúc lời giải."""
+        if self.engine.move_count != self.replay_index:
+            self.action_reset()
+
         while self.replay_index < len(self.replay_actions) and self.engine.is_playing:
             act = self.replay_actions[self.replay_index]
             if self.engine.is_split and len(act) == 2:
@@ -534,6 +598,7 @@ class BloxorzUrsinaApp(Entity):
         self.block_view.sync_from_engine(self.engine)
         self.ui.update_hud(self.engine)
         self.ui.update_replay_status(self.replay_index, len(self.replay_actions), self.current_replay_file)
+        self._sync_replay_button()
 
     def set_speed_mult(self, speed: float) -> None:
         """Cài đặt tốc độ hoạt ảnh và tốc độ phát replay."""
@@ -548,6 +613,7 @@ class BloxorzUrsinaApp(Entity):
             self.pause_screen.hide()
         self.ui.update_hud(self.engine)
         self.state_manager.transition_to(GameState.WIN)
+        self._sync_replay_button()
         best_moves = self.catalog.get_best_moves(self.engine.stage_id)
         stage_title = f"Màn {self.engine.stage_id}" if self.engine.stage_id else "Màn chơi"
         self.win_screen.show(
@@ -564,6 +630,7 @@ class BloxorzUrsinaApp(Entity):
             self.pause_screen.hide()
         self.ui.update_hud(self.engine)
         self.state_manager.transition_to(GameState.LOSE)
+        self._sync_replay_button()
         reason = self.engine.lost_reason or "Khối đã bị rơi khỏi sàn đấu!"
         self.lose_screen.show(reason=reason)
 
@@ -571,7 +638,10 @@ class BloxorzUrsinaApp(Entity):
         """Bắt đầu chơi game từ menu chính."""
         self.main_menu_screen.hide()
         self.ui.ui_root.enabled = True
-        self.state_manager.transition_to(GameState.PLAYING)
+        if not self.engine.is_playing:
+            self.action_reset()
+        else:
+            self.state_manager.transition_to(GameState.PLAYING)
 
     def _menu_select_stage(self) -> None:
         """Mở bảng chọn màn chơi."""
@@ -579,12 +649,10 @@ class BloxorzUrsinaApp(Entity):
         self.pause_screen.hide()
         self.win_screen.hide()
         self.lose_screen.hide()
-        self.state_manager.transition_to(GameState.LEVEL_SELECT)
         self.ui.open_stage_selector()
 
     def _menu_help(self) -> None:
         """Mở modal hướng dẫn & phím tắt."""
-        self.state_manager.push_state(GameState.HELP)
         self.ui.open_help_modal()
 
     def action_resume(self) -> None:
@@ -602,6 +670,20 @@ class BloxorzUrsinaApp(Entity):
         if self.ui.is_help_modal_open:
             self.ui.close_help_modal()
         self.anim.stop_all()
+        self.is_replay_playing = False
+        self.ui.set_replay_play_state(False)
+        self.input_controller.reset()
+
+        # Nếu ván chơi đã kết thúc (thắng hoặc thua), đặt lại trạng thái và hình ảnh khối trên bàn
+        if not self.engine.is_playing:
+            self.engine.reset()
+            self.board_view.reset_fragile_tiles()
+            self.block_view.sync_from_engine(self.engine)
+            self.board_view.update_bridges(self.engine, dt=1.0)
+            self.ui.update_hud(self.engine)
+            self.ui.update_replay_status(0, len(self.replay_actions), self.current_replay_file)
+            self._update_shadow_state()
+
         self.ui.ui_root.enabled = False
         self.main_menu_screen.show()
         self.state_manager.transition_to(GameState.MAIN_MENU)
@@ -632,6 +714,8 @@ class BloxorzUrsinaApp(Entity):
             elif self.state_manager.current_state == GameState.LOSE:
                 reason = self.engine.lost_reason or "Khối đã bị rơi khỏi sàn đấu!"
                 self.lose_screen.show(reason=reason)
+            elif self.state_manager.current_state == GameState.PLAYING:
+                self.ui.ui_root.enabled = True
 
     def _update_background_scale(self) -> None:
         """Đảm bảo ảnh nền phủ kín góc nhìn camera cả ở Orthographic và Perspective."""
@@ -728,16 +812,24 @@ class BloxorzUrsinaApp(Entity):
                 self.action_main_menu()
             return
 
-        # 1. Trạng thái PLAYING: Phím ESC tạm dừng game
+        # 1. Trạng thái PLAYING: Phím ESC tạm dừng game (hoặc chuyển ngay sang kết thúc nếu đang rơi/thắng)
         if key == "escape":
+            if self.anim.is_falling:
+                self.anim.stop_all()
+                self._on_fall_finished()
+                return
+            if self.anim.is_victory:
+                self.anim.stop_all()
+                self._on_victory_finished()
+                return
             self.state_manager.push_state(GameState.PAUSED)
             st_name = f"Màn {self.engine.stage_id}" if self.engine.stage_id else "Màn chơi"
             self.pause_screen.show(stage_name=st_name, move_count=self.engine.move_count)
             return
 
-        # 2. Xử lý nhả phím di chuyển (để dừng lặp hold-to-repeat)
-        if key.endswith(" up"):
-            self.input_controller.handle_key_up(key)
+        # 2. Xử lý nhả phím di chuyển (để dừng lặp hold-to-repeat).
+        # Controller tự chuẩn hóa tên key để tương thích các backend Ursina.
+        if self.input_controller.handle_key_up(key):
             return
 
         # 3. Xử lý phím di chuyển (WASD / Mũi tên qua InputController)
@@ -805,7 +897,7 @@ class BloxorzUrsinaApp(Entity):
                     else:
                         # Kết thúc replay
                         self.is_replay_playing = False
-                        self.ui.set_replay_play_state(False)
+                        self._sync_replay_button()
 
 
 def launch_ursina_gui(
@@ -823,4 +915,3 @@ def launch_ursina_gui(
         debug=debug,
     )
     app.run()
-

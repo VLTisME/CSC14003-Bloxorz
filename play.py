@@ -13,12 +13,20 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 import sys
 
 ROOT_DIR = Path(__file__).resolve().parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
+
+# Panda3D receives special keys incorrectly when a Linux input method is active.
+# Allow opting out for users who need the input method while running the game.
+if sys.platform.startswith("linux") and not os.environ.get("BLOXORZ_KEEP_IM"):
+    if "ursina" in sys.modules or "panda3d" in sys.modules:
+        print("[WARN] IME fix must be applied before importing ursina/panda3d")
+    os.environ["XMODIFIERS"] = "@im=none"
 
 from game.visualize_2d import play_interactive, replay_solution
 
