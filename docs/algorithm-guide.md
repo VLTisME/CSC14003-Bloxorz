@@ -1,6 +1,6 @@
 # Hướng dẫn triển khai thuật toán
 
-Soạn ngày 16/10/2026; chuyển sang tiếng Việt ngày 17/10/2026. Helper đã sẵn sàng; các thuật toán và runner chạy bài nộp chưa được triển khai.
+Soạn ngày 16/10/2026; chuyển sang tiếng Việt ngày 17/10/2026; cập nhật trạng thái ngày 24/10/2026. Các thuật toán và runner hiện đã có trong repo. Hướng dẫn dưới đây vẫn mô tả quy trình triển khai theo từng bước; với A*, xem thêm [thiết kế, chứng minh và benchmark](astar-design.md).
 
 <a id="best-practice"></a>
 
@@ -39,11 +39,12 @@ if __name__ == "__main__":
 Sau khi triển khai `solve`, chạy từ thư mục gốc của repo:
 
 ```bash
-python algorithms/BFS.py < testcases/samples/01.in.json > answer.json
+python algorithms/ASTAR.py < testcases/samples/01.in.json > answer.json
 python checker.py --input testcases/samples/01.in.json --output answer.json
+python run_tests.py --algorithm algorithms/ASTAR.py --test 01 --require-optimal
 ```
 
-Shell lưu phần kết quả được in; thuật toán không mở file đầu ra. Lời giải đúng vẫn có thể nhận AC khi chưa có số liệu đo. Các lệnh hiện tại kiểm tra một stage được chọn; `checker.py --all` hiện kiểm tra lời giải tham chiếu đã lưu, không chạy thuật toán của bạn. Các lệnh chạy bài nộp vẫn chưa được triển khai.
+Shell lưu phần kết quả được in; thuật toán không mở file đầu ra. Checker phát lại kiểm tra đường đi; `run_tests.py` chạy thuật toán, áp dụng timeout, phát verdict và lưu JSON benchmark.
 
 Khi sẵn sàng thêm đo lường, dùng cách tổ chức trong template bên dưới. Đặt file thuật toán cùng thư mục với `solver_support.py` để `from solver_support import SearchMetrics` hoạt động khi chạy `python algorithms/BFS.py`. Helper không cung cấp luật di chuyển, thuật toán tìm kiếm hay bằng chứng rằng lời giải sẽ thắng.
 
@@ -70,7 +71,7 @@ Trong vòng lặp tìm kiếm, bỏ qua các phần tử lỗi thời hoặc tr�
 metrics.expanded()
 ```
 
-Đếm một lần cho nút cha, không đếm một lần cho mỗi trạng thái kế tiếp hay mỗi nước đi hợp lệ. Nếu thực sự mở rộng lại một nút, hãy đếm thêm lần đó. Với IDS, giữ một khối đo bao quanh toàn bộ các vòng lặp tăng giới hạn độ sâu; không đặt lại bộ đếm sau mỗi vòng. Nút bị cắt tại giới hạn độ sâu mà không sinh trạng thái kế tiếp không được tính là đã mở rộng. Với A*, tính lại một trạng thái được mở lại nếu bạn thực sự mở rộng nó lần nữa.
+Đếm một lần cho nút cha, không đếm một lần cho mỗi trạng thái kế tiếp hay mỗi nước đi hợp lệ. Nếu thực sự mở rộng lại một nút, hãy đếm thêm lần đó. Với DFS giới hạn độ sâu, nút bị cắt tại giới hạn mà không sinh trạng thái kế tiếp không được tính là đã mở rộng. Với A*, tính lại một trạng thái được mở lại nếu bạn thực sự mở rộng nó lần nữa.
 
 Helper không thể tự suy ra sự kiện này từ code solver bất kỳ. Khi so sánh thuật toán, cần cùng rà soát vị trí tăng bộ đếm.
 
@@ -91,7 +92,7 @@ python algorithms/BFS.py < testcases/samples/01.in.json > answer.json
 python checker.py --input testcases/samples/01.in.json --output answer.json
 ```
 
-Shell lưu JSON được in vào `answer.json`; thuật toán không tự tạo file này. Checker phát lại hiện tại chấp nhận trường số liệu đo bổ sung nhưng chỉ chấm đường đi. Nó không chạy thuật toán và không áp dụng giới hạn thời gian. Các lệnh checker chạy bài nộp và runner đã thống nhất được liệt kê trong phần [Chấm kết quả](problem-statement.md#judging).
+Shell lưu JSON được in vào `answer.json`; thuật toán không tự tạo file này. Checker phát lại chấm đường đi; checker/runner có cờ `--algorithm` để chạy chương trình, áp timeout và báo verdict. Dùng `--require-optimal` với BFS/UCS/A* để kiểm tra độ dài lời giải theo testcase.
 
 Không in thông báo tiến độ ra stdout (luồng xuất chuẩn). Để debug, dùng `print("Searching...", file=sys.stderr)` sau khi nhập `sys`; stderr là luồng lỗi chuẩn. Không nuốt ngoại lệ để checker chạy bài nộp sau này có thể báo RE thay vì nhận một lời giải thành công giả.
 

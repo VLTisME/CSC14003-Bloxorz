@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import time
 import unittest
 from ursina import Entity, Ursina, Vec3
 
@@ -48,6 +49,26 @@ class TestAnimationIntegrity(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.anim.stop_all()
+
+    def test_astar_button_solves_and_starts_replay(self) -> None:
+        """The GUI runs A* asynchronously and feeds its checked path to Replay."""
+        from game.ursina_ui.app import BloxorzUrsinaApp
+
+        app = BloxorzUrsinaApp(start_in_menu=False)
+        app.load_stage_by_id("01")
+        self.assertEqual(app.ui.btn_solve_astar.text, "Giải A*")
+        app.action_solve_astar()
+
+        deadline = time.monotonic() + 15.0
+        while app._astar_running and time.monotonic() < deadline:
+            time.sleep(0.02)
+            app._poll_astar_results()
+
+        self.assertFalse(app._astar_running, "A* did not finish within 15 seconds")
+        self.assertTrue(app.replay_actions)
+        self.assertEqual(app.current_replay_file, "A*")
+        self.assertTrue(app.is_replay_playing)
+        app.action_reset()
 
     def test_scale_integrity_across_moves(self) -> None:
         """Kiểm tra kích thước khối không bao giờ bị squash ghi đè thành sai tư thế."""

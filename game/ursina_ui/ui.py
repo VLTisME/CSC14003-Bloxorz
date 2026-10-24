@@ -55,6 +55,7 @@ class UIManager:
         on_replay_jump_end: Callable[[], None],
         on_replay_load_file: Callable[[str], None],
         on_speed_change: Callable[[float], None],
+        on_solve_astar: Callable[[], None],
     ) -> None:
         self.catalog = catalog
         self.on_select_stage = on_select_stage
@@ -68,6 +69,7 @@ class UIManager:
         self.on_replay_jump_end = on_replay_jump_end
         self.on_replay_load_file = on_replay_load_file
         self.on_speed_change = on_speed_change
+        self.on_solve_astar = on_solve_astar
 
         self.theme = get_theme("toy")
         self.ui_root = Entity(parent=camera.ui, name="ui_root")
@@ -121,7 +123,18 @@ class UIManager:
             color=color.hex("#10B981"),
         )
 
-        # Các nút chức năng trên đỉnh
+        # Nút chạy A* và các nút chức năng trên đỉnh
+        self.btn_solve_astar = Button(
+            parent=self.ui_root,
+            text="Giải A*",
+            font=FONT_NAME,
+            scale=(0.12, 0.05),
+            position=(0.46, 0.46, -0.01),
+            color=rgba255(230, 126, 34, 230),
+            text_color=color.white,
+            on_click=self.on_solve_astar,
+        )
+
         self.btn_select_stage = Button(
             parent=self.ui_root,
             text="Chọn Màn",
@@ -320,6 +333,11 @@ class UIManager:
 
         self.btn_speed.text = f"{int(self.current_speed)}x"
         self.on_speed_change(self.current_speed)
+
+    def set_solver_status(self, text: str, *, failed: bool = False) -> None:
+        """Show A* solve progress/result in the solver button."""
+        self.btn_solve_astar.text = text
+        self.btn_solve_astar.color = rgba255(192, 57, 43, 230) if failed else rgba255(230, 126, 34, 230)
 
     def _submit_custom_replay(self) -> None:
         """Người dùng nhấn nút nạp đường dẫn file replay nhập tay."""

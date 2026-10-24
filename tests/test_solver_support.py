@@ -111,7 +111,11 @@ class SolverSupportTests(unittest.TestCase):
             self.assertTrue(metrics_issues(value))
         for key, values in {
             "search_time_ms": [True, -1, float("inf"), float("nan"), "1"],
+            "heuristic_preprocessing_time_ms": [True, -1, float("inf"), "1"],
+            "astar_search_time_ms": [True, -1, float("nan"), "1"],
             "expanded_nodes": [True, -1, 1.2],
+            "relaxed_states": [True, -1, 1.2],
+            "generated_nodes": [True, -1, 1.2],
             "peak_memory_bytes": [True, -1, 1.2, None],
             "memory_method": [None, "RSS"],
         }.items():

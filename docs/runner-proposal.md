@@ -1,6 +1,6 @@
 # Runner và checker
 
-Đặc tả v1.1 — 16/10/2026; bản tiếng Việt ngày 17/10/2026. Checker phát lại và helper đo lường dùng chung đã được triển khai. Checker chạy bài nộp, runner chạy theo bộ và phần hiển thị trên terminal vẫn là sản phẩm cần hoàn thành trong giai đoạn 1.
+Đặc tả v1.1 — 16/10/2026; cập nhật trạng thái triển khai ngày 24/10/2026. Checker phát lại, checker chạy bài nộp, runner theo bộ và hiển thị 2D trên terminal đã được triển khai. GUI Ursina 3D cũng có nút chạy A* và phát lại lời giải.
 
 ## Quy trình một lần chạy
 
@@ -30,7 +30,7 @@ Lệnh thứ hai phát lại mọi lời giải tham chiếu được cung cấp
 python algorithms/DFS.py < testcases/original/01.in.json > answer.json
 ```
 
-Các lệnh checker chạy bài nộp và runner đã thống nhất (chưa triển khai):
+Các lệnh checker chạy bài nộp và runner:
 
 ```bash
 python checker.py --algorithm algorithms/BFS.py --test 01 --timeout 10
@@ -46,7 +46,7 @@ Checker chạy bài nộp khởi chạy thuật toán, thu JSON được in, áp
 
 Với một stage, runner hiển thị verdict, hành động trả về, số hành động và thời gian đo. Với toàn bộ bộ thử nghiệm, hiển thị thời gian/số hành động từng stage, tổng thời gian thực thi thuật toán và stage giải thành công nhanh nhất/chậm nhất kèm ID. Hiển thị riêng lỗi và trường hợp hết thời gian. Nếu không có stage nào giải thành công, thống kê stage thành công nhanh nhất/chậm nhất không có giá trị.
 
-`--visualize_2d` chỉ dành cho runner và yêu cầu chọn một stage; dành `--visualize_3d` cho phần 3D ở giai đoạn sau. `checker.py --all` hiện vẫn là lệnh kiểm tra dữ liệu tham chiếu cho đến khi triển khai giao diện chạy bài nộp. Khi đó chuyển chức năng kiểm tra tham chiếu sang lệnh phát triển hoặc bài kiểm thử có tên riêng để tránh hai ý nghĩa mâu thuẫn.
+`--visualize_2d` chỉ dành cho runner và yêu cầu chọn một stage. GUI 3D có nút `Giải A*`; kết quả được checker phát lại kiểm tra trước khi animation bắt đầu. `checker.py --all` kiểm tra các lời giải tham chiếu đã lưu, còn `checker.py --algorithm ... --all` chạy chương trình thuật toán trên toàn bộ stage.
 
 ## Checker đơn giản
 

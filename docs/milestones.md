@@ -18,11 +18,15 @@ Cập nhật ngày 17/10/2026. Ngày tháng dùng múi giờ Asia/Ho_Chi_Minh. C
 
 - [ ] **M3 — Game engine và hiển thị 2D trên terminal.** Ngày hoàn thành: chưa có. Chơi thủ công và phát lại hoạt động với đầy đủ cơ chế yêu cầu; chuyển trạng thái khớp checker và ví dụ. Báo cáo: thiết kế trạng thái/chuyển trạng thái, các lựa chọn triển khai và bằng chứng kiểm chứng.
 
-- [ ] **M4 — Bốn chương trình tìm kiếm Python độc lập.** Ngày hoàn thành: chưa có. BFS, DFS/IDS, UCS và A* đọc stage JSON, trả về JSON có thể phát lại. Mỗi chương trình ghi các số liệu tìm kiếm bắt buộc. Giải thích sự tương đương về mục tiêu giữa UCS/BFS khi mỗi hành động có chi phí một và lập luận cho heuristic của A*. Báo cáo: bốn phần thuật toán, chi phí, điều kiện đúng đắn và độ phức tạp.
+- [ ] **M4 — Bốn chương trình tìm kiếm Python độc lập.** Ngày hoàn thành: chưa có. BFS, DFS, UCS và A* đọc stage JSON, trả về JSON có thể phát lại. Mỗi chương trình ghi các số liệu tìm kiếm bắt buộc. Giải thích sự tương đương về mục tiêu giữa UCS/BFS khi mỗi hành động có chi phí một và lập luận cho heuristic của A*. Báo cáo: bốn phần thuật toán, chi phí, điều kiện đúng đắn và độ phức tạp.
+
+  Phần code và kiểm thử: BFS, DFS, UCS, A* đều AC 33/33; metrics đầy đủ 33/33. BFS/UCS/A* đã qua đối chiếu độ dài tối ưu, A* có thêm kiểm thử heuristic và chứng minh trong [tài liệu thiết kế](astar-design.md). Nút Solve A* trong GUI 3D đã kiểm thử. Hoàn thành phần triển khai/kiểm chứng **2026-10-24**; M4 vẫn mở cho tới khi các phần báo cáo tương ứng được đưa vào Prism và nhóm rà soát.
 
 - [ ] **M5 — Hoàn tất tích hợp giai đoạn 1.** Ngày hoàn thành: chưa có. Checker chạy bài nộp và runner dùng chung phần thực thi chương trình, giới hạn tài nguyên và phát lại. Cả hai thống kê verdict; runner ghi thêm mức độ đầy đủ của số liệu benchmark, thống kê, một file JSON theo thời điểm và phát lại trên terminal. Báo cáo: phương pháp thực nghiệm và các bảng đo đầu tiên; không tự tạo số liệu.
 
 - [ ] **M6 — GUI 3D và đánh giá cuối cùng.** Ngày hoàn thành: chưa có. Chơi thủ công 3D và phát lại lời giải tự động hoạt động. Chạy một bộ benchmark cố định, tạo biểu đồ, thảo luận đánh đổi giữa thời gian/bộ nhớ/số nút mở rộng/độ dài lời giải. Báo cáo: mô tả GUI, kết quả cuối cùng và thảo luận.
+
+  Đã tích hợp và kiểm thử nút Solve A*, chạy benchmark so sánh BFS/A* trên 33 stage và lưu kết quả theo từng stage trong [Markdown](astar-benchmark.md)/[CSV](astar-benchmark.csv) vào **2026-10-24**. Còn tạo biểu đồ, chạy đo lặp lại để kết luận hiệu năng và hoàn thiện nội dung báo cáo.
 
 - [ ] **M7 — Gói nộp bài và demo.** Ngày hoàn thành: chưa có. Hoàn tất mã nguồn có thể tái chạy, hướng dẫn thiết lập, PDF, trích dẫn, phụ lục sử dụng AI, liên kết demo công khai có thuyết minh/phụ đề và file nén đúng tên. Báo cáo: đối chiếu lần cuối với tiêu chí chấm bài.
 

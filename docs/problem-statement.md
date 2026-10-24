@@ -176,7 +176,7 @@ Với các lần benchmark dùng trong báo cáo, thêm `metrics` vào cùng đ�
 | Trường | Ý nghĩa |
 |---|---|
 | `search_time_ms` | Số mili giây trôi qua hữu hạn, không âm, cho khởi tạo tìm kiếm, tiền xử lý heuristic, tìm kiếm và truy vết đường đi; không gồm phân tích JSON và in kết quả |
-| `expanded_nodes` | Số nguyên không âm đếm các nút không phải đích có sinh trạng thái kế tiếp; bỏ qua phần tử lỗi thời/trùng lặp bị bỏ qua, nhưng tính các lần thực sự mở rộng lại và mọi vòng lặp IDS |
+| `expanded_nodes` | Số nguyên không âm đếm các nút không phải đích có sinh trạng thái kế tiếp; bỏ qua phần tử lỗi thời/trùng lặp bị bỏ qua, nhưng tính các lần thực sự mở rộng lại |
 | `peak_memory_bytes` | Số nguyên không âm biểu diễn đỉnh cấp phát bộ nhớ Python được theo dõi trong tìm kiếm; không gồm cấp phát có trước khi đo và không phải toàn bộ bộ nhớ tiến trình |
 | `memory_method` | `"tracemalloc"` cho phương pháp đo cơ sở dùng chung |
 

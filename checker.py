@@ -517,6 +517,13 @@ def execute_and_check(
         "cost": cost,
         "reference_length": reference_length,
     }
+    if isinstance(metrics_data, dict):
+        for key in (
+            "heuristic_preprocessing_time_ms", "astar_search_time_ms",
+            "relaxed_states", "relaxed_edges", "generated_nodes", "max_frontier_size",
+        ):
+            if key in metrics_data:
+                statistics[key] = metrics_data[key]
 
     return {
         "test_id": test_id,

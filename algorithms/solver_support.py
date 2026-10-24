@@ -20,6 +20,15 @@ def metrics_issues(metrics: object) -> list[str]:
         value = metrics.get(key)
         if type(value) is not int or value < 0:
             issues.append(f"{key} must be a nonnegative integer")
+    for key in ("heuristic_preprocessing_time_ms", "astar_search_time_ms"):
+        if key in metrics:
+            value = metrics[key]
+            if (type(value) not in (int, float) or value < 0
+                    or (isinstance(value, float) and not math.isfinite(value))):
+                issues.append(f"{key} must be a finite nonnegative number")
+    for key in ("relaxed_states", "relaxed_edges", "generated_nodes", "max_frontier_size"):
+        if key in metrics and (type(metrics[key]) is not int or metrics[key] < 0):
+            issues.append(f"{key} must be a nonnegative integer")
     if metrics.get("memory_method") != "tracemalloc":
         issues.append("memory_method must be tracemalloc for the agreed baseline")
     return issues

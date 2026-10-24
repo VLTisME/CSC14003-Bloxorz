@@ -16,6 +16,10 @@ from __future__ import annotations
 import json
 import math
 from pathlib import Path
+import queue
+import subprocess
+import sys
+from threading import Thread
 from typing import TYPE_CHECKING
 from ursina import (
     AmbientLight,
@@ -49,6 +53,7 @@ from game.ursina_ui.screens.win_screen import WinScreen
 from game.ursina_ui.shadows import BlobShadow
 from game.ursina_ui.state_manager import GameState, StateManager
 from game.ursina_ui.ui import UIManager
+from checker import check as check_answer
 
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -147,6 +152,13 @@ class BloxorzUrsinaApp(Entity):
         self.replay_interval: float = 0.35
         self.current_replay_file: str | None = None
 
+        # A* chạy trong tiến trình riêng để không chặn vòng lặp hiển thị Ursina.
+        self._astar_results: queue.Queue[tuple[int, int | None, str, str]] = queue.Queue()
+        self._astar_generation = 0
+        self._astar_running = False
+        self._astar_thread: Thread | None = None
+        self._astar_start_move_count = 0
+
         # Giao diện HUD 2D
         self.ui = UIManager(
             catalog=self.catalog,
@@ -161,6 +173,7 @@ class BloxorzUrsinaApp(Entity):
             on_replay_jump_end=self.action_replay_jump_end,
             on_replay_load_file=self.action_replay_load_custom,
             on_speed_change=self.set_speed_mult,
+            on_solve_astar=self.action_solve_astar,
         )
 
         # Màn hình Menu chính và các Menu trạng thái
@@ -265,6 +278,9 @@ class BloxorzUrsinaApp(Entity):
 
     def load_stage_from_file(self, stage_path: Path, replay_path: Path | None = None) -> None:
         """Nạp màn chơi từ đường dẫn file .in.json cụ thể."""
+        self._astar_generation += 1
+        self._astar_running = False
+        self.ui.set_solver_status("Giải A*")
         self.anim.stop_all()
         self.is_replay_playing = False
         self.ui.set_replay_play_state(False)
@@ -454,6 +470,83 @@ class BloxorzUrsinaApp(Entity):
         self.anim.stop_all()
         self.block_view.sync_from_engine(self.engine)
 
+    def action_solve_astar(self) -> None:
+        """Run A* off-thread, validate its answer, then animate it via Replay."""
+        if self._astar_running:
+            return
+        if self.engine.stage is None:
+            self.ui.set_solver_status("Chưa có màn", failed=True)
+            return
+        if self.engine.move_count or not self.engine.is_playing:
+            self.action_reset()
+
+        self._astar_generation += 1
+        generation = self._astar_generation
+        self._astar_start_move_count = self.engine.move_count
+        stage_data = json.loads(json.dumps(self.engine.stage))
+        stage_json = json.dumps(stage_data)
+        self._astar_running = True
+        self.ui.set_solver_status("A*: Đang giải...")
+
+        def run_solver() -> None:
+            try:
+                process = subprocess.run(
+                    [sys.executable, str(ROOT_DIR / "algorithms" / "ASTAR.py")],
+                    input=stage_json,
+                    text=True,
+                    capture_output=True,
+                    cwd=ROOT_DIR,
+                    timeout=60.0,
+                    check=False,
+                )
+                self._astar_results.put((generation, process.returncode, process.stdout, process.stderr))
+            except Exception as exc:
+                self._astar_results.put((generation, None, "", f"{type(exc).__name__}: {exc}"))
+
+        self._astar_thread = Thread(target=run_solver, name="bloxorz-astar", daemon=True)
+        self._astar_thread.start()
+
+    def _poll_astar_results(self) -> None:
+        """Consume completed subprocesses on the GUI thread."""
+        while True:
+            try:
+                generation, return_code, stdout, stderr = self._astar_results.get_nowait()
+            except queue.Empty:
+                return
+            if generation != self._astar_generation:
+                continue
+
+            self._astar_running = False
+            if return_code != 0:
+                self.ui.set_solver_status("A*: lỗi", failed=True)
+                print(f"[A*] Solver failed: {stderr.strip() or f'exit code {return_code}'}", file=sys.stderr)
+                continue
+            try:
+                answer = json.loads(stdout)
+                verdict = check_answer(self.engine.stage, answer)
+            except Exception as exc:
+                self.ui.set_solver_status("A*: đầu ra lỗi", failed=True)
+                print(f"[A*] Invalid solver output: {exc}", file=sys.stderr)
+                continue
+
+            if verdict["verdict"] != "AC":
+                self.ui.set_solver_status("A*: lời giải lỗi", failed=True)
+                print(f"[A*] Checker rejected solution: {verdict['message']}", file=sys.stderr)
+                continue
+            if self.engine.move_count != self._astar_start_move_count or not self.engine.is_playing:
+                self.ui.set_solver_status("Bàn đã đổi - giải lại")
+                continue
+
+            self.replay_actions = answer["actions"]
+            self.replay_index = 0
+            self.current_replay_file = "A*"
+            self.ui.inp_replay_path.text = "A*"
+            self.ui.update_replay_status(0, len(self.replay_actions), "A*")
+            self.ui.set_solver_status(f"A*: {len(self.replay_actions)} bước")
+            self.is_replay_playing = True
+            self.replay_timer = self.replay_interval
+            self._sync_replay_button()
+
     def action_undo(self) -> None:
         """Hoàn tác bước đi gần nhất."""
         self.input_controller.reset()
@@ -481,6 +574,10 @@ class BloxorzUrsinaApp(Entity):
 
     def action_reset(self) -> None:
         """Đặt lại ván chơi về trạng thái ban đầu."""
+        # Nếu đang giải, bỏ kết quả của trạng thái cũ sau khi người dùng reset.
+        self._astar_generation += 1
+        self._astar_running = False
+        self.ui.set_solver_status("Giải A*")
         self.input_controller.reset()
         self.anim.stop_all()
         self.is_replay_playing = False
@@ -864,6 +961,7 @@ class BloxorzUrsinaApp(Entity):
 
     def update(self) -> None:
         """Vòng lặp cập nhật chính của trò chơi mỗi khung hình."""
+        self._poll_astar_results()
         dt = time.dt
 
         # Cập nhật tỉ lệ nền
