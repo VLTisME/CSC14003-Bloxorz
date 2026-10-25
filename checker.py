@@ -518,9 +518,12 @@ def execute_and_check(
         "reference_length": reference_length,
     }
     if isinstance(metrics_data, dict):
+        # Giữ các số liệu mở rộng do solver báo cáo. weighted_cost là mục tiêu
+        # UCS; cost phía trên vẫn là số bước, không phải chứng nhận tối ưu UCS.
         for key in (
             "heuristic_preprocessing_time_ms", "astar_search_time_ms",
             "relaxed_states", "relaxed_edges", "generated_nodes", "max_frontier_size",
+            "weighted_cost",
         ):
             if key in metrics_data:
                 statistics[key] = metrics_data[key]
