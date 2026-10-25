@@ -13,6 +13,14 @@ Bắt đầu với [phát biểu bài toán](docs/problem-statement.md), [hướ
 - BFS, DFS, UCS và A* chạy độc lập; runner kiểm tra và lưu số liệu, còn A* có heuristic relaxed-graph đã kiểm thử tính tối ưu.
 - Engine trò chơi, hiển thị 2D trên terminal và GUI Ursina 3D đã có; GUI có nút Solve A*.
 
+- UCS tối ưu tổng chi phí có trọng số (weighted cost): `weighted_cost = số bước di chuyển + 2 × số bước đáp lên ô dễ vỡ + số bước đáp lên ô cầu + 3 × số lần kích hoạt tách khối`.
+- Số bước đáp lên ô dễ vỡ `F` (fragile tile): số hành động mà phần khối vừa di chuyển đáp lên ít nhất một ô `F`; một hành động đáp lên hai ô `F` vẫn chỉ tính một lần.
+- Số bước đáp lên ô cầu `B` (bridge tile): số hành động mà phần khối vừa di chuyển đáp lên ít nhất một ô `B`; một hành động đáp lên hai ô `B` vẫn chỉ tính một lần. Nếu một bước đáp lên cả `F` và `B`, hai phụ phí được cộng dồn.
+- Số lần kích hoạt tách khối (block splitting): số hành động làm khối nguyên đứng thẳng trên ô tách `T` (splitter), dịch chuyển và tách thành hai khối nhỏ. Nằm trên `T` không được tính; các bước di chuyển sau khi đã tách và việc tự ghép lại (rejoining) không làm tăng số lần tách.
+- Khi khối đã tách, chỉ xét ô đích của khối nhỏ vừa di chuyển (moving cube), không tính ô của khối đứng yên (stationary cube). Riêng bước kích hoạt tách, xét phụ phí `F`/`B` tại cả hai điểm đến dịch chuyển (teleport destinations). Xem [thiết kế chi phí UCS](docs/ucs-design.md) để biết đầy đủ quy tắc.
+- BFS và A* vẫn tối ưu số bước. Chạy UCS bằng `python run_tests.py --algorithm algorithms/UCS.py --all`, không dùng `--require-optimal`: cờ này yêu cầu số bước bằng độ dài lời giải tham chiếu (reference solution length), không kiểm tra tổng chi phí có trọng số nhỏ nhất.
+- `solution_length` (độ dài lời giải) và `cost` cũ vẫn bằng số bước; `statistics.weighted_cost` là tổng chi phí có trọng số UCS báo cáo. AC (Accepted) trong chế độ không bật `--require-optimal` chỉ xác nhận lời giải hợp lệ, không chứng minh chi phí tối ưu.
+
 ```bash
 python run_tests.py --algorithm algorithms/ASTAR.py --all --require-optimal
 python checker.py --input testcases/original/01.in.json --output answer.json

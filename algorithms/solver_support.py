@@ -26,7 +26,7 @@ def metrics_issues(metrics: object) -> list[str]:
             if (type(value) not in (int, float) or value < 0
                     or (isinstance(value, float) and not math.isfinite(value))):
                 issues.append(f"{key} must be a finite nonnegative number")
-    for key in ("relaxed_states", "relaxed_edges", "generated_nodes", "max_frontier_size"):
+    for key in ("relaxed_states", "relaxed_edges", "generated_nodes", "max_frontier_size", "weighted_cost"):
         if key in metrics and (type(metrics[key]) is not int or metrics[key] < 0):
             issues.append(f"{key} must be a nonnegative integer")
     if metrics.get("memory_method") != "tracemalloc":

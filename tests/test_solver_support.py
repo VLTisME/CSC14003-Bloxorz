@@ -107,6 +107,8 @@ class SolverSupportTests(unittest.TestCase):
         valid = {"search_time_ms": 0.5, "expanded_nodes": 2,
                  "peak_memory_bytes": 100, "memory_method": "tracemalloc"}
         self.assertEqual(metrics_issues(valid), [])
+        for cost in (0, 15):
+            self.assertEqual(metrics_issues({**valid, "weighted_cost": cost}), [])
         for value in (None, [], {}, {"expanded_nodes": 1}):
             self.assertTrue(metrics_issues(value))
         for key, values in {
@@ -116,6 +118,7 @@ class SolverSupportTests(unittest.TestCase):
             "expanded_nodes": [True, -1, 1.2],
             "relaxed_states": [True, -1, 1.2],
             "generated_nodes": [True, -1, 1.2],
+            "weighted_cost": [True, -1, 1.2, None, "15"],
             "peak_memory_bytes": [True, -1, 1.2, None],
             "memory_method": [None, "RSS"],
         }.items():

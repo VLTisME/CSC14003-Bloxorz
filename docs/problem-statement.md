@@ -41,11 +41,13 @@ Khối nhỏ đang đứng yên trên công tắc nhẹ không nhấn lại côn
 
 ## Di chuyển và chi phí
 
-Mỗi bước di chuyển theo hướng có chi phí **1**. Đổi khối nhỏ được chọn có chi phí **0**. Dịch chuyển tức thời, đổi trạng thái cầu, tác dụng công tắc và tự ghép khối cũng có chi phí **0**. Tổng chi phí bằng số bước di chuyển theo hướng.
+Theo thước đo số bước cơ sở, mỗi bước di chuyển theo hướng có chi phí **1**. Đổi khối nhỏ được chọn có chi phí **0**. Dịch chuyển tức thời, đổi trạng thái cầu, tác dụng công tắc và tự ghép khối không tạo thêm bước. Trường `cost` của checker giữ thước đo này và bằng số bước di chuyển theo hướng. UCS hiện dùng thêm một hàm chi phí có phụ phí riêng, được lưu trong `weighted_cost`; xem bên dưới.
 
 Đi ra ngoài bàn chơi, vào khoảng trống hoặc lên cầu đang tắt đều gây thua. Để khối hộp hoàn chỉnh đứng thẳng trên ô dễ vỡ cũng gây thua. Đây vẫn là các hành động trong game có thể nhận diện, nhưng kết quả là thua; solver phải tránh chúng trong lời giải.
 
-BFS và UCS tìm được lời giải ngắn nhất với mô hình mỗi hành động có chi phí một. A* cũng đạt điều đó khi heuristic và cách triển khai thỏa các điều kiện bảo đảm tính tối ưu. Vì vậy, “chi phí tối ưu” nghĩa là ít bước di chuyển theo hướng nhất. DFS có thể tìm ra lời giải dài hơn. Checker chấp nhận mọi đường đi dẫn đến chiến thắng; độ dài lời giải được so sánh riêng trong thực nghiệm.
+BFS và A* hiện tìm lời giải ít bước nhất; DFS có thể tìm ra lời giải dài hơn. UCS tối ưu `1 + 2 × touches_fragile + touches_bridge + 3 × triggers_split` cho từng hành động hợp lệ, nên có thể chọn đường dài hơn nhưng tổng chi phí nhỏ hơn. Các chỉ báo nhận giá trị 0/1, phụ phí mỗi loại chỉ tính một lần trong một bước. Quy tắc đầy đủ cho khối nhỏ, ghép và dịch chuyển nằm trong [thiết kế UCS](ucs-design.md). Đây là ưu tiên đường đi do nhóm chọn, không phải xác suất thua.
+
+Checker chấp nhận mọi đường đi dẫn đến chiến thắng. `--require-optimal` chỉ so sánh số bước với tham chiếu, phù hợp với BFS/A* hiện tại; không dùng cờ này để chấm UCS có phụ phí. AC không chứng minh tối ưu `weighted_cost`. Khi so sánh tổng chi phí giữa các solver, phải tính lại mọi lời giải bằng cùng công thức UCS, đồng thời báo cáo riêng số bước.
 
 ## Dữ liệu vào
 
@@ -182,7 +184,7 @@ Với các lần benchmark dùng trong báo cáo, thêm `metrics` vào cùng đ�
 
 Dùng [template thuật toán](../algorithms/template.py) và [hướng dẫn helper](algorithm-guide.md) để thu thập các trường này nhất quán. Helper đo thời gian tìm kiếm, theo dõi đỉnh cấp phát và in JSON; bạn gọi `metrics.expanded()` ngay trước khi sinh trạng thái kế tiếp của mỗi nút không phải đích. Helper không triển khai tìm kiếm hay áp đặt cách biểu diễn trạng thái của bạn.
 
-Thiếu số liệu hoặc số liệu không hợp lệ không biến một lời giải thắng thành WA. Khi đó bản ghi không đủ điều kiện làm kết quả benchmark đầy đủ và runner sau này phải báo riêng. Đầu ra tham chiếu giữ nguyên, không chứa giá trị đo. Runner suy ra độ dài/chi phí từ hành động được chấp nhận và tự đo thời gian toàn tiến trình. Xem [đặc tả runner](runner-proposal.md) về chi phí đo lường và các lần chỉ đo thời gian.
+Thiếu số liệu hoặc số liệu không hợp lệ không biến một lời giải thắng thành WA. Khi đó bản ghi không đủ điều kiện làm kết quả benchmark đầy đủ và runner báo riêng. Đầu ra tham chiếu giữ nguyên, không chứa giá trị đo. Runner suy ra `solution_length`/`cost` bằng số hành động được chấp nhận và tự đo thời gian toàn tiến trình. UCS bổ sung `metrics.weighted_cost` (số nguyên không âm); runner lưu lại ở `statistics.weighted_cost`. Đây là số liệu solver báo cáo, không được checker chứng nhận tối ưu. Xem [đặc tả runner](runner-proposal.md) về chi phí đo lường và các lần chỉ đo thời gian.
 
 ### Hành động
 
@@ -192,7 +194,7 @@ Thiếu số liệu hoặc số liệu không hợp lệ không biến một l�
 | Khối nhỏ 1 | `1U` | `1D` | `1L` | `1R` |
 | Khối nhỏ 2 | `2U` | `2D` | `2L` | `2R` |
 
-Ví dụ, `1R` chọn khối nhỏ 1 miễn phí rồi di chuyển sang phải với chi phí 1. Không có hành động riêng chỉ để đổi khối được chọn.
+Ví dụ, `1R` chọn khối nhỏ 1 miễn phí rồi di chuyển sang phải, được tính là một bước. UCS cộng phụ phí nếu ô đích của khối đang di chuyển là `F` hoặc `B`. Không có hành động riêng chỉ để đổi khối được chọn.
 
 Chỉ dùng hành động khối nhỏ khi đang tách, và hành động khối hộp hoàn chỉnh khi đang ghép. Kết thúc danh sách hành động ngay khi đạt đích.
 

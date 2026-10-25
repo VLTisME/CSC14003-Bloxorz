@@ -92,7 +92,9 @@ python algorithms/BFS.py < testcases/samples/01.in.json > answer.json
 python checker.py --input testcases/samples/01.in.json --output answer.json
 ```
 
-Shell lưu JSON được in vào `answer.json`; thuật toán không tự tạo file này. Checker phát lại chấm đường đi; checker/runner có cờ `--algorithm` để chạy chương trình, áp timeout và báo verdict. Dùng `--require-optimal` với BFS/UCS/A* để kiểm tra độ dài lời giải theo testcase.
+Shell lưu JSON được in vào `answer.json`; thuật toán không tự tạo file này. Checker phát lại chấm đường đi; checker/runner có cờ `--algorithm` để chạy chương trình, áp timeout và báo verdict. Dùng `--require-optimal` với BFS/A* để kiểm tra độ dài lời giải theo testcase. UCS hiện tối ưu chi phí có phụ phí nên chạy không kèm cờ này: `python run_tests.py --algorithm algorithms/UCS.py --all`.
+
+UCS giữ `solve(stage, metrics)` trả danh sách hành động và bổ sung `solve_with_cost(stage, metrics)` trả `(actions, total_cost)`. CLI in thêm `metrics.weighted_cost`, được helper kiểm tra là số nguyên không âm nếu có. Runner sao chép sang `statistics.weighted_cost`, còn `cost` và `solution_length` vẫn bằng số bước. Xem [công thức và kiểm chứng UCS](ucs-design.md); AC chỉ xác nhận đường đi hợp lệ, không chứng minh chi phí tối ưu.
 
 Không in thông báo tiến độ ra stdout (luồng xuất chuẩn). Để debug, dùng `print("Searching...", file=sys.stderr)` sau khi nhập `sys`; stderr là luồng lỗi chuẩn. Không nuốt ngoại lệ để checker chạy bài nộp sau này có thể báo RE thay vì nhận một lời giải thành công giả.
 
