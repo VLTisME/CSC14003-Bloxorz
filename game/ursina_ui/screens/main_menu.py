@@ -15,6 +15,17 @@ from ursina import (
 )
 
 from game.theme import UI_FONT
+from game.ursina_ui.theme import (
+    BTN_HOVER,
+    BTN_PRESSED,
+    BTN_WOOD_BASE,
+    FRAME_BEZEL,
+    FRAME_DARK,
+    SOLVER_ERROR,
+    TEXT_DARK,
+    TEXT_MUTED,
+    get_parchment_panel_texture,
+)
 
 FONT_NAME = UI_FONT
 
@@ -36,31 +47,31 @@ class MainMenuScreen(Entity):
         self.on_help = on_help
         self.on_quit = on_quit or application.quit
 
-        # Lớp nền mờ tối Obsidian
+        # Lớp nền mờ tối ấm áp
         self.bg_overlay = Entity(
             parent=self,
             model="quad",
             scale=(2.5, 2.5),
-            color=color.rgba(7 / 255.0, 10 / 255.0, 16 / 255.0, 0.92),
+            color=color.rgba(24 / 255.0, 16 / 255.0, 10 / 255.0, 0.85),
             z=0.1,
         )
 
-        # Panel trung tâm
+        # Panel trung tâm kiểu bảng gỗ thông báo & giấy da parchment
+        self.panel_border = Entity(
+            parent=self,
+            model="quad",
+            scale=(0.612, 0.732),
+            color=color.hex(FRAME_DARK),
+            z=0.06,
+        )
+
         self.panel = Entity(
             parent=self,
             model="quad",
             scale=(0.60, 0.72),
-            color=color.rgba(27 / 255.0, 32 / 255.0, 56 / 255.0, 0.95),
+            texture=get_parchment_panel_texture(160, 192),
+            color=color.white,
             z=0.05,
-        )
-
-        # Viền trang trí panel
-        self.panel_border = Entity(
-            parent=self,
-            model="quad",
-            scale=(0.605, 0.725),
-            color=color.hex("#4A5568"),
-            z=0.06,
         )
 
         # Tiêu đề game
@@ -71,18 +82,18 @@ class MainMenuScreen(Entity):
             scale=2.4,
             origin=(0, 0),
             position=(0, 0.24, 0),
-            color=color.hex("#F6AD55"),
+            color=color.hex(TEXT_DARK),
         )
 
         # Phụ đề
         self.txt_subtitle = Text(
             parent=self,
-            text="STUDIO EDITION • AI FOUNDATIONS",
+            text="COZY EDITION • AI FOUNDATIONS",
             font=FONT_NAME,
             scale=1.0,
             origin=(0, 0),
             position=(0, 0.17, 0),
-            color=color.hex("#A0AEC0"),
+            color=color.hex(TEXT_MUTED),
         )
 
         # Đường gạch phân cách
@@ -91,7 +102,7 @@ class MainMenuScreen(Entity):
             model="quad",
             scale=(0.45, 0.003),
             position=(0, 0.13, 0),
-            color=color.hex("#4A5568"),
+            color=color.hex(FRAME_BEZEL),
         )
 
         # Danh sách các nút điều hướng
@@ -106,9 +117,9 @@ class MainMenuScreen(Entity):
             model="quad",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start, 0),
-            color=color.hex("#2B6CB0"),
-            highlight_color=color.hex("#3182CE"),
-            pressed_color=color.hex("#1A365D"),
+            color=color.hex("#4E8A3A"),
+            highlight_color=color.hex("#62A848"),
+            pressed_color=color.hex("#3B682C"),
             text_color=color.white,
             text_origin=(0, 0),
             radius=0.15,
@@ -122,10 +133,10 @@ class MainMenuScreen(Entity):
             model="quad",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start - btn_spacing, 0),
-            color=color.hex("#2D3748"),
-            highlight_color=color.hex("#4A5568"),
-            pressed_color=color.hex("#1A202C"),
-            text_color=color.hex("#E2E8F0"),
+            color=color.hex(BTN_WOOD_BASE),
+            highlight_color=color.hex(BTN_HOVER),
+            pressed_color=color.hex(BTN_PRESSED),
+            text_color=color.hex(TEXT_DARK),
             text_origin=(0, 0),
             radius=0.15,
             on_click=self._on_select_stage_clicked,
@@ -138,10 +149,10 @@ class MainMenuScreen(Entity):
             model="quad",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start - btn_spacing * 2, 0),
-            color=color.hex("#2D3748"),
-            highlight_color=color.hex("#4A5568"),
-            pressed_color=color.hex("#1A202C"),
-            text_color=color.hex("#E2E8F0"),
+            color=color.hex(BTN_WOOD_BASE),
+            highlight_color=color.hex(BTN_HOVER),
+            pressed_color=color.hex(BTN_PRESSED),
+            text_color=color.hex(TEXT_DARK),
             text_origin=(0, 0),
             radius=0.15,
             on_click=self._on_help_clicked,
@@ -154,15 +165,14 @@ class MainMenuScreen(Entity):
             model="quad",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start - btn_spacing * 3, 0),
-            color=color.hex("#742A2A"),
-            highlight_color=color.hex("#9B2C2C"),
-            pressed_color=color.hex("#4C1D1D"),
-            text_color=color.hex("#FED7D7"),
+            color=color.hex(SOLVER_ERROR),
+            highlight_color=color.hex("#C53030"),
+            pressed_color=color.hex("#822020"),
+            text_color=color.white,
             text_origin=(0, 0),
             radius=0.15,
             on_click=self._on_quit_clicked,
         )
-
 
         # Footer bản quyền / phiên bản
         self.txt_version = Text(
@@ -172,7 +182,7 @@ class MainMenuScreen(Entity):
             scale=0.8,
             origin=(0, 0),
             position=(0, -0.31, 0),
-            color=color.hex("#718096"),
+            color=color.hex(TEXT_MUTED),
         )
 
     def _on_play_clicked(self) -> None:

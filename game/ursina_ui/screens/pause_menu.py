@@ -11,6 +11,16 @@ from ursina import (
 )
 
 from game.theme import UI_FONT
+from game.ursina_ui.theme import (
+    BTN_HOVER,
+    BTN_PRESSED,
+    BTN_WOOD_BASE,
+    FRAME_BEZEL,
+    FRAME_DARK,
+    TEXT_DARK,
+    TEXT_MUTED,
+    get_parchment_panel_texture,
+)
 
 FONT_NAME = UI_FONT
 
@@ -34,30 +44,31 @@ class PauseMenuScreen(Entity):
         self.on_help = on_help
         self.on_main_menu = on_main_menu
 
-        # Lớp nền mờ dimming
+        # Lớp nền mờ dimming ấm áp
         self.bg_overlay = Entity(
             parent=self,
             model="quad",
             scale=(2.5, 2.5),
-            color=color.rgba(7 / 255.0, 10 / 255.0, 16 / 255.0, 0.85),
+            color=color.rgba(24 / 255.0, 16 / 255.0, 10 / 255.0, 0.85),
             z=0.1,
         )
 
-        # Panel trung tâm
+        # Panel trung tâm kiểu bảng gỗ thông báo & giấy da parchment
+        self.panel_border = Entity(
+            parent=self,
+            model="quad",
+            scale=(0.552, 0.662),
+            color=color.hex(FRAME_DARK),
+            z=0.06,
+        )
+
         self.panel = Entity(
             parent=self,
             model="quad",
             scale=(0.54, 0.65),
-            color=color.rgba(27 / 255.0, 32 / 255.0, 56 / 255.0, 0.95),
+            texture=get_parchment_panel_texture(140, 170),
+            color=color.white,
             z=0.05,
-        )
-
-        self.panel_border = Entity(
-            parent=self,
-            model="quad",
-            scale=(0.545, 0.655),
-            color=color.hex("#4A5568"),
-            z=0.06,
         )
 
         # Tiêu đề
@@ -68,7 +79,7 @@ class PauseMenuScreen(Entity):
             scale=2.2,
             origin=(0, 0),
             position=(0, 0.23, 0),
-            color=color.hex("#ECC94B"),
+            color=color.hex(TEXT_DARK),
         )
 
         # Thông tin ván chơi
@@ -79,7 +90,7 @@ class PauseMenuScreen(Entity):
             scale=1.0,
             origin=(0, 0),
             position=(0, 0.16, 0),
-            color=color.hex("#CBD5E0"),
+            color=color.hex(TEXT_MUTED),
         )
 
         # Đường gạch phân cách
@@ -88,7 +99,7 @@ class PauseMenuScreen(Entity):
             model="quad",
             scale=(0.42, 0.003),
             position=(0, 0.12, 0),
-            color=color.hex("#4A5568"),
+            color=color.hex(FRAME_BEZEL),
         )
 
         # Danh sách nút bấm
@@ -103,8 +114,9 @@ class PauseMenuScreen(Entity):
             model="quad",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start, 0),
-            color=color.hex("#2B6CB0"),
-            highlight_color=color.hex("#3182CE"),
+            color=color.hex("#4E8A3A"),
+            highlight_color=color.hex("#62A848"),
+            pressed_color=color.hex("#3B682C"),
             text_color=color.white,
             text_origin=(0, 0),
             radius=0.15,
@@ -118,9 +130,10 @@ class PauseMenuScreen(Entity):
             model="quad",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start - btn_spacing, 0),
-            color=color.hex("#2D3748"),
-            highlight_color=color.hex("#4A5568"),
-            text_color=color.hex("#E2E8F0"),
+            color=color.hex(BTN_WOOD_BASE),
+            highlight_color=color.hex(BTN_HOVER),
+            pressed_color=color.hex(BTN_PRESSED),
+            text_color=color.hex(TEXT_DARK),
             text_origin=(0, 0),
             radius=0.15,
             on_click=self._on_restart_clicked,
@@ -133,9 +146,10 @@ class PauseMenuScreen(Entity):
             model="quad",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start - btn_spacing * 2, 0),
-            color=color.hex("#2D3748"),
-            highlight_color=color.hex("#4A5568"),
-            text_color=color.hex("#E2E8F0"),
+            color=color.hex(BTN_WOOD_BASE),
+            highlight_color=color.hex(BTN_HOVER),
+            pressed_color=color.hex(BTN_PRESSED),
+            text_color=color.hex(TEXT_DARK),
             text_origin=(0, 0),
             radius=0.15,
             on_click=self._on_stages_clicked,
@@ -148,9 +162,10 @@ class PauseMenuScreen(Entity):
             model="quad",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start - btn_spacing * 3, 0),
-            color=color.hex("#2D3748"),
-            highlight_color=color.hex("#4A5568"),
-            text_color=color.hex("#E2E8F0"),
+            color=color.hex(BTN_WOOD_BASE),
+            highlight_color=color.hex(BTN_HOVER),
+            pressed_color=color.hex(BTN_PRESSED),
+            text_color=color.hex(TEXT_DARK),
             text_origin=(0, 0),
             radius=0.15,
             on_click=self._on_help_clicked,
@@ -163,9 +178,10 @@ class PauseMenuScreen(Entity):
             model="quad",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start - btn_spacing * 4, 0),
-            color=color.hex("#4A5568"),
-            highlight_color=color.hex("#718096"),
-            text_color=color.hex("#F7FAFC"),
+            color=color.hex("#8A562E"),
+            highlight_color=color.hex("#A66B3B"),
+            pressed_color=color.hex("#6E3E1A"),
+            text_color=color.white,
             text_origin=(0, 0),
             radius=0.15,
             on_click=self._on_main_menu_clicked,

@@ -11,6 +11,16 @@ from ursina import (
 )
 
 from game.theme import UI_FONT
+from game.ursina_ui.theme import (
+    BTN_HOVER,
+    BTN_PRESSED,
+    BTN_WOOD_BASE,
+    FRAME_BEZEL,
+    FRAME_DARK,
+    TEXT_DARK,
+    TEXT_MUTED,
+    get_parchment_panel_texture,
+)
 
 FONT_NAME = UI_FONT
 
@@ -32,30 +42,31 @@ class WinScreen(Entity):
         self.on_select_stage = on_select_stage
         self.on_main_menu = on_main_menu
 
-        # Nền mờ sang trọng
+        # Nền mờ ấm áp
         self.bg_overlay = Entity(
             parent=self,
             model="quad",
             scale=(2.5, 2.5),
-            color=color.rgba(7 / 255.0, 10 / 255.0, 16 / 255.0, 0.88),
+            color=color.rgba(24 / 255.0, 16 / 255.0, 10 / 255.0, 0.85),
             z=0.1,
         )
 
-        # Panel trung tâm
+        # Panel trung tâm kiểu bảng gỗ thông báo & giấy da parchment
+        self.panel_border = Entity(
+            parent=self,
+            model="quad",
+            scale=(0.572, 0.652),
+            color=color.hex("#C47B14"),
+            z=0.06,
+        )
+
         self.panel = Entity(
             parent=self,
             model="quad",
             scale=(0.56, 0.64),
-            color=color.rgba(20 / 255.0, 36 / 255.0, 48 / 255.0, 0.95),
+            texture=get_parchment_panel_texture(150, 170),
+            color=color.white,
             z=0.05,
-        )
-
-        self.panel_border = Entity(
-            parent=self,
-            model="quad",
-            scale=(0.565, 0.645),
-            color=color.hex("#38A169"),
-            z=0.06,
         )
 
         # Tiêu đề chiến thắng
@@ -66,7 +77,7 @@ class WinScreen(Entity):
             scale=2.3,
             origin=(0, 0),
             position=(0, 0.23, 0),
-            color=color.hex("#48BB78"),
+            color=color.hex("#C47B14"),
         )
 
         # Biểu tượng sao vàng / kim cương vinh danh
@@ -77,7 +88,7 @@ class WinScreen(Entity):
                 model="diamond",
                 position=(offset_x, 0.165, -0.01),
                 scale=(0.026, 0.038, 0.01),
-                color=color.hex("#ECC94B"),
+                color=color.hex("#F4C430"),
             )
 
         # Thống kê thành tích
@@ -88,7 +99,7 @@ class WinScreen(Entity):
             scale=1.1,
             origin=(0, 0),
             position=(0, 0.09, 0),
-            color=color.hex("#E2E8F0"),
+            color=color.hex(TEXT_DARK),
         )
 
         # Đường gạch phân cách
@@ -97,7 +108,7 @@ class WinScreen(Entity):
             model="quad",
             scale=(0.44, 0.003),
             position=(0, 0.04, 0),
-            color=color.hex("#4A5568"),
+            color=color.hex(FRAME_BEZEL),
         )
 
         # Danh sách nút bấm
@@ -112,8 +123,9 @@ class WinScreen(Entity):
             model="quad",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start, 0),
-            color=color.hex("#2F855A"),
-            highlight_color=color.hex("#38A169"),
+            color=color.hex("#4E8A3A"),
+            highlight_color=color.hex("#62A848"),
+            pressed_color=color.hex("#3B682C"),
             text_color=color.white,
             text_origin=(0, 0),
             radius=0.15,
@@ -127,9 +139,10 @@ class WinScreen(Entity):
             model="quad",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start - btn_spacing, 0),
-            color=color.hex("#2D3748"),
-            highlight_color=color.hex("#4A5568"),
-            text_color=color.hex("#E2E8F0"),
+            color=color.hex(BTN_WOOD_BASE),
+            highlight_color=color.hex(BTN_HOVER),
+            pressed_color=color.hex(BTN_PRESSED),
+            text_color=color.hex(TEXT_DARK),
             text_origin=(0, 0),
             radius=0.15,
             on_click=self._on_restart_clicked,
@@ -142,9 +155,10 @@ class WinScreen(Entity):
             model="quad",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start - btn_spacing * 2, 0),
-            color=color.hex("#2D3748"),
-            highlight_color=color.hex("#4A5568"),
-            text_color=color.hex("#E2E8F0"),
+            color=color.hex(BTN_WOOD_BASE),
+            highlight_color=color.hex(BTN_HOVER),
+            pressed_color=color.hex(BTN_PRESSED),
+            text_color=color.hex(TEXT_DARK),
             text_origin=(0, 0),
             radius=0.15,
             on_click=self._on_stages_clicked,
@@ -157,9 +171,10 @@ class WinScreen(Entity):
             model="quad",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start - btn_spacing * 3, 0),
-            color=color.hex("#4A5568"),
-            highlight_color=color.hex("#718096"),
-            text_color=color.hex("#F7FAFC"),
+            color=color.hex("#8A562E"),
+            highlight_color=color.hex("#A66B3B"),
+            pressed_color=color.hex("#6E3E1A"),
+            text_color=color.white,
             text_origin=(0, 0),
             radius=0.15,
             on_click=self._on_main_menu_clicked,

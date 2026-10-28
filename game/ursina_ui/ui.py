@@ -26,6 +26,23 @@ from ursina import (
 
 from game.stage_catalog import StageCatalog
 from game.theme import UI_FONT, get_theme
+from game.ursina_ui.theme import (
+    BTN_HOVER,
+    BTN_PRESSED,
+    BTN_WOOD_BASE,
+    FRAME_BEZEL,
+    FRAME_DARK,
+    PARCHMENT_LIGHT,
+    PARCHMENT_SHADOW,
+    SOLVER_COMPLETED,
+    SOLVER_ERROR,
+    SOLVER_IDLE,
+    SOLVER_PAUSED,
+    SOLVER_RUNNING,
+    TEXT_DARK,
+    TEXT_MUTED,
+    get_parchment_panel_texture,
+)
 
 if TYPE_CHECKING:
     from game.engine import BloxorzEngine
@@ -85,7 +102,8 @@ class UIManager:
             model="quad",
             scale=(2.2, 0.08),
             position=(0, 0.46, 0.05),
-            color=rgba255(16, 44, 42, 230),
+            texture=get_parchment_panel_texture(256, 32),
+            color=color.white,
         )
 
         self.txt_stage = Text(
@@ -95,7 +113,7 @@ class UIManager:
             scale=1.25,
             origin=(-0.5, 0),
             position=(-0.82, 0.46, -0.01),
-            color=color.hex("#E6F7F7"),
+            color=color.hex(TEXT_DARK),
         )
 
         self.txt_moves = Text(
@@ -105,7 +123,7 @@ class UIManager:
             scale=1.20,
             origin=(-0.5, 0),
             position=(-0.60, 0.46, -0.01),
-            color=color.hex("#FFD700"),
+            color=color.hex(TEXT_MUTED),
         )
 
         self.txt_status = Text(
@@ -115,7 +133,7 @@ class UIManager:
             scale=1.20,
             origin=(-0.5, 0),
             position=(-0.38, 0.46, -0.01),
-            color=color.hex("#2ECC71"),
+            color=color.hex("#4E8A3A"),
         )
 
         self.txt_cube_info = Text(
@@ -125,7 +143,7 @@ class UIManager:
             scale=1.05,
             origin=(-0.5, 0),
             position=(0.02, 0.46, -0.01),
-            color=color.hex("#10B981"),
+            color=color.hex("#4E8A3A"),
         )
 
         # Nhãn thông tin chi tiết của Solver (nodes, thời gian, cost)
@@ -136,7 +154,7 @@ class UIManager:
             scale=0.85,
             origin=(0.5, 0),
             position=(0.28, 0.46, -0.01),
-            color=color.hex("#80CBC4"),
+            color=color.hex(TEXT_MUTED),
         )
 
         # Nút chọn thuật toán (BFS / DFS / UCS / A*)
@@ -146,8 +164,10 @@ class UIManager:
             font=FONT_NAME,
             scale=(0.10, 0.05),
             position=(0.34, 0.46, -0.01),
-            color=rgba255(0, 150, 136, 230),
-            text_color=color.white,
+            color=color.hex(BTN_WOOD_BASE),
+            highlight_color=color.hex(BTN_HOVER),
+            pressed_color=color.hex(BTN_PRESSED),
+            text_color=color.hex(TEXT_DARK),
             on_click=self._handle_cycle_algorithm,
         )
 
@@ -158,7 +178,8 @@ class UIManager:
             font=FONT_NAME,
             scale=(0.13, 0.05),
             position=(0.47, 0.46, -0.01),
-            color=rgba255(230, 126, 34, 230),
+            color=color.hex(SOLVER_IDLE),
+            highlight_color=color.hex("#D98E28"),
             text_color=color.white,
             on_click=self.on_solve,
         )
@@ -170,7 +191,8 @@ class UIManager:
             font=FONT_NAME,
             scale=(0.12, 0.05),
             position=(0.61, 0.46, -0.01),
-            color=rgba255(0, 121, 107, 230),
+            color=color.hex("#8A562E"),
+            highlight_color=color.hex("#A66B3B"),
             text_color=color.white,
             on_click=self.toggle_stage_selector,
         )
@@ -181,7 +203,8 @@ class UIManager:
             font=FONT_NAME,
             scale=(0.11, 0.05),
             position=(0.74, 0.46, -0.01),
-            color=rgba255(0, 77, 64, 230),
+            color=color.hex("#5C3A1E"),
+            highlight_color=color.hex("#784C27"),
             text_color=color.white,
             on_click=self.toggle_help_modal,
         )
@@ -192,7 +215,8 @@ class UIManager:
             model="quad",
             scale=(2.2, 0.08),
             position=(0, -0.46, 0.05),
-            color=rgba255(16, 44, 42, 230),
+            texture=get_parchment_panel_texture(256, 32),
+            color=color.white,
         )
 
         self.txt_replay_info = Text(
@@ -202,7 +226,7 @@ class UIManager:
             scale=1.05,
             origin=(-0.5, 0),
             position=(-0.82, -0.46, -0.01),
-            color=color.hex("#E6F7F7"),
+            color=color.hex(TEXT_DARK),
         )
 
         # Cụm nút tua Replay
@@ -212,7 +236,10 @@ class UIManager:
             font=FONT_NAME,
             scale=(0.065, 0.05),
             position=(-0.25, -0.46, -0.01),
-            color=rgba255(40, 60, 70, 230),
+            color=color.hex(BTN_WOOD_BASE),
+            highlight_color=color.hex(BTN_HOVER),
+            pressed_color=color.hex(BTN_PRESSED),
+            text_color=color.hex(TEXT_DARK),
             on_click=self.on_replay_jump_start,
         )
 
@@ -222,7 +249,10 @@ class UIManager:
             font=FONT_NAME,
             scale=(0.065, 0.05),
             position=(-0.17, -0.46, -0.01),
-            color=rgba255(40, 60, 70, 230),
+            color=color.hex(BTN_WOOD_BASE),
+            highlight_color=color.hex(BTN_HOVER),
+            pressed_color=color.hex(BTN_PRESSED),
+            text_color=color.hex(TEXT_DARK),
             on_click=self.on_replay_step_back,
         )
 
@@ -232,7 +262,9 @@ class UIManager:
             font=FONT_NAME,
             scale=(0.10, 0.05),
             position=(-0.07, -0.46, -0.01),
-            color=rgba255(0, 150, 136, 230),
+            color=color.hex("#4E8A3A"),
+            highlight_color=color.hex("#62A848"),
+            text_color=color.white,
             on_click=self.on_replay_play_pause,
         )
 
@@ -242,7 +274,10 @@ class UIManager:
             font=FONT_NAME,
             scale=(0.065, 0.05),
             position=(0.03, -0.46, -0.01),
-            color=rgba255(40, 60, 70, 230),
+            color=color.hex(BTN_WOOD_BASE),
+            highlight_color=color.hex(BTN_HOVER),
+            pressed_color=color.hex(BTN_PRESSED),
+            text_color=color.hex(TEXT_DARK),
             on_click=self.on_replay_step_forward,
         )
 
@@ -252,7 +287,10 @@ class UIManager:
             font=FONT_NAME,
             scale=(0.065, 0.05),
             position=(0.11, -0.46, -0.01),
-            color=rgba255(40, 60, 70, 230),
+            color=color.hex(BTN_WOOD_BASE),
+            highlight_color=color.hex(BTN_HOVER),
+            pressed_color=color.hex(BTN_PRESSED),
+            text_color=color.hex(TEXT_DARK),
             on_click=self.on_replay_jump_end,
         )
 
@@ -264,7 +302,9 @@ class UIManager:
             font=FONT_NAME,
             scale=(0.065, 0.05),
             position=(0.19, -0.46, -0.01),
-            color=rgba255(50, 75, 90, 230),
+            color=color.hex("#7A4A28"),
+            highlight_color=color.hex("#9C6236"),
+            text_color=color.white,
             on_click=self._cycle_speed,
         )
 
@@ -275,6 +315,8 @@ class UIManager:
             scale=(0.22, 0.045),
             position=(0.33, -0.46, -0.01),
             font=FONT_NAME,
+            color=color.hex(PARCHMENT_LIGHT),
+            text_color=color.hex(TEXT_DARK),
         )
 
         self.btn_replay_load = Button(
@@ -283,7 +325,9 @@ class UIManager:
             font=FONT_NAME,
             scale=(0.09, 0.045),
             position=(0.50, -0.46, -0.01),
-            color=rgba255(38, 166, 154, 230),
+            color=color.hex("#4E8A3A"),
+            highlight_color=color.hex("#62A848"),
+            text_color=color.white,
             on_click=self._submit_custom_replay,
         )
 
@@ -293,7 +337,8 @@ class UIManager:
             model="quad",
             scale=(0.23, 0.13),
             position=(0.74, -0.34, 0.05),
-            color=rgba255(16, 44, 42, 210),
+            texture=get_parchment_panel_texture(96, 64),
+            color=color.white,
         )
         self.txt_compass_title = Text(
             parent=self.ui_root,
@@ -302,7 +347,7 @@ class UIManager:
             scale=0.85,
             origin=(0, 0),
             position=(0.74, -0.29, -0.01),
-            color=color.hex("#80CBC4"),
+            color=color.hex(TEXT_MUTED),
         )
         self.txt_compass_u = Text(
             parent=self.ui_root,
@@ -311,7 +356,7 @@ class UIManager:
             scale=0.75,
             origin=(0, 0),
             position=(0.67, -0.33, -0.01),
-            color=color.hex("#E6F7F7"),
+            color=color.hex(TEXT_DARK),
         )
         self.txt_compass_r = Text(
             parent=self.ui_root,
@@ -320,7 +365,7 @@ class UIManager:
             scale=0.75,
             origin=(0, 0),
             position=(0.81, -0.33, -0.01),
-            color=color.hex("#E6F7F7"),
+            color=color.hex(TEXT_DARK),
         )
         self.txt_compass_l = Text(
             parent=self.ui_root,
@@ -329,7 +374,7 @@ class UIManager:
             scale=0.75,
             origin=(0, 0),
             position=(0.67, -0.38, -0.01),
-            color=color.hex("#E6F7F7"),
+            color=color.hex(TEXT_DARK),
         )
         self.txt_compass_d = Text(
             parent=self.ui_root,
@@ -338,7 +383,7 @@ class UIManager:
             scale=0.75,
             origin=(0, 0),
             position=(0.81, -0.38, -0.01),
-            color=color.hex("#E6F7F7"),
+            color=color.hex(TEXT_DARK),
         )
 
         # 4. Modal Bảng chọn màn chơi (Stage Selector Modal)
@@ -366,7 +411,7 @@ class UIManager:
     def set_solver_status(self, text: str, *, failed: bool = False) -> None:
         """Show solve progress/result in the solver button."""
         self.btn_solve.text = text
-        self.btn_solve.color = rgba255(192, 57, 43, 230) if failed else rgba255(230, 126, 34, 230)
+        self.btn_solve.color = color.hex(SOLVER_ERROR) if failed else color.hex(SOLVER_IDLE)
 
     def set_selected_algorithm(self, algo: str) -> None:
         """Cập nhật thuật toán đang được chọn (BFS, DFS, UCS, A*)."""
@@ -414,13 +459,15 @@ class UIManager:
             self.txt_solver_info.text = ""
 
         if failed or status in ("FAILED", "TIMEOUT"):
-            self.btn_solve.color = rgba255(192, 57, 43, 230)  # Đỏ gạch
+            self.btn_solve.color = color.hex(SOLVER_ERROR)
         elif status == "PAUSED":
-            self.btn_solve.color = rgba255(46, 204, 113, 230)  # Xanh lục (Nhấn để Tiếp Tục)
+            self.btn_solve.color = color.hex(SOLVER_PAUSED)
         elif status == "RUNNING":
-            self.btn_solve.color = rgba255(243, 156, 18, 230)  # Vàng cam đậm (Nhấn để Tạm Dừng)
+            self.btn_solve.color = color.hex(SOLVER_RUNNING)
+        elif status == "COMPLETED":
+            self.btn_solve.color = color.hex(SOLVER_COMPLETED)
         else:
-            self.btn_solve.color = rgba255(230, 126, 34, 230)  # Cam mặc định
+            self.btn_solve.color = color.hex(SOLVER_IDLE)
 
     def _submit_custom_replay(self) -> None:
         """Người dùng nhấn nút nạp đường dẫn file replay nhập tay."""
@@ -432,13 +479,13 @@ class UIManager:
         """Đổi nhãn và màu sắc nút phát Replay."""
         if is_playing:
             self.btn_replay_play.text = "Tạm Dừng"
-            self.btn_replay_play.color = rgba255(230, 126, 34, 230)  # Cam
+            self.btn_replay_play.color = color.hex(SOLVER_RUNNING)
         elif is_reset_mode:
             self.btn_replay_play.text = "Đặt Lại"
-            self.btn_replay_play.color = rgba255(192, 57, 43, 230)   # Đỏ gạch
+            self.btn_replay_play.color = color.hex(SOLVER_ERROR)
         else:
             self.btn_replay_play.text = "Phát"
-            self.btn_replay_play.color = rgba255(0, 150, 136, 230)   # Teal ngọc
+            self.btn_replay_play.color = color.hex("#4E8A3A")
 
     def update_hud(self, engine: BloxorzEngine) -> None:
         """Cập nhật các số liệu trên thanh HUD theo trạng thái ván chơi."""
@@ -449,17 +496,17 @@ class UIManager:
 
         if engine.is_won:
             self.txt_status.text = "CHIẾN THẮNG!"
-            self.txt_status.color = color.hex("#FFD700")
+            self.txt_status.color = color.hex("#C47B14")
         elif engine.is_lost:
             self.txt_status.text = "THẤT BẠI: Rơi xuống vực!"
-            self.txt_status.color = color.hex("#E74C3C")
+            self.txt_status.color = color.hex(SOLVER_ERROR)
         else:
             self.txt_status.text = "ĐANG CHƠI"
-            self.txt_status.color = color.hex("#2ECC71")
+            self.txt_status.color = color.hex("#4E8A3A")
 
         if engine.is_split and not (engine.is_lost or engine.is_won):
             self.txt_cube_info.text = f"Đang chọn: Khối {engine.selected_cube} (Space)"
-            self.txt_cube_info.color = color.hex("#10B981") if engine.selected_cube == 1 else color.hex("#38BDF8")
+            self.txt_cube_info.color = color.hex("#4E8A3A") if engine.selected_cube == 1 else color.hex("#3A72A4")
         else:
             self.txt_cube_info.text = ""
 
@@ -509,7 +556,7 @@ class UIManager:
             parent=self.stage_selector_modal,
             model="quad",
             scale=(3, 3),
-            color=color.rgba(4 / 255.0, 8 / 255.0, 15 / 255.0, 0.85),
+            color=color.rgba(24 / 255.0, 16 / 255.0, 10 / 255.0, 0.85),
             z=0.2,
             on_click=self.close_stage_selector,
         )
@@ -519,9 +566,9 @@ class UIManager:
         panel_border = Entity(
             parent=self.stage_selector_modal,
             model="quad",
-            scale=(modal_w + 0.006, modal_h + 0.006),
+            scale=(modal_w + 0.012, modal_h + 0.012),
             position=(0, 0, 0.12),
-            color=color.hex("#1E3A8A"),
+            color=color.hex(FRAME_DARK),
         )
 
         window_panel = Entity(
@@ -529,7 +576,8 @@ class UIManager:
             model="quad",
             scale=(modal_w, modal_h),
             position=(0, 0, 0.1),
-            color=color.rgba(11 / 255.0, 18 / 255.0, 32 / 255.0, 0.98),
+            texture=get_parchment_panel_texture(256, 160),
+            color=color.white,
         )
 
         # Tiêu đề & Thông tin tiến độ
@@ -540,7 +588,7 @@ class UIManager:
             scale=1.7,
             origin=(0, 0),
             position=(0, 0.405, -0.05),
-            color=color.hex("#F8FAFC"),
+            color=color.hex(TEXT_DARK),
         )
 
         won_count = len(self.catalog.progress)
@@ -552,7 +600,7 @@ class UIManager:
             scale=0.88,
             origin=(0, 0),
             position=(0, 0.36, -0.05),
-            color=color.hex("#94A3B8"),
+            color=color.hex(TEXT_MUTED),
         )
 
         # Nút Đóng (X)
@@ -562,11 +610,11 @@ class UIManager:
             font=FONT_NAME,
             scale=(0.046, 0.046),
             position=(modal_w / 2 - 0.048, 0.405, -0.08),
-            color=color.rgba(30 / 255.0, 41 / 255.0, 59 / 255.0, 0.9),
-            text_color=color.hex("#CBD5E1"),
+            color=color.hex(SOLVER_ERROR),
+            text_color=color.white,
             on_click=self.close_stage_selector,
         )
-        btn_close.highlight_color = color.hex("#EF4444")
+        btn_close.highlight_color = color.hex("#C53030")
 
         self.tab_container = Entity(parent=self.stage_selector_modal, z=-0.06)
         self.grid_container = Entity(parent=self.stage_selector_modal, z=-0.06)
@@ -588,8 +636,8 @@ class UIManager:
         tab_w, tab_h = 0.52, 0.054
 
         # Tab 1: Màn gốc
-        t1_col = color.hex("#0284C7") if is_orig else color.rgba(30 / 255.0, 41 / 255.0, 59 / 255.0, 0.95)
-        t1_txt = color.white if is_orig else color.hex("#94A3B8")
+        t1_col = color.hex(BTN_WOOD_BASE) if is_orig else color.hex(PARCHMENT_SHADOW)
+        t1_txt = color.hex(TEXT_DARK) if is_orig else color.hex(TEXT_MUTED)
         btn_tab1 = Button(
             parent=self.tab_container,
             text=f"Màn Gốc ({orig_count})  •  {orig_won}/{orig_count} Đã qua",
@@ -600,13 +648,13 @@ class UIManager:
             text_color=t1_txt,
             on_click=lambda: self._switch_stage_tab("original"),
         )
-        btn_tab1.highlight_color = color.hex("#0369A1") if is_orig else color.hex("#334155")
+        btn_tab1.highlight_color = color.hex(BTN_HOVER) if is_orig else color.hex(PARCHMENT_LIGHT)
         if hasattr(btn_tab1, "text_entity") and btn_tab1.text_entity:
             btn_tab1.text_entity.world_scale *= 0.88
 
         # Tab 2: Màn mẫu (Thử nghiệm)
-        t2_col = color.hex("#0284C7") if not is_orig else color.rgba(30 / 255.0, 41 / 255.0, 59 / 255.0, 0.95)
-        t2_txt = color.white if not is_orig else color.hex("#94A3B8")
+        t2_col = color.hex(BTN_WOOD_BASE) if not is_orig else color.hex(PARCHMENT_SHADOW)
+        t2_txt = color.hex(TEXT_DARK) if not is_orig else color.hex(TEXT_MUTED)
         btn_tab2 = Button(
             parent=self.tab_container,
             text=f"Màn Thử Nghiệm ({sample_count})  •  {sample_won}/{sample_count} Đã qua",
@@ -617,7 +665,7 @@ class UIManager:
             text_color=t2_txt,
             on_click=lambda: self._switch_stage_tab("samples"),
         )
-        btn_tab2.highlight_color = color.hex("#0369A1") if not is_orig else color.hex("#334155")
+        btn_tab2.highlight_color = color.hex(BTN_HOVER) if not is_orig else color.hex(PARCHMENT_LIGHT)
         if hasattr(btn_tab2, "text_entity") and btn_tab2.text_entity:
             btn_tab2.text_entity.world_scale *= 0.88
 
@@ -674,19 +722,19 @@ class UIManager:
 
             if is_curr:
                 status_str = "ĐANG CHƠI"
-                bg_col = color.rgba(30 / 255.0, 58 / 255.0, 138 / 255.0, 0.95)   # Sapphire đậm
-                txt_col = color.hex("#60A5FA")                                    # Cyan sáng
-                border_col = color.hex("#38BDF8")
+                bg_col = color.hex("#B87432")
+                txt_col = color.white
+                border_col = color.hex(FRAME_DARK)
             elif is_won:
                 status_str = f"Kỷ lục: {best_moves} bước"
-                bg_col = color.rgba(15 / 255.0, 35 / 255.0, 26 / 255.0, 0.95)   # Pine green trầm
-                txt_col = color.hex("#34D399")                                    # Ngọc lục bảo
-                border_col = color.hex("#059669")
+                bg_col = color.hex("#4E8A3A")
+                txt_col = color.hex(PARCHMENT_LIGHT)
+                border_col = color.hex("#2E5422")
             else:
                 status_str = f"{ref_len}b tối ưu" if ref_len else "Chưa chơi"
-                bg_col = color.rgba(24 / 255.0, 32 / 255.0, 47 / 255.0, 0.9)    # Graphite slate
-                txt_col = color.hex("#94A3B8")                                    # Muted gray
-                border_col = color.hex("#334155")
+                bg_col = color.hex(PARCHMENT_LIGHT)
+                txt_col = color.hex(TEXT_DARK)
+                border_col = color.hex(FRAME_BEZEL)
 
             full_label = f"{title_str}\n{status_str}"
 
@@ -709,8 +757,8 @@ class UIManager:
                 text_color=txt_col,
                 on_click=lambda tid=st_id: self._on_stage_clicked(tid),
             )
-            btn.highlight_color = color.tint(bg_col, 0.35)
-            btn.pressed_color = color.tint(bg_col, -0.15)
+            btn.highlight_color = color.tint(bg_col, 0.18)
+            btn.pressed_color = color.tint(bg_col, -0.12)
             if hasattr(btn, "text_entity") and btn.text_entity:
                 btn.text_entity.world_scale *= 0.88
 
@@ -746,14 +794,23 @@ class UIManager:
             parent=self.help_modal,
             model="quad",
             scale=(2, 2),
-            color=rgba255(0, 0, 0, 180),
+            color=color.rgba(24 / 255.0, 16 / 255.0, 10 / 255.0, 0.85),
+        )
+
+        panel_border = Entity(
+            parent=self.help_modal,
+            model="quad",
+            scale=(1.212, 0.762),
+            position=(0, 0, 0.01),
+            color=color.hex(FRAME_DARK),
         )
 
         window_panel = Entity(
             parent=self.help_modal,
             model="quad",
             scale=(1.2, 0.75),
-            color=rgba255(14, 38, 38, 250),
+            texture=get_parchment_panel_texture(192, 128),
+            color=color.white,
         )
 
         Text(
@@ -763,7 +820,7 @@ class UIManager:
             scale=1.5,
             origin=(0, 0),
             position=(0, 0.42),
-            color=color.hex("#FFD700"),
+            color=color.hex(TEXT_DARK),
         )
 
         help_text = (
@@ -786,7 +843,7 @@ class UIManager:
             scale=1.15,
             origin=(0, 0),
             position=(0, 0.02),
-            color=color.hex("#E6F7F7"),
+            color=color.hex(TEXT_DARK),
         )
 
         Button(
@@ -795,7 +852,9 @@ class UIManager:
             font=FONT_NAME,
             scale=(0.12, 0.075),
             position=(0, -0.40),
-            color=rgba255(0, 150, 136, 230),
+            color=color.hex(BTN_WOOD_BASE),
+            highlight_color=color.hex(BTN_HOVER),
+            text_color=color.hex(TEXT_DARK),
             on_click=self.close_help_modal,
         )
 
