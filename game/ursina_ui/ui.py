@@ -142,7 +142,7 @@ class UIManager:
         # Nút chọn thuật toán (BFS / DFS / UCS / A*)
         self.btn_algo_select = Button(
             parent=self.ui_root,
-            text="A* ▼",
+            text="A* v",
             font=FONT_NAME,
             scale=(0.10, 0.05),
             position=(0.34, 0.46, -0.01),
@@ -371,7 +371,7 @@ class UIManager:
     def set_selected_algorithm(self, algo: str) -> None:
         """Cập nhật thuật toán đang được chọn (BFS, DFS, UCS, A*)."""
         self.selected_algorithm = algo
-        self.btn_algo_select.text = f"{algo} ▼"
+        self.btn_algo_select.text = f"{algo} v"
         if self.btn_solve.text.startswith("Giải ") or self.btn_solve.text in (
             "Giải A*",
             "Giải BFS",

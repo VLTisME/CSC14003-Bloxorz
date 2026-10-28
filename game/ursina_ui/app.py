@@ -268,16 +268,13 @@ class BloxorzUrsinaApp(Entity):
         """Nạp màn chơi dựa trên ID (ví dụ: '01', 'sample04')."""
         meta = self.catalog.stage_by_id.get(stage_id)
         if meta and meta["input_path"].exists():
-            # Tự động nạp file .out.json tương ứng nếu không truyền file replay ngoài
-            rep = replay_path or (meta["output_path"] if meta["output_path"].exists() else None)
-            self.load_stage_from_file(meta["input_path"], replay_path=rep)
+            self.load_stage_from_file(meta["input_path"], replay_path=replay_path)
         else:
             # Fallback tìm kiếm trong thư mục testcases
             for s in ("original", "samples"):
                 cand = ROOT_DIR / "testcases" / s / f"{stage_id}.in.json"
                 if cand.exists():
-                    rep = replay_path or cand.with_name(f"{stage_id}.out.json")
-                    self.load_stage_from_file(cand, replay_path=rep if rep.exists() else None)
+                    self.load_stage_from_file(cand, replay_path=replay_path)
                     return
 
     @property
@@ -344,12 +341,7 @@ class BloxorzUrsinaApp(Entity):
         # Cập nhật bóng ban đầu
         self._update_shadow_state()
 
-        # Tự động tìm nạp file lời giải .out.json tương ứng nếu chưa có
-        if replay_path is None:
-            auto_rep = stage_path.with_name(stage_path.name.replace(".in.json", ".out.json"))
-            if auto_rep.exists():
-                replay_path = auto_rep
-
+        # Chỉ nạp file replay nếu được chỉ định rõ ràng qua tham số CLI hoặc tải file
         if replay_path and replay_path.exists():
             self._load_replay_file(replay_path)
         else:
@@ -516,11 +508,13 @@ class BloxorzUrsinaApp(Entity):
     def action_solve_current(self) -> None:
         """Chạy hoặc tạm dừng / tiếp tục thuật toán đang được lựa chọn."""
         if self.search_controller.is_paused:
+            print(f"[SOLVER] Tiếp tục quá trình tìm kiếm {self.selected_algorithm}...")
             self.search_controller.resume()
             self.ui.set_solver_state(SearchStatus.RUNNING, "Tạm Dừng")
             return
 
         if self.search_controller.is_running:
+            print(f"[SOLVER] Tạm dừng quá trình tìm kiếm {self.selected_algorithm}...")
             self.search_controller.pause()
             self.ui.set_solver_state(SearchStatus.PAUSED, "Tiếp Tục")
             return
@@ -536,6 +530,13 @@ class BloxorzUrsinaApp(Entity):
         self._solver_stage_id = self.engine.stage_id
         self._solver_algorithm = self.selected_algorithm
         self._solver_start_move_count = self.engine.move_count
+        self.replay_actions.clear()
+        self.replay_index = 0
+        self.current_replay_file = None
+        self.ui.update_replay_status(0, 0)
+
+        st_id = self.engine.stage_id or "hiện tại"
+        print(f"[SOLVER] >>> Bắt đầu tìm kiếm trực tiếp (live search) bằng thuật toán {self.selected_algorithm} trên màn {st_id}...")
         self.search_controller.start(
             stage=self.engine.stage,
             algorithm=self.selected_algorithm,
@@ -575,12 +576,12 @@ class BloxorzUrsinaApp(Entity):
 
         if res.status == SearchStatus.TIMEOUT:
             self.ui.set_solver_state(SearchStatus.TIMEOUT, f"{res.algorithm}: Hết giờ", failed=True, info=res.error_message)
-            print(f"[{res.algorithm}] Solver timeout: {res.error_message}", file=sys.stderr)
+            print(f"[SOLVER] [{res.algorithm}] Hết thời gian tìm kiếm (timeout): {res.error_message}", file=sys.stderr)
             return
 
         if res.status == SearchStatus.FAILED:
             self.ui.set_solver_state(SearchStatus.FAILED, f"{res.algorithm}: Lỗi", failed=True, info=res.error_message)
-            print(f"[{res.algorithm}] Solver failed: {res.error_message}", file=sys.stderr)
+            print(f"[SOLVER] [{res.algorithm}] Lỗi trong quá trình tìm kiếm: {res.error_message}", file=sys.stderr)
             return
 
         if res.status == SearchStatus.COMPLETED:
@@ -589,12 +590,12 @@ class BloxorzUrsinaApp(Entity):
                 verdict = check_answer(self.engine.stage, ans)
             except Exception as exc:
                 self.ui.set_solver_state(SearchStatus.FAILED, f"{res.algorithm}: Đầu ra lỗi", failed=True, info=str(exc))
-                print(f"[{res.algorithm}] Invalid solver output: {exc}", file=sys.stderr)
+                print(f"[SOLVER] [{res.algorithm}] Định dạng kết quả không hợp lệ: {exc}", file=sys.stderr)
                 return
 
             if verdict["verdict"] != "AC":
                 self.ui.set_solver_state(SearchStatus.FAILED, f"{res.algorithm}: Lời giải lỗi", failed=True, info=verdict.get("message", "WA"))
-                print(f"[{res.algorithm}] Checker rejected solution: {verdict['message']}", file=sys.stderr)
+                print(f"[SOLVER] [{res.algorithm}] Checker từ chối lời giải: {verdict['message']}", file=sys.stderr)
                 return
 
             if self.engine.move_count != self._solver_start_move_count or not self.engine.is_playing:
@@ -608,11 +609,17 @@ class BloxorzUrsinaApp(Entity):
             self.ui.update_replay_status(0, len(self.replay_actions), res.algorithm)
 
             time_ms = res.metrics.get("search_time_ms", 0.0)
+            expanded = res.metrics.get("expanded_nodes", 0)
             cost = verdict.get("cost", len(res.actions))
             if res.algorithm == "UCS":
                 info_text = f"{res.algorithm}: {len(self.replay_actions)}b | cost {cost} ({time_ms:.1f}ms)"
             else:
                 info_text = f"{res.algorithm}: {len(self.replay_actions)} bước ({time_ms:.1f}ms)"
+
+            print(
+                f"[SOLVER] <<< Thuật toán {res.algorithm} giải thành công màn {self.engine.stage_id}: "
+                f"{len(self.replay_actions)} bước | {expanded} nodes duyệt | {time_ms:.2f}ms"
+            )
 
             self.ui.set_solver_state(SearchStatus.COMPLETED, f"{res.algorithm}: {len(self.replay_actions)}b", info=info_text)
             self.is_replay_playing = True
@@ -707,8 +714,10 @@ class BloxorzUrsinaApp(Entity):
         )
 
     def action_replay_toggle(self) -> None:
-        """Bật/tắt tự động phát Replay."""
+        """Bật/tắt tự động phát Replay. Nếu chưa có lời giải, kích hoạt Solver tính toán trực tiếp."""
         if not self.replay_actions:
+            print(f"[REPLAY] Chưa có lời giải có sẵn. Tự động kích hoạt thuật toán {self.selected_algorithm} để tìm kiếm trực tiếp...")
+            self.action_solve_current()
             return
 
         # Nếu ván chơi bị lệch vị trí Replay (ví dụ đã tự đi 1-2 bước hoặc đã thắng/thua),

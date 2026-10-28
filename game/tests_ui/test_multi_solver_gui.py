@@ -31,31 +31,31 @@ class TestMultiSolverGUI(unittest.TestCase):
     def test_cycle_through_all_algorithms(self) -> None:
         """Kiểm tra nút chuyển đổi xoay vòng qua 4 thuật toán: A* -> BFS -> DFS -> UCS -> A*."""
         self.assertEqual(self.app.selected_algorithm, "A*")
-        self.assertEqual(self.app.ui.btn_algo_select.text, "A* ▼")
+        self.assertEqual(self.app.ui.btn_algo_select.text, "A* v")
         self.assertEqual(self.app.ui.btn_solve.text, "Giải A*")
 
         # 1. Chuyển sang BFS
         self.app.action_cycle_algorithm()
         self.assertEqual(self.app.selected_algorithm, "BFS")
-        self.assertEqual(self.app.ui.btn_algo_select.text, "BFS ▼")
+        self.assertEqual(self.app.ui.btn_algo_select.text, "BFS v")
         self.assertEqual(self.app.ui.btn_solve.text, "Giải BFS")
 
         # 2. Chuyển sang DFS
         self.app.action_cycle_algorithm()
         self.assertEqual(self.app.selected_algorithm, "DFS")
-        self.assertEqual(self.app.ui.btn_algo_select.text, "DFS ▼")
+        self.assertEqual(self.app.ui.btn_algo_select.text, "DFS v")
         self.assertEqual(self.app.ui.btn_solve.text, "Giải DFS")
 
         # 3. Chuyển sang UCS
         self.app.action_cycle_algorithm()
         self.assertEqual(self.app.selected_algorithm, "UCS")
-        self.assertEqual(self.app.ui.btn_algo_select.text, "UCS ▼")
+        self.assertEqual(self.app.ui.btn_algo_select.text, "UCS v")
         self.assertEqual(self.app.ui.btn_solve.text, "Giải UCS")
 
         # 4. Quay lại A*
         self.app.action_cycle_algorithm()
         self.assertEqual(self.app.selected_algorithm, "A*")
-        self.assertEqual(self.app.ui.btn_algo_select.text, "A* ▼")
+        self.assertEqual(self.app.ui.btn_algo_select.text, "A* v")
         self.assertEqual(self.app.ui.btn_solve.text, "Giải A*")
 
     def test_solve_and_replay_each_algorithm(self) -> None:

@@ -265,7 +265,8 @@ class TestAnimationIntegrity(unittest.TestCase):
         from game.ursina_ui.app import BloxorzUrsinaApp
 
         app = BloxorzUrsinaApp(start_in_menu=False)
-        app.load_stage_by_id("01")
+        rep = Path(__file__).resolve().parents[2] / "testcases" / "original" / "01.out.json"
+        app.load_stage_by_id("01", replay_path=rep)
 
         self.assertEqual(app.ui.btn_replay_play.text, "Phát")
 
