@@ -352,95 +352,61 @@ def get_contrast_bg_texture(
     return tex
 
 
-def get_posture_block_texture(
-    posture: Posture | str,
-    part: int = 1,
+def get_solid_wood_texture(
     base_hex: str = "#8B5A2B",
     size: int = 32,
 ) -> Texture:
-    """Tạo texture khối Bloxorz tối giản (minimalist, low-noise) khớp chuẩn theo từng tư thế.
+    """Tạo texture khối gỗ tối giản (Minimalist Matte Wood) sắc nét với viền vát cạnh 3D.
 
     Đặc tính:
-    - Thẩm mỹ tối giản, sạch sẽ (clean matte), ít texture, không đinh tán hay vết nứt ván gắt.
-    - Màu sắc gỗ ấm cao cấp (Warm Scandinavian Teak / Cedar) với dải chuyển tiếp mượt mà.
-    - Viền vát cạnh (chamfered bevel) tinh tế ở các mép ngoài.
-    - Khớp nối liền mạch (seamless open inner edge) ở các mặt tiếp giáp giữa 2 nửa:
-      + UPRIGHT: Nửa 1 (dưới) mở viền trên; Nửa 2 (trên) mở viền dưới, tạo thành cột trụ 1x1x2 thống nhất.
-      + HORIZONTAL: Nửa 1 (trái) mở viền phải; Nửa 2 (phải) mở viền trái, tạo thành thanh ngang 2x1x1 nguyên khối.
-      + VERTICAL: Nửa 1 (trước) mở viền sau; Nửa 2 (sau) mở viền trước, tạo thành thanh sâu 1x2x1 liền mạch.
-      + SPLIT: Đóng viền cả 4 cạnh, thể hiện khối 1x1x1 độc lập.
+    - Bề mặt tối giản, sạch sẽ, không đinh tán hay vết rãnh ván rườm rà.
+    - Viền tối bao quanh cả 4 cạnh để khi 2 nửa khối ghép lại (dù ở tư thế đứng UPRIGHT,
+      nằm ngang HORIZONTAL hay nằm dọc VERTICAL) đều tự nhiên tạo thành "thanh giữa" (recessed groove)
+      rõ nét phân tách 2 nửa khối.
+    - Vát cạnh chamfer bevel nổi khối 3D (highlight sáng ở cạnh trên/trái, shadow ở cạnh dưới/phải).
+    - Texture nhất quán, triệt tiêu hoàn toàn hiện tượng giật/nhảy texture khi chuyển đổi hoạt ảnh di chuyển.
     """
-    key = f"minimal_block_{posture}_{part}_{base_hex}_{size}"
+    key = f"minimal_wood_cube_{base_hex}_{size}"
     if key in _TEXTURE_CACHE:
         return _TEXTURE_CACHE[key]
 
     base_rgb = hex_to_rgb(base_hex)
     br, bg, bb = base_rgb
 
-    # Bảng màu tối giản thanh lịch (subtle minimalist contrast)
-    outer_dark = (max(0, br - 36), max(0, bg - 26), max(0, bb - 20))
-    shadow_rgb = (max(0, br - 18), max(0, bg - 14), max(0, bb - 10))
-    light_rgb  = (min(255, br + 18), min(255, bg + 14), min(255, bb + 10))
-    hl_rgb     = (min(255, br + 28), min(255, bg + 22), min(255, bb + 16))
+    # Bảng màu viền và vát cạnh sắc nét
+    dark_border = (max(0, br - 60), max(0, bg - 42), max(0, bb - 26))
+    shadow_rgb  = (max(0, br - 25), max(0, bg - 18), max(0, bb - 14))
+    light_rgb   = (min(255, br + 22), min(255, bg + 18), min(255, bb + 12))
+    hl_rgb      = (min(255, br + 40), min(255, bg + 30), min(255, bb + 22))
 
     img = Image.new("RGB", (size, size), base_rgb)
     pixels = img.load()
     assert pixels is not None
 
-    # Xác định cạnh nào là mặt nối trong (open edge)
-    open_top = (posture == Posture.UPRIGHT and part == 1) or (posture == Posture.VERTICAL and part == 2)
-    open_bottom = (posture == Posture.UPRIGHT and part == 2) or (posture == Posture.VERTICAL and part == 1)
-    open_left = (posture == Posture.HORIZONTAL and part == 2)
-    open_right = (posture == Posture.HORIZONTAL and part == 1)
-
-    # 1. Vi chuyển sắc ánh sáng bề mặt cực nhẹ (subtle directional micro-lighting)
+    # Ánh sáng dịu nhẹ lan tỏa từ góc trên-trái (minimalist micro-gradient, ít texture)
     for y in range(size):
         for x in range(size):
-            if posture == Posture.UPRIGHT:
-                t = (y / (2.0 * size)) if part == 2 else ((y + size) / (2.0 * size))
-                factor = 0.07 * (0.5 - t)
-            elif posture == Posture.HORIZONTAL:
-                t = (x / (2.0 * size)) if part == 1 else ((x + size) / (2.0 * size))
-                factor = 0.07 * (0.5 - t)
-            elif posture == Posture.VERTICAL:
-                t = (y / (2.0 * size)) if part == 1 else ((y + size) / (2.0 * size))
-                factor = 0.07 * (0.5 - t)
-            else:
-                factor = 0.04 * (1.0 - (x + y) / (2.0 * size))
-
+            factor = 0.04 * (1.0 - (x + y) / (2.0 * size))
             cr = max(0, min(255, int(br * (1.0 + factor))))
             cg = max(0, min(255, int(bg * (1.0 + factor))))
             cb = max(0, min(255, int(bb * (1.0 + factor))))
             pixels[x, y] = (cr, cg, cb)
 
-    # 2. Khung viền 1-pixel ở các cạnh ngoài (outer boundaries)
+    # 1. Khung viền pixel tối bao quanh cả 4 cạnh (tạo "thanh giữa" hoàn hảo khi 2 nửa chạm nhau)
     for x in range(size):
-        if not open_top:
-            pixels[x, 0] = outer_dark
-        if not open_bottom:
-            pixels[x, size - 1] = outer_dark
+        pixels[x, 0] = dark_border
+        pixels[x, size - 1] = dark_border
     for y in range(size):
-        if not open_left:
-            pixels[0, y] = outer_dark
-        if not open_right:
-            pixels[size - 1, y] = outer_dark
+        pixels[0, y] = dark_border
+        pixels[size - 1, y] = dark_border
 
-    # 3. Vát cạnh 3D nổi khối tối giản (chamfer bevel nối liền mạch)
-    x_start = 0 if open_left else 1
-    x_end = size if open_right else size - 1
-    for x in range(x_start, x_end):
-        if not open_top:
-            pixels[x, 1] = hl_rgb
-        if not open_bottom:
-            pixels[x, size - 2] = shadow_rgb
-
-    y_start = 0 if open_top else 1
-    y_end = size if open_bottom else size - 1
-    for y in range(y_start, y_end):
-        if not open_left:
-            pixels[1, y] = light_rgb
-        if not open_right:
-            pixels[size - 2, y] = shadow_rgb
+    # 2. Vát cạnh 3D nổi khối pixel
+    for x in range(1, size - 1):
+        pixels[x, 1] = hl_rgb
+        pixels[x, size - 2] = shadow_rgb
+    for y in range(1, size - 1):
+        pixels[1, y] = light_rgb
+        pixels[size - 2, y] = shadow_rgb
 
     tex = Texture(img)
     tex.filtering = False
@@ -448,12 +414,14 @@ def get_posture_block_texture(
     return tex
 
 
-def get_solid_wood_texture(
+def get_posture_block_texture(
+    posture: Posture | str = Posture.UPRIGHT,
+    part: int = 1,
     base_hex: str = "#8B5A2B",
     size: int = 32,
 ) -> Texture:
-    """Tạo texture khối gỗ tối giản cơ bản (mặc định tư thế đứng UPRIGHT)."""
-    return get_posture_block_texture(Posture.UPRIGHT, part=1, base_hex=base_hex, size=size)
+    """Trả về texture khối gỗ tối giản có thanh giữa cho khối chính."""
+    return get_solid_wood_texture(base_hex=base_hex, size=size)
 
 
 def get_custom_background_texture(

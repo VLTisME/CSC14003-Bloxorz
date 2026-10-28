@@ -381,6 +381,92 @@ class BloxorzUrsinaApp(Entity):
         else:
             print(f"[REPLAY] Không tìm thấy file: {p}")
 
+    def _classify_fall_case(
+        self,
+        from_cells: list[tuple[int, int]],
+        direction: str,
+        is_split: bool,
+        reason: str,
+    ) -> tuple[str, dict | None, tuple[int, int] | None]:
+        """Phân loại chính xác 8 kịch bản rơi trong Bloxorz để khối không rơi xuyên sàn."""
+        # 1. Kịch bản 1: UPRIGHT đè vỡ gạch mỏng (FRAGILE_CRUMBLE)
+        if "fragile" in reason.lower():
+            fragile_pos = None
+            import re
+            m = re.search(r"\((\d+),\s*(\d+)\)", reason)
+            if m:
+                fragile_pos = (int(m.group(1)), int(m.group(2)))
+            elif from_cells:
+                fragile_pos = from_cells[0]
+            return "FRAGILE_CRUMBLE", {"pos": fragile_pos}, fragile_pos
+
+        # 2. Kịch bản 8: Chế độ tách 2 khối độc lập (SPLIT_CUBE_FALL)
+        if is_split:
+            return "SPLIT_CUBE_FALL", {"direction": direction}, None
+
+        dir_map = {"U": (-1, 0), "D": (1, 0), "L": (0, -1), "R": (0, 1)}
+        dr, dc = dir_map.get(direction, (0, 0))
+
+        def is_cell_solid(p: tuple[int, int]) -> bool:
+            if self.engine.replay is None:
+                return False
+            ch = self.engine.cells.get(p, "#")
+            if ch == "#":
+                return False
+            if ch == "B":
+                bridge_idx = self.engine.replay.bridge_cells.get(p)
+                if bridge_idx is not None and not self.engine.is_bridge_active(bridge_idx):
+                    return False
+            return True
+
+        if len(from_cells) == 1:
+            # Khối đang đứng thẳng (UPRIGHT)
+            s = from_cells[0]
+            p_near = (s[0] + dr, s[1] + dc)
+            p_far = (s[0] + 2 * dr, s[1] + 2 * dc)
+
+            near_solid = is_cell_solid(p_near)
+            far_solid = is_cell_solid(p_far)
+
+            if near_solid and not far_solid:
+                # Kịch bản 3: UPRIGHT lăn qua mép: 1 ô sàn, 1 ô vực
+                return "UPRIGHT_OVERHANG_CLIFF", {"p_near": p_near, "p_far": p_far, "direction": direction}, None
+            elif not near_solid and far_solid:
+                # Kịch bản hẫng chân ô gần
+                return "UPRIGHT_DROP_NEAR", {"p_near": p_near, "p_far": p_far, "direction": direction}, None
+            else:
+                # Kịch bản 2: UPRIGHT lăn vào khoảng trống toàn phần
+                return "UPRIGHT_TOTAL_VOID", {"direction": direction}, None
+
+        elif len(from_cells) == 2:
+            # Khối đang nằm ngang hoặc dọc
+            c1, c2 = from_cells[0], from_cells[1]
+            is_horizontal = (c1[0] == c2[0])
+            is_vertical = (c1[1] == c2[1])
+
+            # Nếu lăn dọc theo chiều dài -> thành đứng thẳng ở 1 ô duy nhất
+            if (is_horizontal and direction in ("L", "R")) or (is_vertical and direction in ("U", "D")):
+                # Kịch bản 6: HORIZONTAL/VERTICAL lăn dọc thành đứng vào vực
+                return "LONGITUDINAL_TIP_VOID", {"direction": direction}, None
+
+            # Nếu lăn ngang (bề rộng 2 ô)
+            t1 = (c1[0] + dr, c1[1] + dc)
+            t2 = (c2[0] + dr, c2[1] + dc)
+            t1_solid = is_cell_solid(t1)
+            t2_solid = is_cell_solid(t2)
+
+            if t1_solid and not t2_solid:
+                # Kịch bản 4: HORIZONTAL/VERTICAL vắt qua mép nghiêng về phía trống
+                return "LATERAL_TEETER_TIP", {"solid": t1, "void": t2, "direction": direction}, None
+            elif not t1_solid and t2_solid:
+                # Kịch bản 4: HORIZONTAL/VERTICAL vắt qua mép nghiêng về phía trống
+                return "LATERAL_TEETER_TIP", {"solid": t2, "void": t1, "direction": direction}, None
+            else:
+                # Kịch bản 5: HORIZONTAL/VERTICAL lăn ngang vào vực toàn phần
+                return "LATERAL_TOTAL_VOID", {"direction": direction}, None
+
+        return "UPRIGHT_TOTAL_VOID", {"direction": direction}, None
+
     def make_move(self, direction: str) -> bool:
         """Thực hiện một bước di chuyển (U/D/L/R) có hoạt ảnh 3D."""
         if self.anim.is_busy or not self.engine.is_playing or not self.state_manager.is_playing:
@@ -409,17 +495,10 @@ class BloxorzUrsinaApp(Entity):
 
         elif self.engine.is_lost:
             # 2. Bước đi gây thua (rơi xuống vực hoặc vỡ gạch mỏng)
+            # BỎ HẲN BÓNG NGAY TỪ FRAME ĐẦU TIÊN CỦA BƯỚC ĐI THUA
+            self.shadow.suppress()
             reason = self.engine.lost_reason or ""
-            is_fragile = "fragile" in reason.lower()
-
-            fragile_pos = None
-            if is_fragile:
-                import re
-                m = re.search(r"\((\d+),\s*(\d+)\)", reason)
-                if m:
-                    fragile_pos = (int(m.group(1)), int(m.group(2)))
-                elif from_cells:
-                    fragile_pos = from_cells[0]
+            fall_type, fall_data, fragile_pos = self._classify_fall_case(from_cells, direction, is_split, reason)
 
             self.anim.start_roll(
                 from_cells=from_cells,
@@ -431,6 +510,8 @@ class BloxorzUrsinaApp(Entity):
                     direction=direction,
                     reason=reason,
                     fragile_pos=fragile_pos,
+                    fall_type=fall_type,
+                    fall_data=fall_data,
                     on_complete=self._on_fall_finished,
                 ),
             )
