@@ -47,6 +47,7 @@ from game.ursina_ui.camera_rig import CameraRig
 from game.ursina_ui.input_controller import InputController
 from game.ursina_ui.materials import get_custom_background_texture
 from game.ursina_ui.particles import ParticlePool
+from game.ursina_ui.screens.loading_screen import LoadingScreen
 from game.ursina_ui.screens.lose_screen import LoseScreen
 from game.ursina_ui.screens.main_menu import MainMenuScreen
 from game.ursina_ui.screens.pause_menu import PauseMenuScreen
@@ -69,6 +70,7 @@ class BloxorzUrsinaApp(Entity):
         theme_name: str = "toy",
         start_in_menu: bool = False,
         debug: bool = False,
+        show_loading: bool = False,
     ) -> None:
         super().__init__(name="bloxorz_game_controller")
 
@@ -178,6 +180,7 @@ class BloxorzUrsinaApp(Entity):
             on_solve_astar=self.action_solve_astar,
             on_cycle_algorithm=self.action_cycle_algorithm,
             on_solve=self.action_solve_current,
+            on_load_benchmark_solution=self.action_load_solution_actions,
         )
 
         # Màn hình Menu chính và các Menu trạng thái
@@ -247,8 +250,30 @@ class BloxorzUrsinaApp(Entity):
         # Áp dụng tỉ lệ nền ban đầu
         self._update_background_scale()
 
-        # Hiển thị Menu chính nếu khởi động ở chế độ Menu
-        if start_in_menu:
+        self.start_in_menu = start_in_menu
+        self.loading_screen: LoadingScreen | None = None
+
+        # Hiển thị Loading Screen hoặc chuyển thẳng tới màn hình đầu
+        if show_loading and not getattr(application, "headless", False):
+            self.ui.ui_root.enabled = False
+            self.main_menu_screen.hide()
+            self.loading_screen = LoadingScreen(
+                on_complete=self._on_loading_complete,
+                duration=0.6,
+            )
+        else:
+            if start_in_menu:
+                self.ui.ui_root.enabled = False
+                self.main_menu_screen.show()
+                self.state_manager.transition_to(GameState.MAIN_MENU)
+            else:
+                self.ui.ui_root.enabled = True
+                self.main_menu_screen.hide()
+
+    def _on_loading_complete(self) -> None:
+        """Callback khi màn hình tải hoàn tất."""
+        self.loading_screen = None
+        if self.start_in_menu:
             self.ui.ui_root.enabled = False
             self.main_menu_screen.show()
             self.state_manager.transition_to(GameState.MAIN_MENU)
@@ -380,6 +405,18 @@ class BloxorzUrsinaApp(Entity):
             self._load_replay_file(p)
         else:
             print(f"[REPLAY] Không tìm thấy file: {p}")
+
+    def action_load_solution_actions(self, actions: list[str]) -> None:
+        """Nạp trực tiếp danh sách actions lời giải từ Benchmark vào hệ thống Replay."""
+        if not actions:
+            return
+        self.action_reset()
+        self.replay_actions = list(actions)
+        self.replay_index = 0
+        self.current_replay_file = None
+        self.ui.update_replay_status(0, len(self.replay_actions))
+        self._sync_replay_button()
+        print(f"[REPLAY] Đã nạp thành công {len(actions)} bước vào Replay từ Benchmark!")
 
     def _classify_fall_case(
         self,
@@ -570,11 +607,14 @@ class BloxorzUrsinaApp(Entity):
         self.anim.stop_all()
         self.block_view.sync_from_engine(self.engine)
 
-    def action_cycle_algorithm(self) -> None:
-        """Chuyển đổi luân phiên giữa 4 thuật toán: A* -> BFS -> DFS -> UCS -> A*."""
+    def action_cycle_algorithm(self, target_algo: str | None = None) -> None:
+        """Đặt thuật toán trực tiếp (nếu có target_algo) hoặc luân phiên: A* -> BFS -> DFS -> UCS -> A*."""
         algos = ["A*", "BFS", "DFS", "UCS"]
-        idx = algos.index(self.selected_algorithm) if self.selected_algorithm in algos else 0
-        next_algo = algos[(idx + 1) % len(algos)]
+        if target_algo and target_algo in algos:
+            next_algo = target_algo
+        else:
+            idx = algos.index(self.selected_algorithm) if self.selected_algorithm in algos else 0
+            next_algo = algos[(idx + 1) % len(algos)]
 
         # Nếu solver đang chạy hoặc tạm dừng, hủy lượt giải cũ
         if self.search_controller.is_running:
@@ -1170,6 +1210,7 @@ def launch_ursina_gui(
     replay_path: Path | None = None,
     start_in_menu: bool = False,
     debug: bool = False,
+    show_loading: bool = True,
 ) -> None:
     """Hàm khởi chạy cửa sổ game Bloxorz bằng Ursina Engine."""
     app = Ursina()
@@ -1178,5 +1219,6 @@ def launch_ursina_gui(
         replay_path=replay_path,
         start_in_menu=start_in_menu,
         debug=debug,
+        show_loading=show_loading,
     )
     app.run()

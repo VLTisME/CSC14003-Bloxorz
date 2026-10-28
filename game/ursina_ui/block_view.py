@@ -14,12 +14,7 @@ from ursina import Entity, Vec3, color, destroy, scene
 
 from game.engine import Posture
 from game.theme import get_theme
-from game.ursina_ui.materials import (
-    get_posture_block_texture,
-    get_solid_wood_texture,
-    get_split_wood_texture,
-    hex_to_ursina_color,
-)
+from game.ursina_ui.materials import get_solid_wood_texture, get_split_wood_texture, hex_to_ursina_color
 
 if TYPE_CHECKING:
     from game.engine import BloxorzEngine
@@ -32,10 +27,10 @@ class BlockView:
         self.theme_name = theme_name
         self.theme = get_theme(theme_name)
 
-        # Cấu hình vật liệu gỗ tối giản thanh lịch viền vát cạnh nổi khối
+        # Cấu hình vật liệu gỗ gụ sẫm RGB đặc 100% viền vát cạnh nổi khối
         bm = self.theme.get("block_main", {})
-        self.base_wood_color = bm.get("color", bm.get("top", "#8B5A2B"))
-        self.wood_texture = get_posture_block_texture(Posture.UPRIGHT, part=1, base_hex=self.base_wood_color)
+        base_hex = bm.get("color", "#8B5A2B")
+        self.wood_texture = get_solid_wood_texture(base_hex)
 
         # Root container của khối chính
         self.block_entity = Entity(
@@ -132,10 +127,8 @@ class BlockView:
             self.cube_2.scale = Vec3(0.98, 0.98, 0.98)
             self.cube_1.rotation = Vec3(0, 0, 0)
             self.cube_2.rotation = Vec3(0, 0, 0)
-            if self.cube_1.texture is not self.wood_texture:
-                self.cube_1.texture = self.wood_texture
-            if self.cube_2.texture is not self.wood_texture:
-                self.cube_2.texture = self.wood_texture
+            self.cube_1.texture = self.wood_texture
+            self.cube_2.texture = self.wood_texture
             self.cube_1.color = color.white
             self.cube_2.color = color.white
             self.cube_1.transparent = False

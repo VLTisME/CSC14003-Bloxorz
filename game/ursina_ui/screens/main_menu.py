@@ -1,208 +1,214 @@
-"""Màn hình chính (Main Menu Screen) cho Bloxorz Ursina UI."""
+"""Main Menu Screen for Bloxorz 3D (Stardew Valley Pixel Art Aesthetic)."""
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Callable
 from ursina import (
-    Button,
     Entity,
     Text,
+    Texture,
     Vec2,
-    Vec3,
-    application,
     camera,
     color,
-    destroy,
+    load_texture,
 )
 
-from game.theme import UI_FONT
-from game.ursina_ui.theme import (
-    BTN_HOVER,
-    BTN_PRESSED,
-    BTN_WOOD_BASE,
-    FRAME_BEZEL,
-    FRAME_DARK,
-    SOLVER_ERROR,
-    TEXT_DARK,
-    TEXT_MUTED,
-    get_parchment_panel_texture,
+from game.ursina_ui.assets.theme import (
+    PALETTE,
+    DEFAULT_FONT_NAME,
+    LocalizedStr,
+    snap,
+)
+from game.ursina_ui.pixel_widgets import (
+    PixelButton,
+    get_pixel_panel_texture,
 )
 
-FONT_NAME = UI_FONT
+LOGO_DIR = Path(__file__).resolve().parent.parent / "assets" / "ui" / "logo"
 
 
 class MainMenuScreen(Entity):
-    """Màn hình menu chính của trò chơi."""
+    """Main start menu screen for Bloxorz 3D with authentic pixel art styling."""
 
     def __init__(
         self,
         on_play: Callable[[], None],
         on_select_stage: Callable[[], None],
         on_help: Callable[[], None],
-        on_quit: Callable[[], None] | None = None,
+        on_quit: Callable[[], None],
     ) -> None:
         super().__init__(parent=camera.ui, name="main_menu_screen", enabled=False)
 
         self.on_play = on_play
         self.on_select_stage = on_select_stage
         self.on_help = on_help
-        self.on_quit = on_quit or application.quit
+        self.on_quit = on_quit
 
-        # Lớp nền mờ tối ấm áp
+        # 1. Warm night sky / dimmed background overlay
+        c_navy = color.hex(PALETTE["navy_1"])
         self.bg_overlay = Entity(
             parent=self,
             model="quad",
             scale=(2.5, 2.5),
-            color=color.rgba(24 / 255.0, 16 / 255.0, 10 / 255.0, 0.85),
+            color=color.rgba(c_navy.r, c_navy.g, c_navy.b, 0.88),
             z=0.1,
         )
 
-        # Panel trung tâm kiểu bảng gỗ thông báo & giấy da parchment
-        self.panel_border = Entity(
-            parent=self,
-            model="quad",
-            scale=(0.612, 0.732),
-            color=color.hex(FRAME_DARK),
-            z=0.06,
-        )
+        # 2. Main Parchment Panel with layered wood bevel
+        panel_w = 0.62
+        panel_h = 0.74
+        w_px = max(64, int(round(panel_w * 864 * (16 / 9))))
+        h_px = max(64, int(round(panel_h * 864)))
+        panel_tex = get_pixel_panel_texture(w_px, h_px)
 
         self.panel = Entity(
             parent=self,
             model="quad",
-            scale=(0.60, 0.72),
-            texture=get_parchment_panel_texture(160, 192),
+            scale=(panel_w, panel_h),
+            texture=panel_tex,
             color=color.white,
             z=0.05,
         )
+        self.panel_border = self.panel  # backward compatibility
 
-        # Tiêu đề game
-        self.txt_title = Text(
-            parent=self,
-            text="BLOXORZ 3D",
-            font=FONT_NAME,
-            scale=2.4,
-            origin=(0, 0),
-            position=(0, 0.24, 0),
-            color=color.hex(TEXT_DARK),
-        )
+        # 3. Logo Title ("BLOXORZ") & Subtitle ("3D PUZZLE")
+        title_tex_path = LOGO_DIR / "logo_title.png"
+        sub_tex_path = LOGO_DIR / "logo_sub.png"
 
-        # Phụ đề
-        self.txt_subtitle = Text(
-            parent=self,
-            text="COZY EDITION • AI FOUNDATIONS",
-            font=FONT_NAME,
-            scale=1.0,
-            origin=(0, 0),
-            position=(0, 0.17, 0),
-            color=color.hex(TEXT_MUTED),
-        )
+        title_tex = Texture(title_tex_path) if title_tex_path.exists() else None
+        if title_tex:
+            title_tex.filtering = False
+            aspect = title_tex.width / max(1, title_tex.height)
+            title_h = 0.088
+            title_w = title_h * aspect
+            self.txt_title = Entity(
+                parent=self,
+                model="quad",
+                texture=title_tex,
+                color=color.white,
+                scale=(title_w, title_h),
+                position=(0, 0.23, -0.01),
+            )
+        else:
+            self.txt_title = Text(
+                parent=self,
+                text="BLOXORZ",
+                font=DEFAULT_FONT_NAME,
+                scale=2.4,
+                origin=(0, 0),
+                position=(0, 0.23, -0.01),
+                color=color.hex(PALETTE["ink"]),
+            )
 
-        # Đường gạch phân cách
+        sub_tex = Texture(sub_tex_path) if sub_tex_path.exists() else None
+        if sub_tex:
+            sub_tex.filtering = False
+            aspect = sub_tex.width / max(1, sub_tex.height)
+            sub_h = 0.038
+            sub_w = sub_h * aspect
+            self.txt_subtitle = Entity(
+                parent=self,
+                model="quad",
+                texture=sub_tex,
+                color=color.white,
+                scale=(sub_w, sub_h),
+                position=(0, 0.155, -0.01),
+            )
+        else:
+            self.txt_subtitle = Text(
+                parent=self,
+                text="3D PUZZLE",
+                font=DEFAULT_FONT_NAME,
+                scale=1.0,
+                origin=(0, 0),
+                position=(0, 0.155, -0.01),
+                color=color.hex(PALETTE["brick"]),
+            )
+
+        # Decorative divider line in brick/tan
         self.divider = Entity(
             parent=self,
             model="quad",
-            scale=(0.45, 0.003),
-            position=(0, 0.13, 0),
-            color=color.hex(FRAME_BEZEL),
+            scale=(0.46, 0.004),
+            position=(0, 0.115, -0.01),
+            color=color.hex(PALETTE["brick"]),
         )
 
-        # Danh sách các nút điều hướng
+        # 4. Pixel Navigation Buttons
         btn_w, btn_h = 0.42, 0.068
-        btn_y_start = 0.05
+        btn_y_start = 0.045
         btn_spacing = 0.082
 
-        # 1. Nút Chơi ngay
-        self.btn_play = Button(
+        # Button 1: Play Now (Green ramp)
+        self.btn_play = PixelButton(
             parent=self,
-            text="CHƠI NGAY",
-            model="quad",
+            text=LocalizedStr("PLAY NOW", ["CHƠI NGAY"]),
+            color_ramp="green",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start, 0),
-            color=color.hex("#4E8A3A"),
-            highlight_color=color.hex("#62A848"),
-            pressed_color=color.hex("#3B682C"),
-            text_color=color.white,
-            text_origin=(0, 0),
-            radius=0.15,
             on_click=self._on_play_clicked,
         )
 
-        # 2. Nút Chọn màn chơi
-        self.btn_stages = Button(
+        # Button 2: Select Stage (Orange ramp)
+        self.btn_stages = PixelButton(
             parent=self,
-            text="CHỌN MÀN CHƠI",
-            model="quad",
+            text=LocalizedStr("STAGE SELECT", ["CHỌN MÀN CHƠI"]),
+            color_ramp="orange",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start - btn_spacing, 0),
-            color=color.hex(BTN_WOOD_BASE),
-            highlight_color=color.hex(BTN_HOVER),
-            pressed_color=color.hex(BTN_PRESSED),
-            text_color=color.hex(TEXT_DARK),
-            text_origin=(0, 0),
-            radius=0.15,
             on_click=self._on_select_stage_clicked,
         )
 
-        # 3. Nút Hướng dẫn
-        self.btn_help = Button(
+        # Button 3: How to Play (Orange ramp)
+        self.btn_help = PixelButton(
             parent=self,
-            text="HƯỚNG DẪN & PHÍM TẮT",
-            model="quad",
+            text=LocalizedStr("HOW TO PLAY", ["HƯỚNG DẪN & PHÍM TẮT"]),
+            color_ramp="orange",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start - btn_spacing * 2, 0),
-            color=color.hex(BTN_WOOD_BASE),
-            highlight_color=color.hex(BTN_HOVER),
-            pressed_color=color.hex(BTN_PRESSED),
-            text_color=color.hex(TEXT_DARK),
-            text_origin=(0, 0),
-            radius=0.15,
             on_click=self._on_help_clicked,
         )
 
-        # 4. Nút Thoát
-        self.btn_quit = Button(
+        # Button 4: Quit (Red ramp)
+        self.btn_quit = PixelButton(
             parent=self,
-            text="THOÁT TRÒ CHƠI",
-            model="quad",
+            text=LocalizedStr("QUIT GAME", ["THOÁT TRÒ CHƠI"]),
+            color_ramp="red",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start - btn_spacing * 3, 0),
-            color=color.hex(SOLVER_ERROR),
-            highlight_color=color.hex("#C53030"),
-            pressed_color=color.hex("#822020"),
-            text_color=color.white,
-            text_origin=(0, 0),
-            radius=0.15,
             on_click=self._on_quit_clicked,
         )
 
-        # Footer bản quyền / phiên bản
+        # Footer version label
         self.txt_version = Text(
             parent=self,
-            text="v2.0 • Ursina 3D Engine",
-            font=FONT_NAME,
-            scale=0.8,
+            text="v2.0 • AI Foundations • Bloxorz 3D",
+            font=DEFAULT_FONT_NAME,
+            scale=0.75,
             origin=(0, 0),
-            position=(0, -0.31, 0),
-            color=color.hex(TEXT_MUTED),
+            position=(0, -0.315, -0.01),
+            color=color.hex(PALETTE["brick"]),
         )
 
     def _on_play_clicked(self) -> None:
         self.hide()
-        self.on_play()
+        if self.on_play:
+            self.on_play()
 
     def _on_select_stage_clicked(self) -> None:
-        self.hide()
-        self.on_select_stage()
+        if self.on_select_stage:
+            self.on_select_stage()
 
     def _on_help_clicked(self) -> None:
-        self.on_help()
+        if self.on_help:
+            self.on_help()
 
     def _on_quit_clicked(self) -> None:
-        self.on_quit()
+        if self.on_quit:
+            self.on_quit()
 
     def show(self) -> None:
-        """Hiển thị menu chính."""
         self.enabled = True
 
     def hide(self) -> None:
-        """Ẩn menu chính."""
         self.enabled = False

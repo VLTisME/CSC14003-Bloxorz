@@ -15,112 +15,114 @@ from typing import Any
 from PIL import Image, ImageDraw
 from ursina import Texture, color
 
+from game.ursina_ui.assets.theme import PALETTE, PIXEL_BOARD
+
 # ==============================================================================
-# 1. STARDEW VALLEY PALETTE CONSTANTS
+# 1. STARDEW VALLEY PALETTE CONSTANTS (100% PALETTE COMPLIANT)
 # ==============================================================================
 
 # Nature & Meadow
-GRASS_BASE = "#5C9C3E"
-GRASS_LIGHT = "#78B854"
-GRASS_DARK = "#42762B"
-GRASS_LIP = "#4E8A3A"
-DIRT_BASE = "#7A4A28"
-DIRT_DARK = "#503018"
-DIRT_LIGHT = "#9C6236"
-FLOWER_COLORS = ["#F4E242", "#EA7272", "#FFFFFF", "#70A0D0"]
+GRASS_BASE = PALETTE["green"]         # #8ab060
+GRASS_LIGHT = PALETTE["lime"]         # #c2d368
+GRASS_DARK = PALETTE["moss"]          # #4e584a
+GRASS_LIP = PALETTE["olive_dark"]     # #7b7243
+DIRT_BASE = PALETTE["brick"]          # #80493a
+DIRT_DARK = PALETTE["ink"]            # #212123
+DIRT_LIGHT = PALETTE["wood"]          # #a77b5b
+FLOWER_COLORS = [PALETTE["butter"], PALETTE["blush"], PALETTE["ivory"], PALETTE["sky"]]
 
 # Handcrafted Farm Timber & Crate
-WOOD_BASE = "#9E6438"
-WOOD_LIGHT = "#BA7D4C"
-WOOD_DARK = "#663C1C"
-WOOD_BORDER = "#40240E"
-WOOD_NAIL = "#241408"
-WOOD_BRACKET = "#52341A"
+WOOD_BASE = PALETTE["wood"]           # #a77b5b
+WOOD_LIGHT = PALETTE["tan"]           # #d3a068
+WOOD_DARK = PALETTE["brick"]          # #80493a
+WOOD_BORDER = PALETTE["ink"]          # #212123
+WOOD_NAIL = PALETTE["ink"]            # #212123
+WOOD_BRACKET = PALETTE["plum_dark"]   # #352b42
 
 # Split Blocks (Warm Pine & Cherry Redwood)
-SPLIT_CUBE1_BASE = "#B87432"
-SPLIT_CUBE1_LIGHT = "#D48E4A"
-SPLIT_CUBE1_DARK = "#804A1A"
-SPLIT_CUBE1_ACCENT = "#2E8B57"  # Forest green trim
+SPLIT_CUBE1_BASE = PALETTE["tan"]     # #d3a068
+SPLIT_CUBE1_LIGHT = PALETTE["butter"] # #ede19e
+SPLIT_CUBE1_DARK = PALETTE["brick"]   # #80493a
+SPLIT_CUBE1_ACCENT = PALETTE["green"] # #8ab060
 
-SPLIT_CUBE2_BASE = "#9C4228"
-SPLIT_CUBE2_LIGHT = "#B85C40"
-SPLIT_CUBE2_DARK = "#6E2A16"
-SPLIT_CUBE2_ACCENT = "#3A72A4"  # Mountain blue trim
+SPLIT_CUBE2_BASE = PALETTE["red"]     # #b45252
+SPLIT_CUBE2_LIGHT = PALETTE["blush"]  # #edc8c4
+SPLIT_CUBE2_DARK = PALETTE["brick"]   # #80493a
+SPLIT_CUBE2_ACCENT = PALETTE["blue"]  # #4b80ca
 
 # Fragile & Bridges
-FRAGILE_PLANK = "#8A6546"
-FRAGILE_LIGHT = "#A67F5D"
-FRAGILE_DARK = "#5C3E28"
-FRAGILE_CRACK = "#2E1C10"
+FRAGILE_PLANK = PALETTE["wood"]       # #a77b5b
+FRAGILE_LIGHT = PALETTE["tan"]        # #d3a068
+FRAGILE_DARK = PALETTE["brick"]       # #80493a
+FRAGILE_CRACK = PALETTE["ink"]        # #212123
 
-BRIDGE_WOOD = "#A06838"
-BRIDGE_LIGHT = "#BC824E"
-BRIDGE_DARK = "#6E3E1A"
-BRIDGE_INACTIVE = "#3E2210"
+BRIDGE_WOOD = PALETTE["wood"]         # #a77b5b
+BRIDGE_LIGHT = PALETTE["tan"]         # #d3a068
+BRIDGE_DARK = PALETTE["brick"]        # #80493a
+BRIDGE_INACTIVE = PALETTE["dusk"]     # #4b4158
 
 # Goal Well & Golden Star
-GOAL_STONE_RIM = "#6E727A"
-GOAL_STONE_DARK = "#4A4D54"
-GOAL_STONE_LIGHT = "#8C9098"
-GOAL_STONE_MOSS = "#4E7836"
-GOAL_PIT_DEEP = "#221A10"
-GOAL_STAR = "#F4C430"
-GOAL_STAR_LIGHT = "#FFF080"
-GOAL_STAR_DARK = "#C49010"
+GOAL_STONE_RIM = PALETTE["silver"]    # #b8b5b9
+GOAL_STONE_DARK = PALETTE["slate"]    # #45444f
+GOAL_STONE_LIGHT = PALETTE["ivory"]   # #f2f0e5
+GOAL_STONE_MOSS = PALETTE["moss"]     # #4e584a
+GOAL_PIT_DEEP = PALETTE["ink"]        # #212123
+GOAL_STAR = PALETTE["butter"]         # #ede19e
+GOAL_STAR_LIGHT = PALETTE["ivory"]    # #f2f0e5
+GOAL_STAR_DARK = PALETTE["tan"]       # #d3a068
 
 # Switches & Splitters
-SWITCH_WOOD_BASE = "#8A562E"
-SWITCH_WOOD_BTN = "#D48038"
-SWITCH_WOOD_HL = "#F0A858"
-SWITCH_WOOD_BORDER = "#482A12"
+SWITCH_WOOD_BASE = PALETTE["wood"]    # #a77b5b
+SWITCH_WOOD_BTN = PALETTE["tan"]      # #d3a068
+SWITCH_WOOD_HL = PALETTE["butter"]    # #ede19e
+SWITCH_WOOD_BORDER = PALETTE["brick"] # #80493a
 
-SWITCH_STONE_BASE = "#666A72"
-SWITCH_STONE_RUNE = "#B84030"
-SWITCH_STONE_BORDER = "#383A40"
+SWITCH_STONE_BASE = PALETTE["grey_mid"]  # #868188
+SWITCH_STONE_RUNE = PALETTE["red"]       # #b45252
+SWITCH_STONE_BORDER = PALETTE["slate"]   # #45444f
 
-SPLITTER_BASE = "#72767E"
-SPLITTER_ACCENT = "#D48038"
-SPLITTER_BORDER = "#3A3C42"
+SPLITTER_BASE = PALETTE["grey_mid"]   # #868188
+SPLITTER_ACCENT = PALETTE["blue"]     # #4b80ca
+SPLITTER_BORDER = PALETTE["slate"]    # #45444f
 
 # Sky & Atmosphere
-SKY_TOP = "#74A4C8"
-SKY_MID = "#98C8E2"
-SKY_HORIZON = "#F0F4DC"
-SKY_HAZE = "#D4EAC0"
-CLOUD_WHITE = "#FFFFFF"
-CLOUD_SHADOW = "#DCE4EC"
+SKY_TOP = PALETTE["navy_1"]           # #3a3858
+SKY_MID = PALETTE["navy_2"]           # #43436a
+SKY_HORIZON = PALETTE["cream"]        # #e5ceb4
+SKY_HAZE = PALETTE["mint"]            # #a2dcc7
+CLOUD_WHITE = PALETTE["ivory"]        # #f2f0e5
+CLOUD_SHADOW = PALETTE["silver"]      # #b8b5b9
 
 # Stardew Parchment & Dialogue Box UI
-PARCHMENT_BG = "#F5E6C8"
-PARCHMENT_LIGHT = "#FAF1DE"
-PARCHMENT_SHADOW = "#E0CCA4"
-PARCHMENT_INSET = "#D4B982"
+PARCHMENT_BG = PALETTE["cream"]       # #e5ceb4
+PARCHMENT_LIGHT = PALETTE["ivory"]    # #f2f0e5
+PARCHMENT_SHADOW = PALETTE["tan"]     # #d3a068
+PARCHMENT_INSET = PALETTE["wood"]     # #a77b5b
 
-FRAME_DARK = "#381E0C"
-FRAME_BEZEL = "#5C3A1E"
-FRAME_LIGHT = "#8B5A2B"
-FRAME_CORNER = "#2E180A"
+FRAME_DARK = PALETTE["brick"]         # #80493a
+FRAME_BEZEL = PALETTE["brick"]        # #80493a
+FRAME_LIGHT = PALETTE["wood"]         # #a77b5b
+FRAME_CORNER = PALETTE["ink"]         # #212123
 
-BTN_WOOD_BASE = "#D49A50"
-BTN_WOOD_LIGHT = "#E8B870"
-BTN_WOOD_SHADOW = "#9C6A28"
-BTN_WOOD_BORDER = "#5C3A1E"
+BTN_WOOD_BASE = PALETTE["tan"]        # #d3a068
+BTN_WOOD_LIGHT = PALETTE["butter"]    # #ede19e
+BTN_WOOD_SHADOW = PALETTE["wood"]     # #a77b5b
+BTN_WOOD_BORDER = PALETTE["brick"]    # #80493a
 
-BTN_HOVER = "#E8B870"
-BTN_PRESSED = "#A87030"
+BTN_HOVER = PALETTE["butter"]         # #ede19e
+BTN_PRESSED = PALETTE["wood"]         # #a77b5b
 
-TEXT_DARK = "#3B2314"
-TEXT_MUTED = "#6B492B"
-TEXT_GOLD = "#C47B14"
-TEXT_SHADOW = "#FFF2DC"
+TEXT_DARK = PALETTE["ink"]            # #212123
+TEXT_MUTED = PALETTE["grey_mid"]      # #868188
+TEXT_GOLD = PALETTE["butter"]         # #ede19e
+TEXT_SHADOW = PALETTE["ivory"]        # #f2f0e5
 
-# Solver Dynamic Colors (Keeping exact state semantics)
-SOLVER_IDLE = "#C47B14"       # Warm Oak Amber
-SOLVER_RUNNING = "#D96E20"    # Autumn Pumpkin
-SOLVER_PAUSED = "#4E8A3A"     # Farm Green
-SOLVER_COMPLETED = "#3A8A6E"  # Harvest Teal
-SOLVER_ERROR = "#A83226"      # Barnyard Red
+# Solver Dynamic Colors (Keeping exact state semantics with PALETTE)
+SOLVER_IDLE = PALETTE["tan"]          # #d3a068
+SOLVER_RUNNING = PALETTE["brick"]     # #80493a
+SOLVER_PAUSED = PALETTE["green"]      # #8ab060
+SOLVER_COMPLETED = PALETTE["teal_dark"] # #567b79
+SOLVER_ERROR = PALETTE["red"]         # #b45252
 
 # Font configuration
 FONT_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
