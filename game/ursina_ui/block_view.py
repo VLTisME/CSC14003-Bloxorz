@@ -14,7 +14,12 @@ from ursina import Entity, Vec3, color, destroy, scene
 
 from game.engine import Posture
 from game.theme import get_theme
-from game.ursina_ui.materials import get_solid_wood_texture, get_split_wood_texture, hex_to_ursina_color
+from game.ursina_ui.materials import (
+    get_posture_block_texture,
+    get_solid_wood_texture,
+    get_split_wood_texture,
+    hex_to_ursina_color,
+)
 
 if TYPE_CHECKING:
     from game.engine import BloxorzEngine
@@ -27,10 +32,10 @@ class BlockView:
         self.theme_name = theme_name
         self.theme = get_theme(theme_name)
 
-        # Cấu hình vật liệu gỗ gụ sẫm RGB đặc 100% viền vát cạnh nổi khối
+        # Cấu hình vật liệu gỗ tối giản thanh lịch viền vát cạnh nổi khối
         bm = self.theme.get("block_main", {})
-        base_hex = bm.get("color", "#8B5A2B")
-        self.wood_texture = get_solid_wood_texture(base_hex)
+        self.base_wood_color = bm.get("color", bm.get("top", "#8B5A2B"))
+        self.wood_texture = get_posture_block_texture(Posture.UPRIGHT, part=1, base_hex=self.base_wood_color)
 
         # Root container của khối chính
         self.block_entity = Entity(
@@ -38,7 +43,7 @@ class BlockView:
             position=Vec3(0, 0, 0),
         )
 
-        # Nửa 1 của khối
+        # Nửa 1 của khối (chân cột khi đứng)
         self.cube_1 = Entity(
             parent=self.block_entity,
             name="block_part1",
@@ -50,14 +55,14 @@ class BlockView:
             transparent=False,
         )
 
-        # Nửa 2 của khối
+        # Nửa 2 của khối (đỉnh cột khi đứng)
         self.cube_2 = Entity(
             parent=self.block_entity,
             name="block_part2",
             model="cube",
             position=Vec3(0, 1.5, 0),
             scale=Vec3(0.98, 0.98, 0.98),
-            texture=self.wood_texture,
+            texture=get_posture_block_texture(Posture.UPRIGHT, part=2, base_hex=self.base_wood_color),
             color=color.white,
             transparent=False,
         )
@@ -127,8 +132,6 @@ class BlockView:
             self.cube_2.scale = Vec3(0.98, 0.98, 0.98)
             self.cube_1.rotation = Vec3(0, 0, 0)
             self.cube_2.rotation = Vec3(0, 0, 0)
-            self.cube_1.texture = self.wood_texture
-            self.cube_2.texture = self.wood_texture
             self.cube_1.color = color.white
             self.cube_2.color = color.white
             self.cube_1.transparent = False
@@ -144,6 +147,8 @@ class BlockView:
                 self.block_entity.position = Vec3(float(c), 0.0, -float(r))
                 self.cube_1.position = Vec3(0.0, 0.5, 0.0)
                 self.cube_2.position = Vec3(0.0, 1.5, 0.0)
+                self.cube_1.texture = get_posture_block_texture(Posture.UPRIGHT, 1, self.base_wood_color)
+                self.cube_2.texture = get_posture_block_texture(Posture.UPRIGHT, 2, self.base_wood_color)
 
             elif posture == Posture.HORIZONTAL:
                 cols = [c for r, c in cells]
@@ -152,6 +157,8 @@ class BlockView:
                 self.block_entity.position = Vec3(float(c_min), 0.0, -float(r))
                 self.cube_1.position = Vec3(0.0, 0.5, 0.0)
                 self.cube_2.position = Vec3(1.0, 0.5, 0.0)
+                self.cube_1.texture = get_posture_block_texture(Posture.HORIZONTAL, 1, self.base_wood_color)
+                self.cube_2.texture = get_posture_block_texture(Posture.HORIZONTAL, 2, self.base_wood_color)
 
             else:  # VERTICAL
                 rows = [r for r, c in cells]
@@ -160,6 +167,8 @@ class BlockView:
                 self.block_entity.position = Vec3(float(c), 0.0, -float(r_min))
                 self.cube_1.position = Vec3(0.0, 0.5, 0.0)
                 self.cube_2.position = Vec3(0.0, 0.5, -1.0)
+                self.cube_1.texture = get_posture_block_texture(Posture.VERTICAL, 1, self.base_wood_color)
+                self.cube_2.texture = get_posture_block_texture(Posture.VERTICAL, 2, self.base_wood_color)
 
     def get_world_bounds(self, engine: BloxorzEngine) -> tuple[float, float, float, Posture]:
         """Trả về (x, y, z, posture) của tâm khối trong không gian thế giới."""

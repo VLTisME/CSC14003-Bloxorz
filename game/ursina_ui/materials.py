@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 from PIL import Image, ImageDraw, ImageFilter
 from ursina import Texture, color
 
+from game.engine import Posture
 from game.theme import get_theme
 
 # Bộ nhớ đệm lưu texture tránh tạo lại nhiều lần
@@ -351,68 +352,108 @@ def get_contrast_bg_texture(
     return tex
 
 
-def get_solid_wood_texture(
+def get_posture_block_texture(
+    posture: Posture | str,
+    part: int = 1,
     base_hex: str = "#8B5A2B",
-    size: int = 16,
+    size: int = 32,
 ) -> Texture:
-    """Tạo texture khối gỗ pixel art cơ bản (Basic Pixel-Art Wooden Block) với nearest filtering."""
-    key = f"pixel_wood_block_{base_hex}_{size}"
+    """Tạo texture khối Bloxorz tối giản (minimalist, low-noise) khớp chuẩn theo từng tư thế.
+
+    Đặc tính:
+    - Thẩm mỹ tối giản, sạch sẽ (clean matte), ít texture, không đinh tán hay vết nứt ván gắt.
+    - Màu sắc gỗ ấm cao cấp (Warm Scandinavian Teak / Cedar) với dải chuyển tiếp mượt mà.
+    - Viền vát cạnh (chamfered bevel) tinh tế ở các mép ngoài.
+    - Khớp nối liền mạch (seamless open inner edge) ở các mặt tiếp giáp giữa 2 nửa:
+      + UPRIGHT: Nửa 1 (dưới) mở viền trên; Nửa 2 (trên) mở viền dưới, tạo thành cột trụ 1x1x2 thống nhất.
+      + HORIZONTAL: Nửa 1 (trái) mở viền phải; Nửa 2 (phải) mở viền trái, tạo thành thanh ngang 2x1x1 nguyên khối.
+      + VERTICAL: Nửa 1 (trước) mở viền sau; Nửa 2 (sau) mở viền trước, tạo thành thanh sâu 1x2x1 liền mạch.
+      + SPLIT: Đóng viền cả 4 cạnh, thể hiện khối 1x1x1 độc lập.
+    """
+    key = f"minimal_block_{posture}_{part}_{base_hex}_{size}"
     if key in _TEXTURE_CACHE:
         return _TEXTURE_CACHE[key]
 
     base_rgb = hex_to_rgb(base_hex)
-    dark_border = (max(0, base_rgb[0] - 70), max(0, base_rgb[1] - 48), max(0, base_rgb[2] - 30))
-    shadow_rgb = (max(0, base_rgb[0] - 40), max(0, base_rgb[1] - 28), max(0, base_rgb[2] - 18))
-    light_rgb = (min(255, base_rgb[0] + 25), min(255, base_rgb[1] + 18), min(255, base_rgb[2] + 12))
-    highlight_rgb = (min(255, base_rgb[0] + 55), min(255, base_rgb[1] + 40), min(255, base_rgb[2] + 25))
-    nail_rgb = (max(0, base_rgb[0] - 90), max(0, base_rgb[1] - 65), max(0, base_rgb[2] - 45))
+    br, bg, bb = base_rgb
+
+    # Bảng màu tối giản thanh lịch (subtle minimalist contrast)
+    outer_dark = (max(0, br - 36), max(0, bg - 26), max(0, bb - 20))
+    shadow_rgb = (max(0, br - 18), max(0, bg - 14), max(0, bb - 10))
+    light_rgb  = (min(255, br + 18), min(255, bg + 14), min(255, bb + 10))
+    hl_rgb     = (min(255, br + 28), min(255, bg + 22), min(255, bb + 16))
 
     img = Image.new("RGB", (size, size), base_rgb)
     pixels = img.load()
     assert pixels is not None
 
-    # 1. Khung viền pixel tối ngoài cùng (1-pixel outer dark border)
-    for x in range(size):
-        pixels[x, 0] = dark_border
-        pixels[x, size - 1] = dark_border
+    # Xác định cạnh nào là mặt nối trong (open edge)
+    open_top = (posture == Posture.UPRIGHT and part == 1) or (posture == Posture.VERTICAL and part == 2)
+    open_bottom = (posture == Posture.UPRIGHT and part == 2) or (posture == Posture.VERTICAL and part == 1)
+    open_left = (posture == Posture.HORIZONTAL and part == 2)
+    open_right = (posture == Posture.HORIZONTAL and part == 1)
+
+    # 1. Vi chuyển sắc ánh sáng bề mặt cực nhẹ (subtle directional micro-lighting)
     for y in range(size):
-        pixels[0, y] = dark_border
-        pixels[size - 1, y] = dark_border
+        for x in range(size):
+            if posture == Posture.UPRIGHT:
+                t = (y / (2.0 * size)) if part == 2 else ((y + size) / (2.0 * size))
+                factor = 0.07 * (0.5 - t)
+            elif posture == Posture.HORIZONTAL:
+                t = (x / (2.0 * size)) if part == 1 else ((x + size) / (2.0 * size))
+                factor = 0.07 * (0.5 - t)
+            elif posture == Posture.VERTICAL:
+                t = (y / (2.0 * size)) if part == 1 else ((y + size) / (2.0 * size))
+                factor = 0.07 * (0.5 - t)
+            else:
+                factor = 0.04 * (1.0 - (x + y) / (2.0 * size))
 
-    # 2. Vát cạnh 3D nổi khối pixel (Top/Left highlight, Bottom/Right shadow)
-    for x in range(1, size - 1):
-        pixels[x, 1] = highlight_rgb
-        pixels[x, size - 2] = shadow_rgb
-    for y in range(1, size - 1):
-        pixels[1, y] = highlight_rgb
-        pixels[size - 2, y] = shadow_rgb
+            cr = max(0, min(255, int(br * (1.0 + factor))))
+            cg = max(0, min(255, int(bg * (1.0 + factor))))
+            cb = max(0, min(255, int(bb * (1.0 + factor))))
+            pixels[x, y] = (cr, cg, cb)
 
-    # 3. Rãnh chia các thanh ván gỗ ngang (Horizontal plank seams)
-    plank_h = size // 3
-    seams = [plank_h, plank_h * 2]
-    for sy in seams:
-        if 2 <= sy < size - 2:
-            for x in range(1, size - 1):
-                pixels[x, sy] = shadow_rgb
-                if sy + 1 < size - 2:
-                    pixels[x, sy + 1] = light_rgb
+    # 2. Khung viền 1-pixel ở các cạnh ngoài (outer boundaries)
+    for x in range(size):
+        if not open_top:
+            pixels[x, 0] = outer_dark
+        if not open_bottom:
+            pixels[x, size - 1] = outer_dark
+    for y in range(size):
+        if not open_left:
+            pixels[0, y] = outer_dark
+        if not open_right:
+            pixels[size - 1, y] = outer_dark
 
-    # 4. Đinh tán 1-pixel ở 4 góc (Corner iron nails)
-    corners = [(2, 2), (size - 3, 2), (2, size - 3), (size - 3, size - 3)]
-    for cx, cy in corners:
-        if 0 <= cx < size and 0 <= cy < size:
-            pixels[cx, cy] = nail_rgb
+    # 3. Vát cạnh 3D nổi khối tối giản (chamfer bevel nối liền mạch)
+    x_start = 0 if open_left else 1
+    x_end = size if open_right else size - 1
+    for x in range(x_start, x_end):
+        if not open_top:
+            pixels[x, 1] = hl_rgb
+        if not open_bottom:
+            pixels[x, size - 2] = shadow_rgb
 
-    # 5. Vài chấm thớ gỗ nhẹ tạo chất cảm pixel mộc mạc
-    grain_pts = [(5, 3), (size - 6, 4), (4, size - 5), (size - 5, size - 5)]
-    for gx, gy in grain_pts:
-        if 2 <= gx < size - 2 and 2 <= gy < size - 2:
-            pixels[gx, gy] = shadow_rgb
+    y_start = 0 if open_top else 1
+    y_end = size if open_bottom else size - 1
+    for y in range(y_start, y_end):
+        if not open_left:
+            pixels[1, y] = light_rgb
+        if not open_right:
+            pixels[size - 2, y] = shadow_rgb
 
     tex = Texture(img)
     tex.filtering = False
     _TEXTURE_CACHE[key] = tex
     return tex
+
+
+def get_solid_wood_texture(
+    base_hex: str = "#8B5A2B",
+    size: int = 32,
+) -> Texture:
+    """Tạo texture khối gỗ tối giản cơ bản (mặc định tư thế đứng UPRIGHT)."""
+    return get_posture_block_texture(Posture.UPRIGHT, part=1, base_hex=base_hex, size=size)
 
 
 def get_custom_background_texture(
@@ -444,58 +485,60 @@ def get_custom_background_texture(
 def get_split_wood_texture(
     cube_index: int,
     is_active: bool = True,
-    size: int = 16,
+    size: int = 32,
 ) -> Texture:
-    """Tạo texture khối pixel art cơ bản cho 2 nửa khối khi split (Khối 1: Hổ Phách & Khối 2: Gỗ Đỏ)."""
-    key = f"split_pixel_wood_{cube_index}_{is_active}_{size}"
+    """Tạo texture khối tối giản cho 2 nửa khối khi split (Khối 1: Hổ Phách & Khối 2: Gỗ Đỏ)."""
+    key = f"split_minimal_wood_{cube_index}_{is_active}_{size}"
     if key in _TEXTURE_CACHE:
         return _TEXTURE_CACHE[key]
 
     if cube_index == 1:
-        base_hex = "#C87832" if is_active else "#7A4818"
-        nail_hex = "#2E8B57" if is_active else "#1A4E30"
+        base_hex = "#C87832" if is_active else "#854E1E"
+        accent_hex = "#52D68A" if is_active else "#336B4D"
     else:
-        base_hex = "#A64024" if is_active else "#682414"
-        nail_hex = "#3A72A4" if is_active else "#204260"
+        base_hex = "#A64024" if is_active else "#6D2816"
+        accent_hex = "#4EB4E8" if is_active else "#2B5872"
 
     base_rgb = hex_to_rgb(base_hex)
-    nail_rgb = hex_to_rgb(nail_hex)
-    dark_border = (max(0, base_rgb[0] - 70), max(0, base_rgb[1] - 48), max(0, base_rgb[2] - 30))
-    shadow_rgb = (max(0, base_rgb[0] - 40), max(0, base_rgb[1] - 28), max(0, base_rgb[2] - 18))
-    light_rgb = (min(255, base_rgb[0] + 25), min(255, base_rgb[1] + 18), min(255, base_rgb[2] + 12))
-    highlight_rgb = (min(255, base_rgb[0] + 55), min(255, base_rgb[1] + 40), min(255, base_rgb[2] + 25))
+    accent_rgb = hex_to_rgb(accent_hex)
+    br, bg, bb = base_rgb
+
+    outer_dark = (max(0, br - 38), max(0, bg - 28), max(0, bb - 20))
+    shadow_rgb = (max(0, br - 18), max(0, bg - 14), max(0, bb - 10))
+    light_rgb  = (min(255, br + 22), min(255, bg + 18), min(255, bb + 12))
+    hl_rgb     = (min(255, br + 35), min(255, bg + 28), min(255, bb + 20))
 
     img = Image.new("RGB", (size, size), base_rgb)
     pixels = img.load()
     assert pixels is not None
 
-    for x in range(size):
-        pixels[x, 0] = dark_border
-        pixels[x, size - 1] = dark_border
     for y in range(size):
-        pixels[0, y] = dark_border
-        pixels[size - 1, y] = dark_border
+        for x in range(size):
+            factor = 0.05 * (1.0 - (x + y) / (2.0 * size))
+            cr = max(0, min(255, int(br * (1.0 + factor))))
+            cg = max(0, min(255, int(bg * (1.0 + factor))))
+            cb = max(0, min(255, int(bb * (1.0 + factor))))
+            pixels[x, y] = (cr, cg, cb)
+
+    for x in range(size):
+        pixels[x, 0] = outer_dark
+        pixels[x, size - 1] = outer_dark
+    for y in range(size):
+        pixels[0, y] = outer_dark
+        pixels[size - 1, y] = outer_dark
 
     for x in range(1, size - 1):
-        pixels[x, 1] = highlight_rgb
+        pixels[x, 1] = hl_rgb
         pixels[x, size - 2] = shadow_rgb
     for y in range(1, size - 1):
-        pixels[1, y] = highlight_rgb
+        pixels[1, y] = light_rgb
         pixels[size - 2, y] = shadow_rgb
 
-    plank_h = size // 3
-    seams = [plank_h, plank_h * 2]
-    for sy in seams:
-        if 2 <= sy < size - 2:
-            for x in range(1, size - 1):
-                pixels[x, sy] = shadow_rgb
-                if sy + 1 < size - 2:
-                    pixels[x, sy + 1] = light_rgb
-
-    corners = [(2, 2), (size - 3, 2), (2, size - 3), (size - 3, size - 3)]
-    for cx, cy in corners:
-        if 0 <= cx < size and 0 <= cy < size:
-            pixels[cx, cy] = nail_rgb
+    if is_active:
+        for x in range(1, 4):
+            for y in range(1, 4):
+                if x == 1 or y == 1:
+                    pixels[x, y] = accent_rgb
 
     tex = Texture(img)
     tex.filtering = False
