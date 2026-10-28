@@ -21,6 +21,7 @@ import subprocess
 import sys
 from threading import Thread
 from typing import TYPE_CHECKING
+from game.search_controller import SearchController, SearchStatus
 from ursina import (
     AmbientLight,
     DirectionalLight,
@@ -152,12 +153,13 @@ class BloxorzUrsinaApp(Entity):
         self.replay_interval: float = 0.35
         self.current_replay_file: str | None = None
 
-        # A* chạy trong tiến trình riêng để không chặn vòng lặp hiển thị Ursina.
-        self._astar_results: queue.Queue[tuple[int, int | None, str, str]] = queue.Queue()
-        self._astar_generation = 0
-        self._astar_running = False
-        self._astar_thread: Thread | None = None
-        self._astar_start_move_count = 0
+        # Bộ điều khiển solver chạy nền có hỗ trợ Pause/Resume/Cancel cho cả 4 thuật toán
+        self.search_controller = SearchController()
+        self._selected_algorithm: str = "A*"
+        self._solver_stage_id: str | None = None
+        self._solver_algorithm: str = "A*"
+        self._solver_generation: int = 0
+        self._solver_start_move_count: int = 0
 
         # Giao diện HUD 2D
         self.ui = UIManager(
@@ -174,6 +176,8 @@ class BloxorzUrsinaApp(Entity):
             on_replay_load_file=self.action_replay_load_custom,
             on_speed_change=self.set_speed_mult,
             on_solve_astar=self.action_solve_astar,
+            on_cycle_algorithm=self.action_cycle_algorithm,
+            on_solve=self.action_solve_current,
         )
 
         # Màn hình Menu chính và các Menu trạng thái
@@ -276,11 +280,34 @@ class BloxorzUrsinaApp(Entity):
                     self.load_stage_from_file(cand, replay_path=rep if rep.exists() else None)
                     return
 
+    @property
+    def _astar_running(self) -> bool:
+        return self.search_controller.is_running
+
+    @property
+    def _astar_generation(self) -> int:
+        return self._solver_generation
+
+    @_astar_generation.setter
+    def _astar_generation(self, value: int) -> None:
+        self._solver_generation = value
+
+    @property
+    def selected_algorithm(self) -> str:
+        return self._selected_algorithm
+
+    @selected_algorithm.setter
+    def selected_algorithm(self, value: str) -> None:
+        self._selected_algorithm = value
+        if hasattr(self, "ui") and hasattr(self.ui, "set_selected_algorithm"):
+            self.ui.set_selected_algorithm(value)
+
     def load_stage_from_file(self, stage_path: Path, replay_path: Path | None = None) -> None:
         """Nạp màn chơi từ đường dẫn file .in.json cụ thể."""
-        self._astar_generation += 1
-        self._astar_running = False
-        self.ui.set_solver_status("Giải A*")
+        self._solver_generation += 1
+        self._solver_stage_id = None
+        self.search_controller.cancel()
+        self.ui.set_solver_state(SearchStatus.IDLE)
         self.anim.stop_all()
         self.is_replay_playing = False
         self.ui.set_replay_play_state(False)
@@ -470,79 +497,124 @@ class BloxorzUrsinaApp(Entity):
         self.anim.stop_all()
         self.block_view.sync_from_engine(self.engine)
 
-    def action_solve_astar(self) -> None:
-        """Run A* off-thread, validate its answer, then animate it via Replay."""
-        if self._astar_running:
+    def action_cycle_algorithm(self) -> None:
+        """Chuyển đổi luân phiên giữa 4 thuật toán: A* -> BFS -> DFS -> UCS -> A*."""
+        algos = ["A*", "BFS", "DFS", "UCS"]
+        idx = algos.index(self.selected_algorithm) if self.selected_algorithm in algos else 0
+        next_algo = algos[(idx + 1) % len(algos)]
+
+        # Nếu solver đang chạy hoặc tạm dừng, hủy lượt giải cũ
+        if self.search_controller.is_running:
+            self._solver_generation += 1
+            self._solver_stage_id = None
+            self.search_controller.cancel()
+
+        self.selected_algorithm = next_algo
+        self.ui.set_selected_algorithm(next_algo)
+        self.ui.set_solver_state(SearchStatus.IDLE)
+
+    def action_solve_current(self) -> None:
+        """Chạy hoặc tạm dừng / tiếp tục thuật toán đang được lựa chọn."""
+        if self.search_controller.is_paused:
+            self.search_controller.resume()
+            self.ui.set_solver_state(SearchStatus.RUNNING, "Tạm Dừng")
             return
+
+        if self.search_controller.is_running:
+            self.search_controller.pause()
+            self.ui.set_solver_state(SearchStatus.PAUSED, "Tiếp Tục")
+            return
+
         if self.engine.stage is None:
-            self.ui.set_solver_status("Chưa có màn", failed=True)
+            self.ui.set_solver_state(SearchStatus.FAILED, "Chưa có màn", failed=True)
             return
+
         if self.engine.move_count or not self.engine.is_playing:
             self.action_reset()
 
-        self._astar_generation += 1
-        generation = self._astar_generation
-        self._astar_start_move_count = self.engine.move_count
-        stage_data = json.loads(json.dumps(self.engine.stage))
-        stage_json = json.dumps(stage_data)
-        self._astar_running = True
-        self.ui.set_solver_status("A*: Đang giải...")
+        self._solver_generation += 1
+        self._solver_stage_id = self.engine.stage_id
+        self._solver_algorithm = self.selected_algorithm
+        self._solver_start_move_count = self.engine.move_count
+        self.search_controller.start(
+            stage=self.engine.stage,
+            algorithm=self.selected_algorithm,
+            generation=self._solver_generation,
+            timeout=60.0,
+        )
+        self.ui.set_solver_state(SearchStatus.RUNNING, "Tạm Dừng", info=f"Đang giải {self.selected_algorithm}...")
 
-        def run_solver() -> None:
-            try:
-                process = subprocess.run(
-                    [sys.executable, str(ROOT_DIR / "algorithms" / "ASTAR.py")],
-                    input=stage_json,
-                    text=True,
-                    capture_output=True,
-                    cwd=ROOT_DIR,
-                    timeout=60.0,
-                    check=False,
-                )
-                self._astar_results.put((generation, process.returncode, process.stdout, process.stderr))
-            except Exception as exc:
-                self._astar_results.put((generation, None, "", f"{type(exc).__name__}: {exc}"))
-
-        self._astar_thread = Thread(target=run_solver, name="bloxorz-astar", daemon=True)
-        self._astar_thread.start()
+    def action_solve_astar(self) -> None:
+        """Hành động giải A* (tương thích ngược với các test case)."""
+        if not self.search_controller.is_running and self.selected_algorithm != "A*":
+            self.selected_algorithm = "A*"
+            self.ui.set_selected_algorithm("A*")
+        self.action_solve_current()
 
     def _poll_astar_results(self) -> None:
-        """Consume completed subprocesses on the GUI thread."""
-        while True:
-            try:
-                generation, return_code, stdout, stderr = self._astar_results.get_nowait()
-            except queue.Empty:
-                return
-            if generation != self._astar_generation:
-                continue
+        """Xử lý kết quả trả về từ luồng solver chạy nền."""
+        res = self.search_controller.poll()
+        if res is None:
+            return
 
-            self._astar_running = False
-            if return_code != 0:
-                self.ui.set_solver_status("A*: lỗi", failed=True)
-                print(f"[A*] Solver failed: {stderr.strip() or f'exit code {return_code}'}", file=sys.stderr)
-                continue
+        # 1. Đảm bảo đúng thế hệ (generation) của lượt tìm kiếm
+        if res.generation != self._solver_generation:
+            return
+
+        # 2. Đảm bảo stage hiện tại vẫn trùng khớp với stage lúc bắt đầu giải
+        if self.engine.stage_id != self._solver_stage_id:
+            return
+
+        # 3. Đảm bảo đúng thuật toán đang yêu cầu
+        if res.algorithm != self._solver_algorithm:
+            return
+
+        if res.status == SearchStatus.CANCELLED:
+            self.ui.set_solver_state(SearchStatus.IDLE)
+            return
+
+        if res.status == SearchStatus.TIMEOUT:
+            self.ui.set_solver_state(SearchStatus.TIMEOUT, f"{res.algorithm}: Hết giờ", failed=True, info=res.error_message)
+            print(f"[{res.algorithm}] Solver timeout: {res.error_message}", file=sys.stderr)
+            return
+
+        if res.status == SearchStatus.FAILED:
+            self.ui.set_solver_state(SearchStatus.FAILED, f"{res.algorithm}: Lỗi", failed=True, info=res.error_message)
+            print(f"[{res.algorithm}] Solver failed: {res.error_message}", file=sys.stderr)
+            return
+
+        if res.status == SearchStatus.COMPLETED:
+            ans = {"status": "solved", "actions": res.actions}
             try:
-                answer = json.loads(stdout)
-                verdict = check_answer(self.engine.stage, answer)
+                verdict = check_answer(self.engine.stage, ans)
             except Exception as exc:
-                self.ui.set_solver_status("A*: đầu ra lỗi", failed=True)
-                print(f"[A*] Invalid solver output: {exc}", file=sys.stderr)
-                continue
+                self.ui.set_solver_state(SearchStatus.FAILED, f"{res.algorithm}: Đầu ra lỗi", failed=True, info=str(exc))
+                print(f"[{res.algorithm}] Invalid solver output: {exc}", file=sys.stderr)
+                return
 
             if verdict["verdict"] != "AC":
-                self.ui.set_solver_status("A*: lời giải lỗi", failed=True)
-                print(f"[A*] Checker rejected solution: {verdict['message']}", file=sys.stderr)
-                continue
-            if self.engine.move_count != self._astar_start_move_count or not self.engine.is_playing:
-                self.ui.set_solver_status("Bàn đã đổi - giải lại")
-                continue
+                self.ui.set_solver_state(SearchStatus.FAILED, f"{res.algorithm}: Lời giải lỗi", failed=True, info=verdict.get("message", "WA"))
+                print(f"[{res.algorithm}] Checker rejected solution: {verdict['message']}", file=sys.stderr)
+                return
 
-            self.replay_actions = answer["actions"]
+            if self.engine.move_count != self._solver_start_move_count or not self.engine.is_playing:
+                self.ui.set_solver_state(SearchStatus.FAILED, "Bàn đã đổi - giải lại", failed=True)
+                return
+
+            # Nạp bước đi vào Replay
+            self.replay_actions = res.actions
             self.replay_index = 0
-            self.current_replay_file = "A*"
-            self.ui.inp_replay_path.text = "A*"
-            self.ui.update_replay_status(0, len(self.replay_actions), "A*")
-            self.ui.set_solver_status(f"A*: {len(self.replay_actions)} bước")
+            self.current_replay_file = res.algorithm
+            self.ui.update_replay_status(0, len(self.replay_actions), res.algorithm)
+
+            time_ms = res.metrics.get("search_time_ms", 0.0)
+            cost = verdict.get("cost", len(res.actions))
+            if res.algorithm == "UCS":
+                info_text = f"{res.algorithm}: {len(self.replay_actions)}b | cost {cost} ({time_ms:.1f}ms)"
+            else:
+                info_text = f"{res.algorithm}: {len(self.replay_actions)} bước ({time_ms:.1f}ms)"
+
+            self.ui.set_solver_state(SearchStatus.COMPLETED, f"{res.algorithm}: {len(self.replay_actions)}b", info=info_text)
             self.is_replay_playing = True
             self.replay_timer = self.replay_interval
             self._sync_replay_button()
@@ -574,10 +646,11 @@ class BloxorzUrsinaApp(Entity):
 
     def action_reset(self) -> None:
         """Đặt lại ván chơi về trạng thái ban đầu."""
-        # Nếu đang giải, bỏ kết quả của trạng thái cũ sau khi người dùng reset.
-        self._astar_generation += 1
-        self._astar_running = False
-        self.ui.set_solver_status("Giải A*")
+        # Nếu đang giải, hủy và bỏ kết quả của trạng thái cũ sau khi người dùng reset.
+        self._solver_generation += 1
+        self._solver_stage_id = None
+        self.search_controller.cancel()
+        self.ui.set_solver_state(SearchStatus.IDLE)
         self.input_controller.reset()
         self.anim.stop_all()
         self.is_replay_playing = False
@@ -770,6 +843,10 @@ class BloxorzUrsinaApp(Entity):
         self.is_replay_playing = False
         self.ui.set_replay_play_state(False)
         self.input_controller.reset()
+        self._solver_generation += 1
+        self._solver_stage_id = None
+        self.search_controller.cancel()
+        self.ui.set_solver_state(SearchStatus.IDLE)
 
         # Nếu ván chơi đã kết thúc (thắng hoặc thua), đặt lại trạng thái và hình ảnh khối trên bàn
         if not self.engine.is_playing:

@@ -56,6 +56,8 @@ class UIManager:
         on_replay_load_file: Callable[[str], None],
         on_speed_change: Callable[[float], None],
         on_solve_astar: Callable[[], None],
+        on_cycle_algorithm: Callable[[], None] | None = None,
+        on_solve: Callable[[], None] | None = None,
     ) -> None:
         self.catalog = catalog
         self.on_select_stage = on_select_stage
@@ -70,6 +72,9 @@ class UIManager:
         self.on_replay_load_file = on_replay_load_file
         self.on_speed_change = on_speed_change
         self.on_solve_astar = on_solve_astar
+        self.on_cycle_algorithm = on_cycle_algorithm
+        self.on_solve = on_solve if on_solve is not None else on_solve_astar
+        self.selected_algorithm: str = "A*"
 
         self.theme = get_theme("toy")
         self.ui_root = Entity(parent=camera.ui, name="ui_root")
@@ -119,28 +124,52 @@ class UIManager:
             font=FONT_NAME,
             scale=1.05,
             origin=(-0.5, 0),
-            position=(0.14, 0.46, -0.01),
+            position=(0.02, 0.46, -0.01),
             color=color.hex("#10B981"),
         )
 
-        # Nút chạy A* và các nút chức năng trên đỉnh
-        self.btn_solve_astar = Button(
+        # Nhãn thông tin chi tiết của Solver (nodes, thời gian, cost)
+        self.txt_solver_info = Text(
+            parent=self.ui_root,
+            text="",
+            font=FONT_NAME,
+            scale=0.85,
+            origin=(0.5, 0),
+            position=(0.28, 0.46, -0.01),
+            color=color.hex("#80CBC4"),
+        )
+
+        # Nút chọn thuật toán (BFS / DFS / UCS / A*)
+        self.btn_algo_select = Button(
+            parent=self.ui_root,
+            text="A* ▼",
+            font=FONT_NAME,
+            scale=(0.10, 0.05),
+            position=(0.34, 0.46, -0.01),
+            color=rgba255(0, 150, 136, 230),
+            text_color=color.white,
+            on_click=self._handle_cycle_algorithm,
+        )
+
+        # Nút chạy Solver và các nút chức năng trên đỉnh
+        self.btn_solve = Button(
             parent=self.ui_root,
             text="Giải A*",
             font=FONT_NAME,
-            scale=(0.12, 0.05),
-            position=(0.46, 0.46, -0.01),
+            scale=(0.13, 0.05),
+            position=(0.47, 0.46, -0.01),
             color=rgba255(230, 126, 34, 230),
             text_color=color.white,
-            on_click=self.on_solve_astar,
+            on_click=self.on_solve,
         )
+        self.btn_solve_astar = self.btn_solve  # Alias tương thích ngược 100%
 
         self.btn_select_stage = Button(
             parent=self.ui_root,
             text="Chọn Màn",
             font=FONT_NAME,
-            scale=(0.13, 0.05),
-            position=(0.60, 0.46, -0.01),
+            scale=(0.12, 0.05),
+            position=(0.61, 0.46, -0.01),
             color=rgba255(0, 121, 107, 230),
             text_color=color.white,
             on_click=self.toggle_stage_selector,
@@ -335,9 +364,63 @@ class UIManager:
         self.on_speed_change(self.current_speed)
 
     def set_solver_status(self, text: str, *, failed: bool = False) -> None:
-        """Show A* solve progress/result in the solver button."""
-        self.btn_solve_astar.text = text
-        self.btn_solve_astar.color = rgba255(192, 57, 43, 230) if failed else rgba255(230, 126, 34, 230)
+        """Show solve progress/result in the solver button."""
+        self.btn_solve.text = text
+        self.btn_solve.color = rgba255(192, 57, 43, 230) if failed else rgba255(230, 126, 34, 230)
+
+    def set_selected_algorithm(self, algo: str) -> None:
+        """Cập nhật thuật toán đang được chọn (BFS, DFS, UCS, A*)."""
+        self.selected_algorithm = algo
+        self.btn_algo_select.text = f"{algo} ▼"
+        if self.btn_solve.text.startswith("Giải ") or self.btn_solve.text in (
+            "Giải A*",
+            "Giải BFS",
+            "Giải DFS",
+            "Giải UCS",
+        ):
+            self.btn_solve.text = f"Giải {algo}"
+
+    def _handle_cycle_algorithm(self) -> None:
+        """Chuyển đổi luân phiên giữa các thuật toán khi người dùng nhấn nút chọn."""
+        if self.on_cycle_algorithm:
+            self.on_cycle_algorithm()
+        else:
+            algos = ["A*", "BFS", "DFS", "UCS"]
+            idx = algos.index(self.selected_algorithm) if self.selected_algorithm in algos else 0
+            next_algo = algos[(idx + 1) % len(algos)]
+            self.set_selected_algorithm(next_algo)
+
+    def set_solver_state(
+        self,
+        status: str,
+        text: str | None = None,
+        *,
+        failed: bool = False,
+        info: str | None = None,
+    ) -> None:
+        """Cập nhật nhãn, thông tin và màu sắc nút Solver theo trạng thái tìm kiếm."""
+        if text:
+            self.btn_solve.text = text
+        elif status == "RUNNING":
+            self.btn_solve.text = "Tạm Dừng"
+        elif status == "PAUSED":
+            self.btn_solve.text = "Tiếp Tục"
+        elif status == "IDLE":
+            self.btn_solve.text = f"Giải {self.selected_algorithm}"
+
+        if info is not None:
+            self.txt_solver_info.text = info
+        elif status == "IDLE":
+            self.txt_solver_info.text = ""
+
+        if failed or status in ("FAILED", "TIMEOUT"):
+            self.btn_solve.color = rgba255(192, 57, 43, 230)  # Đỏ gạch
+        elif status == "PAUSED":
+            self.btn_solve.color = rgba255(46, 204, 113, 230)  # Xanh lục (Nhấn để Tiếp Tục)
+        elif status == "RUNNING":
+            self.btn_solve.color = rgba255(243, 156, 18, 230)  # Vàng cam đậm (Nhấn để Tạm Dừng)
+        else:
+            self.btn_solve.color = rgba255(230, 126, 34, 230)  # Cam mặc định
 
     def _submit_custom_replay(self) -> None:
         """Người dùng nhấn nút nạp đường dẫn file replay nhập tay."""
