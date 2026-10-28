@@ -23,6 +23,7 @@ class BlobShadow:
         self.tex = get_blob_shadow_texture(size=128)
         self.shadow_main: Entity | None = None
         self.shadow_cube_2: Entity | None = None
+        self.is_suppressed: bool = False
         self.create_shadows()
 
     def create_shadows(self) -> None:
@@ -70,7 +71,7 @@ class BlobShadow:
         cube_2_pos: tuple[float, float, float] | None = None,
     ) -> None:
         """Cập nhật vị trí, kích thước và độ đậm nhạt của bóng theo khối."""
-        if self.shadow_main is None:
+        if self.is_suppressed or self.shadow_main is None:
             return
 
         # Tính toán độ nâng (lift) của khối so với sàn
@@ -108,6 +109,15 @@ class BlobShadow:
             self.shadow_cube_2.color = color.rgba(0.0, 0.0, 0.0, 0.85 * c2_alpha)
         elif self.shadow_cube_2 is not None:
             self.shadow_cube_2.enabled = False
+
+    def suppress(self) -> None:
+        """Ngăn chặn hoàn toàn việc vẽ bóng (dùng khi khối rơi hoặc bước đi thua)."""
+        self.is_suppressed = True
+        self.hide()
+
+    def unsuppress(self) -> None:
+        """Cho phép vẽ bóng trở lại khi chơi bình thường."""
+        self.is_suppressed = False
 
     def hide(self) -> None:
         """Ẩn bóng (ví dụ khi khối đã rơi hoàn toàn vào vực sâu)."""

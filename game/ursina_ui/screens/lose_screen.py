@@ -1,22 +1,28 @@
-"""Màn hình thất bại (Lose Screen) cho Bloxorz Ursina UI."""
+"""Lose Screen for Bloxorz 3D (Stardew Valley Pixel Art Aesthetic)."""
 from __future__ import annotations
 
 from typing import Callable
 from ursina import (
-    Button,
     Entity,
     Text,
     camera,
     color,
 )
 
-from game.theme import UI_FONT
-
-FONT_NAME = UI_FONT
+from game.ursina_ui.assets.theme import (
+    PALETTE,
+    DEFAULT_FONT_NAME,
+    LocalizedStr,
+    snap,
+)
+from game.ursina_ui.pixel_widgets import (
+    PixelButton,
+    get_pixel_panel_texture,
+)
 
 
 class LoseScreen(Entity):
-    """Màn hình thông báo khi khối rơi khỏi sàn hoặc phạm quy."""
+    """Failure modal screen shown when block falls off board or onto fragile tile."""
 
     def __init__(
         self,
@@ -32,161 +38,144 @@ class LoseScreen(Entity):
         self.on_select_stage = on_select_stage
         self.on_main_menu = on_main_menu
 
-        # Nền mờ đỏ trầm cảnh báo
+        # 1. Warm night sky / dimmed background overlay
+        c_navy = color.hex(PALETTE["navy_1"])
         self.bg_overlay = Entity(
             parent=self,
             model="quad",
             scale=(2.5, 2.5),
-            color=color.rgba(20 / 255.0, 8 / 255.0, 10 / 255.0, 0.88),
+            color=color.rgba(c_navy.r, c_navy.g, c_navy.b, 0.88),
             z=0.1,
         )
 
-        # Panel trung tâm
+        # 2. Main Parchment Panel with layered wood bevel
+        panel_w = 0.58
+        panel_h = 0.66
+        w_px = max(64, int(round(panel_w * 864 * (16 / 9))))
+        h_px = max(64, int(round(panel_h * 864)))
+        panel_tex = get_pixel_panel_texture(w_px, h_px)
+
         self.panel = Entity(
             parent=self,
             model="quad",
-            scale=(0.56, 0.62),
-            color=color.rgba(36 / 255.0, 20 / 255.0, 26 / 255.0, 0.95),
+            scale=(panel_w, panel_h),
+            texture=panel_tex,
+            color=color.white,
             z=0.05,
         )
+        self.panel_border = self.panel  # backward compatibility
 
-        self.panel_border = Entity(
-            parent=self,
-            model="quad",
-            scale=(0.565, 0.625),
-            color=color.hex("#E53E3E"),
-            z=0.06,
-        )
-
-        # Tiêu đề thất bại
+        # 3. Title ("FALLEN!")
         self.txt_title = Text(
             parent=self,
-            text="THẤT BẠI!",
-            font=FONT_NAME,
+            text=LocalizedStr("STAGE FAILED!", ["THẤT BẠI!"]),
+            font=DEFAULT_FONT_NAME,
             scale=2.3,
             origin=(0, 0),
-            position=(0, 0.22, 0),
-            color=color.hex("#FC8181"),
+            position=(0, 0.22, -0.01),
+            color=color.hex(PALETTE["red"]),
         )
 
-        # Lý do thua
+        # Reason text
         self.txt_reason = Text(
             parent=self,
-            text="Khối đã bị rơi khỏi sàn đấu!",
-            font=FONT_NAME,
+            text="The block slipped off the edge!",
+            font=DEFAULT_FONT_NAME,
             scale=1.0,
             origin=(0, 0),
-            position=(0, 0.14, 0),
-            color=color.hex("#FEB2B2"),
+            position=(0, 0.14, -0.01),
+            color=color.hex(PALETTE["ink"]),
             wordwrap=28,
         )
 
-        # Đường gạch phân cách
+        # Divider line
         self.divider = Entity(
             parent=self,
             model="quad",
-            scale=(0.44, 0.003),
-            position=(0, 0.09, 0),
-            color=color.hex("#742A2A"),
+            scale=(0.44, 0.004),
+            position=(0, 0.095, -0.01),
+            color=color.hex(PALETTE["brick"]),
         )
 
-        # Danh sách nút bấm
-        btn_w, btn_h = 0.40, 0.065
-        btn_y_start = 0.02
-        btn_spacing = 0.078
+        # 4. Pixel Buttons
+        btn_w, btn_h = 0.42, 0.066
+        btn_y_start = 0.035
+        btn_spacing = 0.080
 
-        # 1. Nút Thử lại
-        self.btn_retry = Button(
+        # Button 1: Retry (Orange ramp)
+        self.btn_retry = PixelButton(
             parent=self,
-            text="THỬ LẠI (R)",
-            model="quad",
+            text=LocalizedStr("RETRY STAGE", ["THỬ LẠI"]),
+            color_ramp="orange",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start, 0),
-            color=color.hex("#C53030"),
-            highlight_color=color.hex("#E53E3E"),
-            text_color=color.white,
-            text_origin=(0, 0),
-            radius=0.15,
             on_click=self._on_retry_clicked,
         )
 
-        # 2. Nút Hoàn tác bước vừa đi
-        self.btn_undo = Button(
+        # Button 2: Undo (Orange ramp)
+        self.btn_undo = PixelButton(
             parent=self,
-            text="HOÀN TÁC BƯỚC CUỐI (U)",
-            model="quad",
+            text=LocalizedStr("UNDO MOVE (U)", ["ĐI LẠI (U)"]),
+            color_ramp="orange",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start - btn_spacing, 0),
-            color=color.hex("#2D3748"),
-            highlight_color=color.hex("#4A5568"),
-            text_color=color.hex("#E2E8F0"),
-            text_origin=(0, 0),
-            radius=0.15,
             on_click=self._on_undo_clicked,
         )
 
-        # 3. Nút Chọn màn khác
-        self.btn_stages = Button(
+        # Button 3: Select Stage (Orange ramp)
+        self.btn_stages = PixelButton(
             parent=self,
-            text="CHỌN MÀN KHÁC (M)",
-            model="quad",
+            text=LocalizedStr("STAGE SELECT", ["CHỌN MÀN CHƠI"]),
+            color_ramp="orange",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start - btn_spacing * 2, 0),
-            color=color.hex("#2D3748"),
-            highlight_color=color.hex("#4A5568"),
-            text_color=color.hex("#E2E8F0"),
-            text_origin=(0, 0),
-            radius=0.15,
-            on_click=self._on_stages_clicked,
+            on_click=self._on_select_stage_clicked,
         )
 
-        # 4. Nút Menu chính
-        self.btn_menu = Button(
+        # Button 4: Main Menu (Red ramp)
+        self.btn_menu = PixelButton(
             parent=self,
-            text="MENU CHÍNH",
-            model="quad",
+            text=LocalizedStr("MAIN MENU", ["MENU CHÍNH"]),
+            color_ramp="red",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start - btn_spacing * 3, 0),
-            color=color.hex("#4A5568"),
-            highlight_color=color.hex("#718096"),
-            text_color=color.hex("#F7FAFC"),
-            text_origin=(0, 0),
-            radius=0.15,
             on_click=self._on_main_menu_clicked,
         )
 
+    def set_reason(self, reason: str | None) -> None:
+        """Update failure cause description."""
+        if not reason:
+            self.txt_reason.text = "The block fell off the board!"
+        elif "fragile" in reason.lower() or "mỏng" in reason.lower():
+            self.txt_reason.text = "Stepped upright on a fragile tile!"
+        elif "outside" in reason.lower() or "void" in reason.lower() or "ngoài" in reason.lower():
+            self.txt_reason.text = "The block fell into the void!"
+        else:
+            self.txt_reason.text = reason
 
     def _on_retry_clicked(self) -> None:
         self.hide()
-        self.on_retry()
+        if self.on_retry:
+            self.on_retry()
 
     def _on_undo_clicked(self) -> None:
         self.hide()
-        self.on_undo()
+        if self.on_undo:
+            self.on_undo()
 
-    def _on_stages_clicked(self) -> None:
-        self.hide()
-        self.on_select_stage()
+    def _on_select_stage_clicked(self) -> None:
+        if self.on_select_stage:
+            self.on_select_stage()
 
     def _on_main_menu_clicked(self) -> None:
         self.hide()
-        self.on_main_menu()
+        if self.on_main_menu:
+            self.on_main_menu()
 
-    def show(self, reason: str = "") -> None:
-        """Hiển thị màn hình thất bại với lý do."""
-        display_reason = "Khối đã bị rơi khỏi sàn đấu!"
-        r_lower = reason.lower()
-        if "fragile" in r_lower:
-            display_reason = "Gạch mỏng bị vỡ do khối đứng thẳng!"
-        elif "void" in r_lower or "outside" in r_lower:
-            display_reason = "Khối lăn chệch mép rơi xuống vực!"
-        elif "split" in r_lower:
-            display_reason = "Khối bị rơi khi đang tách đôi!"
-        elif reason:
-            display_reason = reason
-        self.txt_reason.text = display_reason
+    def show(self, reason: str | None = None) -> None:
+        if reason is not None:
+            self.set_reason(reason)
         self.enabled = True
 
     def hide(self) -> None:
-        """Ẩn màn hình thất bại."""
         self.enabled = False

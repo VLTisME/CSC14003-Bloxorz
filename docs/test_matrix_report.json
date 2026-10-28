@@ -1,0 +1,124 @@
+{
+  "summary": {
+    "total": 19,
+    "passed": 19,
+    "failed": 0,
+    "timestamp": "2026-10-29 05:19:44"
+  },
+  "matrix": {
+    "E01": {
+      "group": "Lỗi & Timeout",
+      "description": "Bắt lỗi an toàn khi solver trả về định dạng sai",
+      "status": "PASSED",
+      "details": ""
+    },
+    "E02": {
+      "group": "Lỗi & Timeout",
+      "description": "Checker gắn cờ WA với nước đi sai luật",
+      "status": "PASSED",
+      "details": ""
+    },
+    "E03": {
+      "group": "Lỗi & Timeout",
+      "description": "Bộ điều khiển bắt timeout an toàn khi quá giờ",
+      "status": "PASSED",
+      "details": ""
+    },
+    "F01": {
+      "group": "Fragile & Goal",
+      "description": "Khối đứng thẳng lên ô cam làm vỡ gạch và thua",
+      "status": "PASSED",
+      "details": ""
+    },
+    "F02": {
+      "group": "Fragile & Goal",
+      "description": "Khối nằm ngang trên ô cam an toàn không vỡ",
+      "status": "PASSED",
+      "details": ""
+    },
+    "F03": {
+      "group": "Fragile & Goal",
+      "description": "Khối nằm đè qua ô đích không kích hoạt chiến thắng",
+      "status": "PASSED",
+      "details": ""
+    },
+    "M01": {
+      "group": "Reset & Màn",
+      "description": "Reset đưa trò chơi về trạng thái xuất phát ban đầu",
+      "status": "PASSED",
+      "details": ""
+    },
+    "M02": {
+      "group": "Reset & Màn",
+      "description": "Chuyển màn chơi nạp đúng dữ liệu bàn cờ mới",
+      "status": "PASSED",
+      "details": ""
+    },
+    "P01": {
+      "group": "Tư thế & Rơi",
+      "description": "Đứng (1x1x2) lăn sang Ngang và trở về Đứng",
+      "status": "PASSED",
+      "details": ""
+    },
+    "P02": {
+      "group": "Tư thế & Rơi",
+      "description": "Khối lăn quá mép sàn rơi vào hư không",
+      "status": "PASSED",
+      "details": ""
+    },
+    "R01": {
+      "group": "Pause Solver",
+      "description": "Tạm dừng và tiếp tục solver giữ nguyên trạng thái RAM",
+      "status": "PASSED",
+      "details": ""
+    },
+    "R02": {
+      "group": "Pause Solver",
+      "description": "Hủy solver đang pause an toàn khi đổi màn",
+      "status": "PASSED",
+      "details": ""
+    },
+    "S01": {
+      "group": "Switch & Bridge",
+      "description": "Khối chạm nút mềm O đảo trạng thái cầu chuẩn xác",
+      "status": "PASSED",
+      "details": ""
+    },
+    "S02": {
+      "group": "Switch & Bridge",
+      "description": "Khối nằm ngang không kích hoạt nút X cứng",
+      "status": "PASSED",
+      "details": ""
+    },
+    "S03": {
+      "group": "Switch & Bridge",
+      "description": "Khối nhỏ đứng yên không gây toggle switch lặp vô lý",
+      "status": "PASSED",
+      "details": ""
+    },
+    "S04": {
+      "group": "Switch & Bridge",
+      "description": "Sập cầu dưới chân khối đứng yên khiến khối lập tức rơi",
+      "status": "PASSED",
+      "details": ""
+    },
+    "T01": {
+      "group": "Split & Merge",
+      "description": "Khối lớn đứng vào ô T phân tách thành 2 khối 1x1x1",
+      "status": "PASSED",
+      "details": ""
+    },
+    "T02": {
+      "group": "Split & Merge",
+      "description": "Chuyển đổi quyền điều khiển giữa 2 khối nhỏ",
+      "status": "PASSED",
+      "details": ""
+    },
+    "T03": {
+      "group": "Split & Merge",
+      "description": "Hai khối nhỏ lăn sát cạnh nhau tự động hợp nhất",
+      "status": "PASSED",
+      "details": ""
+    }
+  }
+}
