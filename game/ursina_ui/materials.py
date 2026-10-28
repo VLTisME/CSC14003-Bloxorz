@@ -54,52 +54,12 @@ def blend_rgb(c1: tuple[int, int, int], c2: tuple[int, int, int], factor: float)
     )
 
 
-def get_wood_texture(theme_name: str = "toy", size: int = 128) -> Texture:
-    """Tạo texture vân gỗ gụ sẫm/óc chó ấm trên canvas RGB đặc 100% không rỗng ruột."""
-    key = f"wood_{theme_name}_{size}"
-    if key in _TEXTURE_CACHE:
-        return _TEXTURE_CACHE[key]
-
+def get_wood_texture(theme_name: str = "toy", size: int = 16) -> Texture:
+    """Tạo texture khối gỗ pixel art cơ bản (Basic Pixel-Art Wooden Block)."""
     theme = get_theme(theme_name)
     bm = theme.get("block_main", {})
-    top_rgb = hex_to_rgb(bm.get("top", "#8B5A2B"))
-    grain_rgb = hex_to_rgb(bm.get("grain", "#2E1A0A"))
-    outline_rgb = hex_to_rgb(bm.get("outline", "#1A0E05"))
-    highlight_rgb = hex_to_rgb(bm.get("edge_highlight", "#B87333"))
-
-    # Bắt buộc mode='RGB' đặc không có kênh Alpha để chống rỗng ruột / xuyên thấu
-    img = Image.new("RGB", (size, size), top_rgb)
-    draw = ImageDraw.Draw(img)
-
-    # Các dải vân gỗ sẫm là độ lệch sắc thái màu RGB đặc
-    num_grains = size // 5
-    for i in range(num_grains):
-        y = int(i * (size / num_grains))
-        factor = 0.35 + ((i * 31) % 45) / 100.0
-        line_color = blend_rgb(top_rgb, grain_rgb, factor)
-        w = 2 if i % 4 == 0 else 1
-        draw.line([(0, y), (size - 1, y)], fill=line_color, width=w)
-        # Các đường vân cong và thớ gỗ đan xen
-        if i % 2 == 0:
-            arc_color = blend_rgb(top_rgb, grain_rgb, min(1.0, factor + 0.15))
-            for x_seg in range(6, size - 22, 26):
-                draw.arc([x_seg, y - 3, x_seg + 24, y + 3], 0, 180, fill=arc_color, width=1)
-
-    # Thớ gỗ dọc mảnh (micro-fibers)
-    fiber_color = blend_rgb(top_rgb, grain_rgb, 0.18)
-    for fx in range(8, size, 14):
-        draw.line([(fx, 0), (fx, size - 1)], fill=fiber_color, width=1)
-
-    # Viền vát cạnh bóng satin (chamfer bevel)
-    bevel_hl = blend_rgb(top_rgb, highlight_rgb, 0.75)
-    bevel_dark = blend_rgb(top_rgb, outline_rgb, 0.85)
-    draw.rectangle([(0, 0), (size - 1, size - 1)], outline=bevel_dark, width=2)
-    draw.line([(1, 1), (size - 2, 1)], fill=bevel_hl, width=1)
-    draw.line([(1, 1), (1, size - 2)], fill=bevel_hl, width=1)
-
-    tex = Texture(img)
-    _TEXTURE_CACHE[key] = tex
-    return tex
+    base_hex = bm.get("color", bm.get("top", "#8B5A2B"))
+    return get_solid_wood_texture(base_hex, size=size)
 
 
 def get_split_cube_texture(cube_index: int, theme_name: str = "toy", size: int = 128) -> Texture:
@@ -393,50 +353,64 @@ def get_contrast_bg_texture(
 
 def get_solid_wood_texture(
     base_hex: str = "#8B5A2B",
-    size: int = 256,
+    size: int = 16,
 ) -> Texture:
-    """Tạo texture gỗ gụ sẫm RGB đặc 100% có thớ vân tự nhiên và viền vát cạnh nổi khối 3D."""
-    key = f"solid_wood_{base_hex}_{size}"
+    """Tạo texture khối gỗ pixel art cơ bản (Basic Pixel-Art Wooden Block) với nearest filtering."""
+    key = f"pixel_wood_block_{base_hex}_{size}"
     if key in _TEXTURE_CACHE:
         return _TEXTURE_CACHE[key]
 
     base_rgb = hex_to_rgb(base_hex)
+    dark_border = (max(0, base_rgb[0] - 70), max(0, base_rgb[1] - 48), max(0, base_rgb[2] - 30))
+    shadow_rgb = (max(0, base_rgb[0] - 40), max(0, base_rgb[1] - 28), max(0, base_rgb[2] - 18))
+    light_rgb = (min(255, base_rgb[0] + 25), min(255, base_rgb[1] + 18), min(255, base_rgb[2] + 12))
+    highlight_rgb = (min(255, base_rgb[0] + 55), min(255, base_rgb[1] + 40), min(255, base_rgb[2] + 25))
+    nail_rgb = (max(0, base_rgb[0] - 90), max(0, base_rgb[1] - 65), max(0, base_rgb[2] - 45))
+
     img = Image.new("RGB", (size, size), base_rgb)
-    draw = ImageDraw.Draw(img)
+    pixels = img.load()
+    assert pixels is not None
 
-    dark_rgb = (max(0, base_rgb[0] - 31), max(0, base_rgb[1] - 22), max(0, base_rgb[2] - 13))
-    mid_rgb = (max(0, base_rgb[0] - 14), max(0, base_rgb[1] - 10), max(0, base_rgb[2] - 7))
-    light_rgb = (min(255, base_rgb[0] + 17), min(255, base_rgb[1] + 12), min(255, base_rgb[2] + 9))
-
-    # Vẽ vân gỗ lượn sóng nhẹ
+    # 1. Khung viền pixel tối ngoài cùng (1-pixel outer dark border)
+    for x in range(size):
+        pixels[x, 0] = dark_border
+        pixels[x, size - 1] = dark_border
     for y in range(size):
-        wave = int(math.sin(y * 0.12) * 8 + math.sin(y * 0.04) * 14)
-        for x in range(size):
-            val = (x + wave) % 36
-            if val < 4:
-                draw.point((x, y), fill=dark_rgb)
-            elif val < 8:
-                draw.point((x, y), fill=mid_rgb)
-            elif val > 30:
-                draw.point((x, y), fill=light_rgb)
+        pixels[0, y] = dark_border
+        pixels[size - 1, y] = dark_border
 
-    # Vẽ viền vát cạnh 3D (chamfered bevel edge) nổi khối
-    bevel = 9
-    for i in range(bevel):
-        alpha = (bevel - i) / float(bevel)
-        r_top = min(255, int(base_rgb[0] + 65 * alpha))
-        g_top = min(255, int(base_rgb[1] + 55 * alpha))
-        b_top = min(255, int(base_rgb[2] + 40 * alpha))
-        draw.line([(i, i), (size - 1 - i, i)], fill=(r_top, g_top, b_top))
-        draw.line([(i, i), (i, size - 1 - i)], fill=(r_top, g_top, b_top))
+    # 2. Vát cạnh 3D nổi khối pixel (Top/Left highlight, Bottom/Right shadow)
+    for x in range(1, size - 1):
+        pixels[x, 1] = highlight_rgb
+        pixels[x, size - 2] = shadow_rgb
+    for y in range(1, size - 1):
+        pixels[1, y] = highlight_rgb
+        pixels[size - 2, y] = shadow_rgb
 
-        r_bot = max(0, int(base_rgb[0] - 70 * alpha))
-        g_bot = max(0, int(base_rgb[1] - 50 * alpha))
-        b_bot = max(0, int(base_rgb[2] - 28 * alpha))
-        draw.line([(i, size - 1 - i), (size - 1 - i, size - 1 - i)], fill=(r_bot, g_bot, b_bot))
-        draw.line([(size - 1 - i, i), (size - 1 - i, size - 1 - i)], fill=(r_bot, g_bot, b_bot))
+    # 3. Rãnh chia các thanh ván gỗ ngang (Horizontal plank seams)
+    plank_h = size // 3
+    seams = [plank_h, plank_h * 2]
+    for sy in seams:
+        if 2 <= sy < size - 2:
+            for x in range(1, size - 1):
+                pixels[x, sy] = shadow_rgb
+                if sy + 1 < size - 2:
+                    pixels[x, sy + 1] = light_rgb
+
+    # 4. Đinh tán 1-pixel ở 4 góc (Corner iron nails)
+    corners = [(2, 2), (size - 3, 2), (2, size - 3), (size - 3, size - 3)]
+    for cx, cy in corners:
+        if 0 <= cx < size and 0 <= cy < size:
+            pixels[cx, cy] = nail_rgb
+
+    # 5. Vài chấm thớ gỗ nhẹ tạo chất cảm pixel mộc mạc
+    grain_pts = [(5, 3), (size - 6, 4), (4, size - 5), (size - 5, size - 5)]
+    for gx, gy in grain_pts:
+        if 2 <= gx < size - 2 and 2 <= gy < size - 2:
+            pixels[gx, gy] = shadow_rgb
 
     tex = Texture(img)
+    tex.filtering = False
     _TEXTURE_CACHE[key] = tex
     return tex
 
@@ -470,57 +444,61 @@ def get_custom_background_texture(
 def get_split_wood_texture(
     cube_index: int,
     is_active: bool = True,
-    size: int = 256,
+    size: int = 16,
 ) -> Texture:
-    """Tạo texture gỗ tự nhiên cao cấp cho 2 nửa khối khi split (Khối 1: Gỗ Hổ Phách & Khối 2: Gỗ Anh Đào)."""
-    key = f"split_wood_{cube_index}_{is_active}_{size}"
+    """Tạo texture khối pixel art cơ bản cho 2 nửa khối khi split (Khối 1: Hổ Phách & Khối 2: Gỗ Đỏ)."""
+    key = f"split_pixel_wood_{cube_index}_{is_active}_{size}"
     if key in _TEXTURE_CACHE:
         return _TEXTURE_CACHE[key]
 
     if cube_index == 1:
-        base_hex = "#D48C46" if is_active else "#A66B33"
-        accent_hex = "#10B981" if is_active else "#059669"
+        base_hex = "#C87832" if is_active else "#7A4818"
+        nail_hex = "#2E8B57" if is_active else "#1A4E30"
     else:
-        base_hex = "#C85A32" if is_active else "#9E4324"
-        accent_hex = "#38BDF8" if is_active else "#2563EB"
+        base_hex = "#A64024" if is_active else "#682414"
+        nail_hex = "#3A72A4" if is_active else "#204260"
 
     base_rgb = hex_to_rgb(base_hex)
-    accent_rgb = hex_to_rgb(accent_hex)
+    nail_rgb = hex_to_rgb(nail_hex)
+    dark_border = (max(0, base_rgb[0] - 70), max(0, base_rgb[1] - 48), max(0, base_rgb[2] - 30))
+    shadow_rgb = (max(0, base_rgb[0] - 40), max(0, base_rgb[1] - 28), max(0, base_rgb[2] - 18))
+    light_rgb = (min(255, base_rgb[0] + 25), min(255, base_rgb[1] + 18), min(255, base_rgb[2] + 12))
+    highlight_rgb = (min(255, base_rgb[0] + 55), min(255, base_rgb[1] + 40), min(255, base_rgb[2] + 25))
 
     img = Image.new("RGB", (size, size), base_rgb)
-    draw = ImageDraw.Draw(img)
+    pixels = img.load()
+    assert pixels is not None
 
-    dark_rgb = (max(0, base_rgb[0] - 28), max(0, base_rgb[1] - 22), max(0, base_rgb[2] - 14))
-    light_rgb = (min(255, base_rgb[0] + 25), min(255, base_rgb[1] + 20), min(255, base_rgb[2] + 15))
-
-    # 1. Thớ vân gỗ lượn sóng tự nhiên
+    for x in range(size):
+        pixels[x, 0] = dark_border
+        pixels[x, size - 1] = dark_border
     for y in range(size):
-        wave = int(math.sin(y * 0.1) * 7 + math.sin(y * 0.035) * 12)
-        for x in range(size):
-            val = (x + wave) % 32
-            if val < 4:
-                draw.point((x, y), fill=dark_rgb)
-            elif val > 27:
-                draw.point((x, y), fill=light_rgb)
+        pixels[0, y] = dark_border
+        pixels[size - 1, y] = dark_border
 
-    # 2. Viền vát cạnh 3D nổi khối (Chamfer bevel)
-    bevel = 10
-    for i in range(bevel):
-        alpha = (bevel - i) / float(bevel)
-        r_top = min(255, int(base_rgb[0] + 60 * alpha))
-        g_top = min(255, int(base_rgb[1] + 50 * alpha))
-        b_top = min(255, int(base_rgb[2] + 40 * alpha))
-        draw.line([(i, i), (size - 1 - i, i)], fill=(r_top, g_top, b_top))
-        draw.line([(i, i), (i, size - 1 - i)], fill=(r_top, g_top, b_top))
+    for x in range(1, size - 1):
+        pixels[x, 1] = highlight_rgb
+        pixels[x, size - 2] = shadow_rgb
+    for y in range(1, size - 1):
+        pixels[1, y] = highlight_rgb
+        pixels[size - 2, y] = shadow_rgb
 
-        r_bot = max(0, int(base_rgb[0] - 65 * alpha))
-        g_bot = max(0, int(base_rgb[1] - 50 * alpha))
-        b_bot = max(0, int(base_rgb[2] - 30 * alpha))
-        draw.line([(i, size - 1 - i), (size - 1 - i, size - 1 - i)], fill=(r_bot, g_bot, b_bot))
-        draw.line([(size - 1 - i, i), (size - 1 - i, size - 1 - i)], fill=(r_bot, g_bot, b_bot))
+    plank_h = size // 3
+    seams = [plank_h, plank_h * 2]
+    for sy in seams:
+        if 2 <= sy < size - 2:
+            for x in range(1, size - 1):
+                pixels[x, sy] = shadow_rgb
+                if sy + 1 < size - 2:
+                    pixels[x, sy + 1] = light_rgb
 
-    # Hoàn toàn không vẽ viền màu chữ nhật (loại bỏ hoàn toàn cảm giác hitbox)
+    corners = [(2, 2), (size - 3, 2), (2, size - 3), (size - 3, size - 3)]
+    for cx, cy in corners:
+        if 0 <= cx < size and 0 <= cy < size:
+            pixels[cx, cy] = nail_rgb
+
     tex = Texture(img)
+    tex.filtering = False
     _TEXTURE_CACHE[key] = tex
     return tex
 
