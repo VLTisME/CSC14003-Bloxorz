@@ -118,7 +118,7 @@ class UIManager:
             model="quad",
             scale=(2.5, 0.1),
             position=(0, 0.465, 0.05),
-            texture=get_pixel_panel_texture(512, 180),
+            texture=get_pixel_panel_texture(512, 210),
             color=color.white,
         )
 
@@ -199,7 +199,7 @@ class UIManager:
             parent=self.ui_root,
             text=LocalizedStr("Benchmark", ["Đo Hiệu Năng"]),
             color_ramp="orange",
-            scale=(0.155, 0.058),
+            scale=(0.14, 0.058),
             position=(0.415, 0.46, -0.01),
             on_click=self.toggle_benchmark_modal,
         )
@@ -208,8 +208,8 @@ class UIManager:
             parent=self.ui_root,
             text=LocalizedStr("Stage Select", ["Chọn Màn"]),
             color_ramp="orange",
-            scale=(0.175, 0.058),
-            position=(0.59, 0.46, -0.01),
+            scale=(0.16, 0.058),
+            position=(0.58, 0.46, -0.01),
             on_click=self.toggle_stage_selector,
         )
 
@@ -218,7 +218,7 @@ class UIManager:
             text=LocalizedStr("Help", ["Trợ Giúp"]),
             color_ramp="orange",
             scale=(0.09, 0.058),
-            position=(0.73, 0.46, -0.01),
+            position=(0.72, 0.46, -0.01),
             on_click=self.toggle_help_modal,
         )
 
@@ -226,9 +226,9 @@ class UIManager:
         self.replay_panel = Entity(
             parent=self.ui_root,
             model="quad",
-            scale=(2.5, 0.1),
+            scale=(2.5, 0.095),
             position=(0, -0.465, 0.05),
-            texture=get_pixel_panel_texture(512, 210),
+            texture=get_pixel_panel_texture(512, 180),
             color=color.white,
         )
 
@@ -247,8 +247,8 @@ class UIManager:
             parent=self.ui_root,
             text="Start",
             color_ramp="orange",
-            scale=(0.075, 0.054),
-            position=(-0.25, -0.46, -0.01),
+            scale=(0.1, 0.054),
+            position=(-0.27, -0.46, -0.01),
             on_click=self.on_replay_jump_start,
         )
 
@@ -265,8 +265,8 @@ class UIManager:
             parent=self.ui_root,
             text=LocalizedStr("Play", ["Phát"]),
             color_ramp="green",
-            scale=(0.095, 0.054),
-            position=(-0.07, -0.46, -0.01),
+            scale=(0.10, 0.054),
+            position=(-0.065, -0.46, -0.01),
             on_click=self.on_replay_play_pause,
         )
 
@@ -275,7 +275,7 @@ class UIManager:
             text="Next",
             color_ramp="orange",
             scale=(0.075, 0.054),
-            position=(0.025, -0.46, -0.01),
+            position=(0.035, -0.46, -0.01),
             on_click=self.on_replay_step_forward,
         )
 
@@ -284,7 +284,7 @@ class UIManager:
             text="End",
             color_ramp="orange",
             scale=(0.075, 0.054),
-            position=(0.11, -0.46, -0.01),
+            position=(0.12, -0.46, -0.01),
             on_click=self.on_replay_jump_end,
         )
 
@@ -295,7 +295,7 @@ class UIManager:
             text="1x",
             color_ramp="orange",
             scale=(0.075, 0.054),
-            position=(0.195, -0.46, -0.01),
+            position=(0.205, -0.46, -0.01),
             on_click=self._cycle_speed,
         )
 
@@ -304,26 +304,27 @@ class UIManager:
             parent=self.ui_root,
             default_value="",
             scale=(0.20, 0.050),
-            position=(0.345, -0.46, -0.01),
+            position=(0.355, -0.46, -0.01),
             font=FONT_NAME,
-            color=color.hex(PALETTE["ivory"]),
+            color=color.white,
         )
-        self.inp_replay_path.highlight_color = color.hex(PALETTE["cream"])
-        self.inp_replay_path.pressed_color = color.hex(PALETTE["ivory"])
+        self.inp_replay_path.highlight_color = color.white
+        self.inp_replay_path.pressed_color = color.white
         if hasattr(self.inp_replay_path, "text_field"):
             tf = self.inp_replay_path.text_field
             if hasattr(tf, "text_entity"):
-                tf.text_entity.color = color.hex(PALETTE["ink"])
+                tf.text_entity.color = color.black
                 tf.text_entity.font = FONT_NAME
             if hasattr(tf, "cursor"):
-                tf.cursor.color = color.hex(PALETTE["ink"])
+                tf.cursor.animations.clear()
+                tf.cursor.color = color.black
 
         self.btn_replay_load = PixelButton(
             parent=self.ui_root,
             text=LocalizedStr("Load", ["Nạp File"]),
             color_ramp="green",
             scale=(0.095, 0.054),
-            position=(0.505, -0.46, -0.01),
+            position=(0.515, -0.46, -0.01),
             on_click=self._submit_custom_replay,
         )
 
@@ -331,9 +332,9 @@ class UIManager:
         self.compass_panel = Entity(
             parent=self.ui_root,
             model="quad",
-            scale=(0.32, 0.18),
-            position=(0.725, -0.315, 0.05),
-            texture=get_pixel_panel_texture(240, 140),
+            scale=(0.31, 0.17),
+            position=(0.725, -0.31, 0.05),
+            texture=get_pixel_panel_texture(136, 76),
             color=color.white,
         )
         self.txt_compass_title = Text(
@@ -342,7 +343,7 @@ class UIManager:
             font=FONT_NAME,
             scale=0.95,
             origin=(0, 0),
-            position=(0.725, -0.25, -0.01),
+            position=(0.725, -0.245, -0.01),
             color=color.hex(TEXT_MUTED),
         )
         self.txt_compass_u = Text(
@@ -351,7 +352,7 @@ class UIManager:
             font=FONT_NAME,
             scale=0.76,
             origin=(0, 0),
-            position=(0.66, -0.30, -0.01),
+            position=(0.66, -0.295, -0.01),
             color=color.hex(TEXT_DARK),
         )
         self.txt_compass_r = Text(
@@ -360,7 +361,7 @@ class UIManager:
             font=FONT_NAME,
             scale=0.76,
             origin=(0, 0),
-            position=(0.79, -0.30, -0.01),
+            position=(0.79, -0.295, -0.01),
             color=color.hex(TEXT_DARK),
         )
         self.txt_compass_l = Text(
@@ -369,7 +370,7 @@ class UIManager:
             font=FONT_NAME,
             scale=0.76,
             origin=(0, 0),
-            position=(0.66, -0.36, -0.01),
+            position=(0.66, -0.355, -0.01),
             color=color.hex(TEXT_DARK),
         )
         self.txt_compass_d = Text(
@@ -378,7 +379,7 @@ class UIManager:
             font=FONT_NAME,
             scale=0.76,
             origin=(0, 0),
-            position=(0.79, -0.36, -0.01),
+            position=(0.79, -0.355, -0.01),
             color=color.hex(TEXT_DARK),
         )
 
