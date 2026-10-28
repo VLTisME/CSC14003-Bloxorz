@@ -199,7 +199,7 @@ class UIManager:
             parent=self.ui_root,
             text=LocalizedStr("Benchmark", ["Đo Hiệu Năng"]),
             color_ramp="orange",
-            scale=(0.14, 0.058),
+            scale=(0.15, 0.058),
             position=(0.415, 0.46, -0.01),
             on_click=self.toggle_benchmark_modal,
         )
@@ -208,7 +208,7 @@ class UIManager:
             parent=self.ui_root,
             text=LocalizedStr("Stage Select", ["Chọn Màn"]),
             color_ramp="orange",
-            scale=(0.16, 0.058),
+            scale=(0.17, 0.058),
             position=(0.58, 0.46, -0.01),
             on_click=self.toggle_stage_selector,
         )
@@ -332,9 +332,9 @@ class UIManager:
         self.compass_panel = Entity(
             parent=self.ui_root,
             model="quad",
-            scale=(0.31, 0.17),
+            scale=(0.28, 0.16),
             position=(0.725, -0.31, 0.05),
-            texture=get_pixel_panel_texture(136, 76),
+            texture=get_pixel_panel_texture(280, 160),
             color=color.white,
         )
         self.txt_compass_title = Text(

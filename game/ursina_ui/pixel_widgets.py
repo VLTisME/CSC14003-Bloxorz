@@ -120,8 +120,8 @@ def generate_panel_base_sprite(s: int = 48, c: int = 10) -> Image.Image:
     c_tan = hex_to_rgba(PALETTE["tan"])
     c_ivory = hex_to_rgba(PALETTE["ivory"])
 
-    for y in range(c, s - c):
-        for x in range(c, s - c):
+    for y in range(1, s - 1):
+        for x in range(1, s - 1):
             pix[x, y] = c_cream
 
     # Outer border (brick)
