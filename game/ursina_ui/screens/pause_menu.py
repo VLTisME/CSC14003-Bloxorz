@@ -1,22 +1,28 @@
-"""Màn hình tạm dừng (Pause Menu Screen) cho Bloxorz Ursina UI."""
+"""Pause Menu Screen for Bloxorz 3D (Stardew Valley Pixel Art Aesthetic)."""
 from __future__ import annotations
 
 from typing import Callable
 from ursina import (
-    Button,
     Entity,
     Text,
     camera,
     color,
 )
 
-from game.theme import UI_FONT
-
-FONT_NAME = UI_FONT
+from game.ursina_ui.assets.theme import (
+    PALETTE,
+    DEFAULT_FONT_NAME,
+    LocalizedStr,
+    snap,
+)
+from game.ursina_ui.pixel_widgets import (
+    PixelButton,
+    get_pixel_panel_texture,
+)
 
 
 class PauseMenuScreen(Entity):
-    """Màn hình tạm dừng ván chơi khi người dùng nhấn ESC."""
+    """Pause modal screen triggered via ESC or pause button."""
 
     def __init__(
         self,
@@ -34,168 +40,150 @@ class PauseMenuScreen(Entity):
         self.on_help = on_help
         self.on_main_menu = on_main_menu
 
-        # Lớp nền mờ dimming
+        # 1. Warm night sky / dimmed background overlay
+        c_navy = color.hex(PALETTE["navy_1"])
         self.bg_overlay = Entity(
             parent=self,
             model="quad",
             scale=(2.5, 2.5),
-            color=color.rgba(7 / 255.0, 10 / 255.0, 16 / 255.0, 0.85),
+            color=color.rgba(c_navy.r, c_navy.g, c_navy.b, 0.88),
             z=0.1,
         )
 
-        # Panel trung tâm
+        # 2. Main Parchment Panel with layered wood bevel
+        panel_w = 0.56
+        panel_h = 0.68
+        w_px = max(64, int(round(panel_w * 864 * (16 / 9))))
+        h_px = max(64, int(round(panel_h * 864)))
+        panel_tex = get_pixel_panel_texture(w_px, h_px)
+
         self.panel = Entity(
             parent=self,
             model="quad",
-            scale=(0.54, 0.65),
-            color=color.rgba(27 / 255.0, 32 / 255.0, 56 / 255.0, 0.95),
+            scale=(panel_w, panel_h),
+            texture=panel_tex,
+            color=color.white,
             z=0.05,
         )
+        self.panel_border = self.panel  # backward compatibility
 
-        self.panel_border = Entity(
-            parent=self,
-            model="quad",
-            scale=(0.545, 0.655),
-            color=color.hex("#4A5568"),
-            z=0.06,
-        )
-
-        # Tiêu đề
+        # 3. Title
         self.txt_title = Text(
             parent=self,
-            text="TẠM DỪNG",
-            font=FONT_NAME,
+            text=LocalizedStr("PAUSED", ["TẠM DỪNG"]),
+            font=DEFAULT_FONT_NAME,
             scale=2.2,
             origin=(0, 0),
-            position=(0, 0.23, 0),
-            color=color.hex("#ECC94B"),
+            position=(0, 0.23, -0.01),
+            color=color.hex(PALETTE["ink"]),
         )
 
-        # Thông tin ván chơi
+        # Stage info
         self.txt_info = Text(
             parent=self,
-            text="Màn 01  •  Số bước: 0",
-            font=FONT_NAME,
+            text="Stage 01  •  Moves: 0",
+            font=DEFAULT_FONT_NAME,
             scale=1.0,
             origin=(0, 0),
-            position=(0, 0.16, 0),
-            color=color.hex("#CBD5E0"),
+            position=(0, 0.16, -0.01),
+            color=color.hex(PALETTE["brick"]),
         )
 
-        # Đường gạch phân cách
+        # Divider line
         self.divider = Entity(
             parent=self,
             model="quad",
-            scale=(0.42, 0.003),
-            position=(0, 0.12, 0),
-            color=color.hex("#4A5568"),
+            scale=(0.44, 0.004),
+            position=(0, 0.12, -0.01),
+            color=color.hex(PALETTE["brick"]),
         )
 
-        # Danh sách nút bấm
-        btn_w, btn_h = 0.38, 0.062
+        # 4. Pixel Buttons
+        btn_w, btn_h = 0.40, 0.066
         btn_y_start = 0.05
-        btn_spacing = 0.075
+        btn_spacing = 0.080
 
-        # 1. Nút Tiếp tục
-        self.btn_resume = Button(
+        # Button 1: Resume (Green ramp)
+        self.btn_resume = PixelButton(
             parent=self,
-            text="TIẾP TỤC (ESC)",
-            model="quad",
+            text=LocalizedStr("RESUME", ["TIẾP TỤC"]),
+            color_ramp="green",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start, 0),
-            color=color.hex("#2B6CB0"),
-            highlight_color=color.hex("#3182CE"),
-            text_color=color.white,
-            text_origin=(0, 0),
-            radius=0.15,
             on_click=self._on_resume_clicked,
         )
 
-        # 2. Nút Chơi lại từ đầu
-        self.btn_restart = Button(
+        # Button 2: Restart (Orange ramp)
+        self.btn_restart = PixelButton(
             parent=self,
-            text="CHƠI LẠI MÀN (R)",
-            model="quad",
+            text=LocalizedStr("RESTART", ["CHƠI LẠI"]),
+            color_ramp="orange",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start - btn_spacing, 0),
-            color=color.hex("#2D3748"),
-            highlight_color=color.hex("#4A5568"),
-            text_color=color.hex("#E2E8F0"),
-            text_origin=(0, 0),
-            radius=0.15,
             on_click=self._on_restart_clicked,
         )
 
-        # 3. Nút Chọn màn khác
-        self.btn_stages = Button(
+        # Button 3: Select Stage (Orange ramp)
+        self.btn_stages = PixelButton(
             parent=self,
-            text="CHỌN MÀN KHÁC (M)",
-            model="quad",
+            text=LocalizedStr("STAGE SELECT", ["CHỌN MÀN"]),
+            color_ramp="orange",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start - btn_spacing * 2, 0),
-            color=color.hex("#2D3748"),
-            highlight_color=color.hex("#4A5568"),
-            text_color=color.hex("#E2E8F0"),
-            text_origin=(0, 0),
-            radius=0.15,
-            on_click=self._on_stages_clicked,
+            on_click=self._on_select_stage_clicked,
         )
 
-        # 4. Nút Hướng dẫn
-        self.btn_help = Button(
+        # Button 4: Help (Orange ramp)
+        self.btn_help = PixelButton(
             parent=self,
-            text="HƯỚNG DẪN (H)",
-            model="quad",
+            text=LocalizedStr("HOW TO PLAY", ["TRỢ GIÚP"]),
+            color_ramp="orange",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start - btn_spacing * 3, 0),
-            color=color.hex("#2D3748"),
-            highlight_color=color.hex("#4A5568"),
-            text_color=color.hex("#E2E8F0"),
-            text_origin=(0, 0),
-            radius=0.15,
             on_click=self._on_help_clicked,
         )
 
-        # 5. Nút Menu chính
-        self.btn_menu = Button(
+        # Button 5: Main Menu (Red ramp)
+        self.btn_menu = PixelButton(
             parent=self,
-            text="VỀ MENU CHÍNH",
-            model="quad",
+            text=LocalizedStr("MAIN MENU", ["MENU CHÍNH"]),
+            color_ramp="red",
             scale=(btn_w, btn_h),
             position=(0, btn_y_start - btn_spacing * 4, 0),
-            color=color.hex("#4A5568"),
-            highlight_color=color.hex("#718096"),
-            text_color=color.hex("#F7FAFC"),
-            text_origin=(0, 0),
-            radius=0.15,
             on_click=self._on_main_menu_clicked,
         )
 
+    def update_info(self, stage_name: str, moves: int) -> None:
+        """Update stage name and move count in header."""
+        self.txt_info.text = f"{stage_name}  •  Moves: {moves}"
 
     def _on_resume_clicked(self) -> None:
         self.hide()
-        self.on_resume()
+        if self.on_resume:
+            self.on_resume()
 
     def _on_restart_clicked(self) -> None:
         self.hide()
-        self.on_restart()
+        if self.on_restart:
+            self.on_restart()
 
-    def _on_stages_clicked(self) -> None:
-        self.hide()
-        self.on_select_stage()
+    def _on_select_stage_clicked(self) -> None:
+        if self.on_select_stage:
+            self.on_select_stage()
 
     def _on_help_clicked(self) -> None:
-        self.on_help()
+        if self.on_help:
+            self.on_help()
 
     def _on_main_menu_clicked(self) -> None:
         self.hide()
-        self.on_main_menu()
+        if self.on_main_menu:
+            self.on_main_menu()
 
     def show(self, stage_name: str = "", move_count: int = 0) -> None:
-        """Hiển thị menu tạm dừng với thông tin cập nhật."""
-        self.txt_info.text = f"{stage_name}  •  Số bước: {move_count}"
+        if stage_name or move_count:
+            self.txt_info.text = f"{stage_name}  •  Moves: {move_count}"
         self.enabled = True
 
     def hide(self) -> None:
-        """Ẩn menu tạm dừng."""
         self.enabled = False

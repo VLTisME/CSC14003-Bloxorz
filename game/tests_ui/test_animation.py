@@ -152,6 +152,35 @@ class TestAnimationIntegrity(unittest.TestCase):
             self.anim.update(dt, self.engine)
         self.assertLess(self.block_view.block_entity.y, initial_y)
 
+    def test_falling_move_right_direction(self) -> None:
+        """Kiểm tra bước đi rơi sang phải (R) tiếp tục lăn theo chiều dương trục Z và trôi sang phải."""
+        self.block_view.sync_from_engine(self.engine)
+        self.anim.start_roll(
+            from_cells=[(1, 1)],
+            direction="R",
+            is_losing_move=True,
+        )
+        dt = 0.016
+        for _ in range(25):
+            self.anim.update(dt, self.engine)
+
+        # Kết thúc lăn, góc xoay Z phải đạt ~90°
+        self.assertAlmostEqual(self.block_view.block_entity.rotation_z, 90.0, delta=2.0)
+        initial_x = self.block_view.block_entity.x
+        initial_rot_z = self.block_view.block_entity.rotation_z
+
+        self.anim.start_fall(direction="R")
+        self.assertGreater(self.anim.fall_rot_speed.z, 0.0)
+        self.assertGreater(self.anim.fall_vx, 0.0)
+
+        for _ in range(15):
+            self.anim.update(dt, self.engine)
+
+        # Góc xoay Z phải tiếp tục tăng theo chiều lăn (lăn tới về bên phải, không lộn ngược lại)
+        self.assertGreater(self.block_view.block_entity.rotation_z, initial_rot_z)
+        # Tọa độ X phải trôi về bên phải (+X)
+        self.assertGreater(self.block_view.block_entity.x, initial_x)
+
     def test_reset_fragile_tiles(self) -> None:
         """Kiểm tra khôi phục độ cao của các ô gạch mỏng khi reset."""
         # Tạo giả lập gạch mỏng bị rơi
@@ -265,7 +294,8 @@ class TestAnimationIntegrity(unittest.TestCase):
         from game.ursina_ui.app import BloxorzUrsinaApp
 
         app = BloxorzUrsinaApp(start_in_menu=False)
-        app.load_stage_by_id("01")
+        rep = Path(__file__).resolve().parents[2] / "testcases" / "original" / "01.out.json"
+        app.load_stage_by_id("01", replay_path=rep)
 
         self.assertEqual(app.ui.btn_replay_play.text, "Phát")
 
