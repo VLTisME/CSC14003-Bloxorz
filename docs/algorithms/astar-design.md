@@ -27,8 +27,8 @@ Vì vậy, mọi đường đi thật được chiếu thành đường đi thư
 
 `search_time_ms` và `peak_memory_bytes` chuẩn bao gồm cả tiền xử lý đồ thị thư giãn. Các trường riêng của A* tách thời gian tiền xử lý với thời gian tìm kiếm trên heap, đồng thời ghi số state/cạnh thư giãn, state được sinh và kích thước frontier lớn nhất. Runner chuyển các trường này vào JSON kết quả. Bộ nhớ đỉnh dùng `tracemalloc` của Python, không phải RSS của tiến trình.
 
-Chạy A* trực tiếp: `python algorithms/ASTAR.py < testcases/samples/01.in.json`. Chạy một stage có checker: `python run_tests.py --algorithm algorithms/ASTAR.py --test 01 --require-optimal`. Tạo so sánh BFS/A* cho cả bộ: `python benchmark_search.py --suite original`.
+Chạy A* trực tiếp: `python algorithms/ASTAR.py < testcases/samples/01.in.json`. Chạy một stage có checker: `python run_tests.py --algorithm algorithms/ASTAR.py --test 01 --require-optimal`. Chạy bộ benchmark bốn solver: xem [quy trình thực nghiệm](../exp/protocol.md).
 
 ## Phạm vi và giới hạn
 
-Cài đặt này hướng tới các stage được cung cấp trong dự án, vốn đều có lời giải. Chưa bổ sung validator tổng quát cho stage do người dùng tự tạo hay chứng minh vô nghiệm cho mọi map tùy ý. Đồ thị thư giãn được dựng lại ở mỗi lần giải; thời gian và bộ nhớ tiền xử lý được tính vào tổng đã báo cáo. Thời gian benchmark hiện là quan sát một lượt, không nên dùng để khẳng định mức tăng tốc ổn định nếu chưa chạy lặp lại trên máy được mô tả rõ.
+Cài đặt này hướng tới các stage được cung cấp trong dự án, vốn đều có lời giải. Chưa bổ sung validator tổng quát cho stage do người dùng tự tạo hay chứng minh vô nghiệm cho mọi map tùy ý. Đồ thị thư giãn được dựng lại ở mỗi lần giải; thời gian và bộ nhớ tiền xử lý được tính vào tổng đã báo cáo. Bộ công bố dùng năm lượt mỗi stage/solver; kết luận chỉ áp dụng cho dữ liệu và môi trường đã đo, không suy rộng thành thứ hạng ổn định trên mọi máy.

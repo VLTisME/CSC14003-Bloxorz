@@ -15,7 +15,7 @@ UI_ASSETS_DIR = PROJECT_ROOT / "game" / "ursina_ui" / "assets" / "ui"
 BUTTONS_DIR = UI_ASSETS_DIR / "buttons"
 SRC_DIR = UI_ASSETS_DIR / "src"
 LOGO_DIR = UI_ASSETS_DIR / "logo"
-PREVIEW_DIR = PROJECT_ROOT / "docs" / "pixel"
+PREVIEW_DIR = PROJECT_ROOT / "docs" / "assets" / "pixel"
 
 
 class TestPixelAssets(unittest.TestCase):

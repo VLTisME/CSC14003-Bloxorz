@@ -16,7 +16,7 @@ Khối hộp có thể đứng thẳng, nằm ngang theo hàng hoặc nằm dọ
 - Khối đang nằm nếu lăn theo chiều dài sẽ đứng thẳng trên ô tiếp theo nằm ngoài đầu khối.
 - Khối đang nằm nếu lăn sang bên sẽ tiếp tục nằm và dịch đi một ô.
 
-![Khối hộp đổ xuống, lăn và đứng thẳng](assets/Bloxorz.gif)
+![Khối hộp đổ xuống, lăn và đứng thẳng](../assets/Bloxorz.gif)
 
 Ảnh động minh họa cách di chuyển. Bố cục thực tế của mỗi stage được xác định bởi bàn chơi trong dữ liệu vào.
 
@@ -45,7 +45,7 @@ Theo thước đo số bước cơ sở, mỗi bước di chuyển theo hướng
 
 Đi ra ngoài bàn chơi, vào khoảng trống hoặc lên cầu đang tắt đều gây thua. Để khối hộp hoàn chỉnh đứng thẳng trên ô dễ vỡ cũng gây thua. Đây vẫn là các hành động trong game có thể nhận diện, nhưng kết quả là thua; solver phải tránh chúng trong lời giải.
 
-BFS và A* hiện tìm lời giải ít bước nhất; DFS có thể tìm ra lời giải dài hơn. UCS tối ưu `1 + 2 × touches_fragile + touches_bridge + 3 × triggers_split` cho từng hành động hợp lệ, nên có thể chọn đường dài hơn nhưng tổng chi phí nhỏ hơn. Các chỉ báo nhận giá trị 0/1, phụ phí mỗi loại chỉ tính một lần trong một bước. Quy tắc đầy đủ cho khối nhỏ, ghép và dịch chuyển nằm trong [thiết kế UCS](ucs-design.md). Đây là ưu tiên đường đi do nhóm chọn, không phải xác suất thua.
+BFS và A* hiện tìm lời giải ít bước nhất; DFS có thể tìm ra lời giải dài hơn. UCS tối ưu `1 + 2 × touches_fragile + touches_bridge + 3 × triggers_split` cho từng hành động hợp lệ, nên có thể chọn đường dài hơn nhưng tổng chi phí nhỏ hơn. Các chỉ báo nhận giá trị 0/1, phụ phí mỗi loại chỉ tính một lần trong một bước. Quy tắc đầy đủ cho khối nhỏ, ghép và dịch chuyển nằm trong [thiết kế UCS](../algorithms/ucs-design.md). Đây là ưu tiên đường đi do nhóm chọn, không phải xác suất thua.
 
 Checker chấp nhận mọi đường đi dẫn đến chiến thắng. `--require-optimal` chỉ so sánh số bước với tham chiếu, phù hợp với BFS/A* hiện tại; không dùng cờ này để chấm UCS có phụ phí. AC không chứng minh tối ưu `weighted_cost`. Khi so sánh tổng chi phí giữa các solver, phải tính lại mọi lời giải bằng cùng công thức UCS, đồng thời báo cáo riêng số bước.
 
@@ -182,7 +182,7 @@ Với các lần benchmark dùng trong báo cáo, thêm `metrics` vào cùng đ�
 | `peak_memory_bytes` | Số nguyên không âm biểu diễn đỉnh cấp phát bộ nhớ Python được theo dõi trong tìm kiếm; không gồm cấp phát có trước khi đo và không phải toàn bộ bộ nhớ tiến trình |
 | `memory_method` | `"tracemalloc"` cho phương pháp đo cơ sở dùng chung |
 
-Dùng [template thuật toán](../algorithms/template.py) và [hướng dẫn helper](algorithm-guide.md) để thu thập các trường này nhất quán. Helper đo thời gian tìm kiếm, theo dõi đỉnh cấp phát và in JSON; bạn gọi `metrics.expanded()` ngay trước khi sinh trạng thái kế tiếp của mỗi nút không phải đích. Helper không triển khai tìm kiếm hay áp đặt cách biểu diễn trạng thái của bạn.
+Dùng [template thuật toán](../../algorithms/template.py) và [hướng dẫn helper](../algorithms/algorithm-guide.md) để thu thập các trường này nhất quán. Helper đo thời gian tìm kiếm, theo dõi đỉnh cấp phát và in JSON; bạn gọi `metrics.expanded()` ngay trước khi sinh trạng thái kế tiếp của mỗi nút không phải đích. Helper không triển khai tìm kiếm hay áp đặt cách biểu diễn trạng thái của bạn.
 
 Thiếu số liệu hoặc số liệu không hợp lệ không biến một lời giải thắng thành WA. Khi đó bản ghi không đủ điều kiện làm kết quả benchmark đầy đủ và runner báo riêng. Đầu ra tham chiếu giữ nguyên, không chứa giá trị đo. Runner suy ra `solution_length`/`cost` bằng số hành động được chấp nhận và tự đo thời gian toàn tiến trình. UCS bổ sung `metrics.weighted_cost` (số nguyên không âm); runner lưu lại ở `statistics.weighted_cost`. Đây là số liệu solver báo cáo, không được checker chứng nhận tối ưu. Xem [đặc tả runner](runner-proposal.md) về chi phí đo lường và các lần chỉ đo thời gian.
 
@@ -225,7 +225,7 @@ python run_tests.py --algorithm algorithms/BFS.py --all
 - `--all`: chạy mọi stage trong bộ được chọn.
 - `--suite original|samples`: chọn bộ testcase; mặc định là `original`.
 - `--timeout SECONDS`: thời gian chạy thuật toán tối đa cho mỗi stage, không gồm kiểm tra kết quả và hiển thị. Khi triển khai phải nêu rõ giá trị mặc định.
-- `--visualize_2d`: chỉ dành cho runner, phát lại một stage. Cờ `--visualize_3d` sẽ cung cấp phát lại 3D ở giai đoạn sau.
+- `--visualize_2d`: chỉ dành cho runner, phát lại một stage. Phát lại 3D dùng `python play.py --stage 01 --replay answer.json`.
 
 Cả hai công cụ báo verdict từng stage và tổng số theo kết quả. Runner hiển thị thêm thống kê và lưu một JSON tổng hợp. Mỗi tiến trình thuật toán mới nhận một stage qua stdin và in một lời giải JSON, kể cả khi lệnh bên ngoài chọn toàn bộ stage.
 

@@ -113,7 +113,7 @@ class BenchmarkModal(PixelPanel):
         headers = [
             ("ALGORITHM", -0.48, -0.5),
             ("STATUS", -0.16, 0),
-            ("MOVES", -0.01, 0),
+            ("STEPS/COST", -0.01, 0),
             ("NODES", 0.15, 0),
             ("TIME", 0.31, 0),
             ("ACTION", 0.46, 0),
@@ -140,7 +140,7 @@ class BenchmarkModal(PixelPanel):
 
         # 3. Algorithm Rows
         algo_list = [
-            ("A*", "A* (Heuristic)", "Manhattan dist"),
+            ("A*", "A* (Heuristic)", "Relaxed graph"),
             ("BFS", "BFS (Breadth)", "Shortest path"),
             ("UCS", "UCS (Cost)", "Dijkstra optimal"),
             ("DFS", "DFS (Depth)", "Deep branch search"),
@@ -237,7 +237,7 @@ class BenchmarkModal(PixelPanel):
         # 4. Bottom note
         self.txt_note = Text(
             parent=self,
-            text="* A*, BFS, and UCS guarantee optimal solutions. DFS explores deep branches first.",
+            text="BFS/A*: fewest steps. UCS: lowest weighted cost. DFS: no optimality guarantee.",
             font=DEFAULT_FONT_NAME,
             scale=0.76,
             origin=(0, 0),
@@ -307,7 +307,7 @@ class BenchmarkModal(PixelPanel):
                 from solver_support import SearchMetrics
                 from BFS import solve as bfs_solve
                 from DFS import solve as dfs_solve
-                from UCS import solve as ucs_solve
+                from UCS import solve_with_cost as ucs_solve
                 from ASTAR import solve_with_breakdown as astar_solve
             except Exception as e:
                 print(f"[BENCHMARK] Error importing solvers: {e}")
@@ -330,10 +330,13 @@ class BenchmarkModal(PixelPanel):
                     row["status"].color = color.hex(PALETTE["tan"])
 
                 m = SearchMetrics(track_memory=False)
+                weighted_cost = None
                 try:
                     with m:
                         if key == "A*":
                             actions, _ = fn(stage_data, m)
+                        elif key == "UCS":
+                            actions, weighted_cost = fn(stage_data, m)
                         else:
                             actions = fn(stage_data, m)
 
@@ -341,6 +344,7 @@ class BenchmarkModal(PixelPanel):
                     self._results[key] = {
                         "status": "SOLVED" if actions else "NO_SOLUTION",
                         "steps": len(actions),
+                        "weighted_cost": weighted_cost,
                         "nodes": d.get("expanded_nodes", 0),
                         "time_ms": round(d.get("search_time_ms", 0), 2),
                         "actions": actions,
@@ -361,7 +365,10 @@ class BenchmarkModal(PixelPanel):
                     row["status"].text = st
                     if st == "SOLVED":
                         row["status"].color = color.hex(PALETTE["green"])
-                        row["moves"].text = f"{res['steps']}"
+                        row["moves"].text = (
+                            f"{res['steps']}/{res['weighted_cost']}"
+                            if key == "UCS" else f"{res['steps']}"
+                        )
                         row["nodes"].text = f"{res['nodes']:,}"
                         row["time"].text = f"{res['time_ms']} ms"
                         row["btn_load"].disabled = False

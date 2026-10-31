@@ -85,6 +85,33 @@ class TestMultiSolverGUI(unittest.TestCase):
 
                 self.app.action_reset()
 
+    def test_ucs_hud_displays_weighted_cost(self) -> None:
+        self.app.load_stage_by_id("13")
+        self.app.selected_algorithm = "UCS"
+        self.app.ui.set_selected_algorithm("UCS")
+        self.app.action_solve_current()
+        deadline = time.monotonic() + 10.0
+        while time.monotonic() < deadline and not self.app.is_replay_playing:
+            time.sleep(0.01)
+            self.app._poll_astar_results()
+        self.assertTrue(self.app.is_replay_playing)
+        self.assertEqual(len(self.app.replay_actions), 49)
+        self.assertIn("cost 63", self.app.ui.txt_solver_info.text)
+
+    def test_ucs_benchmark_displays_steps_and_weighted_cost(self) -> None:
+        self.app.load_stage_by_id("13")
+        self.app.ui.open_benchmark_modal()
+        modal = self.app.ui.benchmark_modal
+        modal.start_benchmark()
+        deadline = time.monotonic() + 10.0
+        while modal._is_benchmarking and time.monotonic() < deadline:
+            time.sleep(0.01)
+        self.assertFalse(modal._is_benchmarking)
+        self.assertEqual(modal._results["UCS"]["steps"], 49)
+        self.assertEqual(modal._results["UCS"]["weighted_cost"], 63)
+        self.assertEqual(modal._rows["UCS"]["moves"].text, "49/63")
+        self.app.ui.close_benchmark_modal()
+
     def test_pause_resume_controls_calculation_for_all_solvers(self) -> None:
         """Kiểm tra Pause/Resume thực sự điều khiển tiến trình tính toán của cả 4 solver trên stage 10."""
         self.app.load_stage_by_id("10")

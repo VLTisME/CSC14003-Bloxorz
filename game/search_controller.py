@@ -229,9 +229,10 @@ class SearchController:
 
                             result_actions = dfs_solve(stage_copy, metrics)
                         elif algo == "UCS":
-                            from UCS import solve as ucs_solve
+                            from UCS import solve_with_cost as ucs_solve
 
-                            result_actions = ucs_solve(stage_copy, metrics)
+                            result_actions, weighted_cost = ucs_solve(stage_copy, metrics)
+                            extra_details["weighted_cost"] = weighted_cost
                         elif algo in ("A*", "ASTAR"):
                             from ASTAR import solve_with_breakdown as astar_solve
 

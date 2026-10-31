@@ -360,7 +360,7 @@ def main() -> None:
     parser.add_argument(
         "--preview",
         action="store_true",
-        help="Generate preview contact sheet in docs/pixel/preview_buttons.png.",
+        help="Generate preview contact sheet in docs/assets/pixel/preview_buttons.png.",
     )
     args = parser.parse_args()
 
@@ -369,7 +369,7 @@ def main() -> None:
     print(f"[OK] 16 button states generated in {args.output_dir}")
 
     if args.preview:
-        preview_path = PROJECT_ROOT / "docs" / "pixel" / "preview_buttons.png"
+        preview_path = PROJECT_ROOT / "docs" / "assets" / "pixel" / "preview_buttons.png"
         print("[GEN_BUTTONS] Generating preview contact sheet...")
         generate_preview_contact_sheet(sprites, preview_path)
 

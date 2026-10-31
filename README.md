@@ -1,100 +1,95 @@
-# CSC14003 Bloxorz Solver
+# CSC14003 — Bloxorz Solver
 
-Đặc tả giai đoạn 1, bộ testcase đã kiểm chứng và helper đo lường — bản tiếng Việt ngày 17/10/2026.
+Đồ án Cơ sở Trí tuệ Nhân tạo: chơi Bloxorz trên giao diện 3D/terminal, giải bằng BFS, DFS, UCS và A*, kiểm tra lời giải và so sánh thực nghiệm.
 
-Bắt đầu với [phát biểu bài toán](docs/problem-statement.md), [hướng dẫn testcase](testcases/README.md) và [đặc tả runner/checker](docs/runner-proposal.md). Xem [các mốc tiến độ](docs/milestones.md) để theo dõi công việc và [nguồn dữ liệu stage](docs/stage-sources.md) để biết nguồn gốc dữ liệu.
+- [Video demo](https://www.youtube.com/watch?v=HB6mtO96rz0)
+- [Mã nguồn](https://github.com/VLTisME/CSC14003-Bloxorz)
+- [Mục lục tài liệu](docs/README.md)
+- [Benchmark bốn thuật toán, 660 lượt](docs/exp/2026-10-28-weighted-ucs/README.md)
 
-## Những phần đã có
+## Cài đặt
 
-- Đặc tả dữ liệu vào/đầu ra JSON, hình minh họa chuyển động và các ví dụ có giải thích.
-- 33 stage (màn chơi) gốc với lời giải tham chiếu đã kiểm chứng bằng phát lại, cùng sáu testcase (ca kiểm thử) mẫu có lời giải.
-- Checker đơn giản kiểm tra bằng cách phát lại hành động, có thông báo lỗi và tổng số testcase vượt qua.
-- Helper đo lường/in JSON dùng chung và template thuật toán có thể sao chép; xem [hướng dẫn triển khai thuật toán](docs/algorithm-guide.md).
-- BFS, DFS, UCS và A* chạy độc lập; runner kiểm tra và lưu số liệu, còn A* có heuristic relaxed-graph đã kiểm thử tính tối ưu.
-- Engine trò chơi, hiển thị 2D trên terminal và GUI Ursina 3D đã có; GUI có nút Solve A*.
-
-- UCS tối ưu tổng chi phí có trọng số (weighted cost): `weighted_cost = số bước di chuyển + 2 × số bước đáp lên ô dễ vỡ + số bước đáp lên ô cầu + 3 × số lần kích hoạt tách khối`.
-- Số bước đáp lên ô dễ vỡ `F` (fragile tile): số hành động mà phần khối vừa di chuyển đáp lên ít nhất một ô `F`; một hành động đáp lên hai ô `F` vẫn chỉ tính một lần.
-- Số bước đáp lên ô cầu `B` (bridge tile): số hành động mà phần khối vừa di chuyển đáp lên ít nhất một ô `B`; một hành động đáp lên hai ô `B` vẫn chỉ tính một lần. Nếu một bước đáp lên cả `F` và `B`, hai phụ phí được cộng dồn.
-- Số lần kích hoạt tách khối (block splitting): số hành động làm khối nguyên đứng thẳng trên ô tách `T` (splitter), dịch chuyển và tách thành hai khối nhỏ. Nằm trên `T` không được tính; các bước di chuyển sau khi đã tách và việc tự ghép lại (rejoining) không làm tăng số lần tách.
-- Khi khối đã tách, chỉ xét ô đích của khối nhỏ vừa di chuyển (moving cube), không tính ô của khối đứng yên (stationary cube). Riêng bước kích hoạt tách, xét phụ phí `F`/`B` tại cả hai điểm đến dịch chuyển (teleport destinations). Xem [thiết kế chi phí UCS](docs/ucs-design.md) để biết đầy đủ quy tắc.
-- BFS và A* vẫn tối ưu số bước. Chạy UCS bằng `python run_tests.py --algorithm algorithms/UCS.py --all`, không dùng `--require-optimal`: cờ này yêu cầu số bước bằng độ dài lời giải tham chiếu (reference solution length), không kiểm tra tổng chi phí có trọng số nhỏ nhất.
-- `solution_length` (độ dài lời giải) và `cost` cũ vẫn bằng số bước; `statistics.weighted_cost` là tổng chi phí có trọng số UCS báo cáo. AC (Accepted) trong chế độ không bật `--require-optimal` chỉ xác nhận lời giải hợp lệ, không chứng minh chi phí tối ưu.
+GUI yêu cầu Python 3.12 trở lên (đã kiểm tra với 3.12.3; Ursina 8.3.0 yêu cầu Python >= 3.12). Chạy lệnh từ thư mục gốc repository hoặc thư mục `Source` trong gói nộp.
 
 ```bash
-python run_tests.py --algorithm algorithms/ASTAR.py --all --require-optimal
-python checker.py --input testcases/original/01.in.json --output answer.json
+python -m venv .venv
+# Linux / macOS:
+source .venv/bin/activate
+# Windows PowerShell:
+# .venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python play.py
+```
+
+GUI dùng Ursina 8.3.0, Panda3D 1.10.16, Pillow 13.0.0 và cần môi trường đồ họa OpenGL; khuyến nghị tỉ lệ cửa sổ 16:9 để hiển thị đầy đủ HUD. Solver/checker/terminal chỉ cần thư viện chuẩn Python (Python 3.10 trở lên). `.venv` là môi trường cục bộ, không phân phối cùng mã nguồn.
+
+## Chơi và xem lời giải
+
+```bash
+python play.py --stage 01
+python play.py --suite samples --stage 04
+python play.py --stage 01 --terminal
+python algorithms/UCS.py < testcases/original/13.in.json > answer.json
+python checker.py --input testcases/original/13.in.json --output answer.json
+python play.py --stage 13 --replay answer.json
+```
+
+GUI chọn trực tiếp A*, BFS, DFS, UCS rồi bấm Giải; lời giải hợp lệ được tự động phát lại. Nút Giải chuyển thành Tạm Dừng/Tiếp Tục khi solver chạy. HUD UCS hiển thị riêng số bước và weighted cost. Cửa sổ benchmark cho phép chạy bốn thuật toán trên cùng màn và chọn Run để phát lời giải.
+
+- WASD/phím mũi tên: di chuyển; Space: đổi cube khi tách.
+- Z/U: Undo; R: Reset; Esc: menu tạm dừng.
+- Con lăn chuột: zoom; C: khôi phục camera. Bản GUI cuối dùng phép chiếu trực giao.
+- Replay: Prev, Play/Pause, Next và tốc độ. Xem thêm [hướng dẫn GUI và demo](docs/prj/report-and-demo-guide.md).
+
+## Chạy và kiểm tra thuật toán
+
+Thay `UCS.py` bằng `BFS.py`, `DFS.py` hoặc `ASTAR.py` để chạy solver tương ứng. Đầu vào là JSON qua stdin; đầu ra là JSON gồm `status`, `actions`, `metrics`.
+
+```bash
 python -m unittest discover -s tests -v
+python run_tests.py --algorithm algorithms/BFS.py --all --require-optimal
+python run_tests.py --algorithm algorithms/ASTAR.py --all --require-optimal
+python run_tests.py --algorithm algorithms/DFS.py --all
+python run_tests.py --algorithm algorithms/UCS.py --all
+python tools/validate_solvers.py
 ```
 
-Yêu cầu Python 3.10 trở lên; checker và helper chỉ dùng thư viện chuẩn. Cài giao diện 3D bằng `python -m pip install -r game/requirements_ui.txt`.
+`--all` mặc định kiểm tra bộ original; thêm `--suite samples` để chạy sáu mẫu. Công cụ `validate_solvers.py` kiểm tra cả 39 testcase cho bốn solver và đối chiếu UCS với Dijkstra riêng trên mô hình checker.
 
-## Quy trình giai đoạn 1
+BFS/A* tối ưu số bước. UCS tối ưu tổng `1 + 1×chạm cầu + 2×chạm ô dễ vỡ + 3×kích hoạt tách` trên từng bước; xem [quy tắc đầy đủ](docs/algorithms/ucs-design.md). DFS không bảo đảm tối ưu. `cost` của checker là số bước; `metrics.weighted_cost` của UCS là tổng cost có phụ phí. **Không dùng `--require-optimal` để chấm UCS mới**, vì cờ này chỉ so số bước tham chiếu. AC xác nhận đường đi hợp lệ, không tự chứng minh tối ưu weighted cost.
 
-Mỗi thuật toán là một chương trình Python độc lập. Chương trình đọc một stage JSON từ stdin (luồng nhập chuẩn) và in một kết quả JSON ra stdout (luồng xuất chuẩn). Người viết tự chọn cấu trúc dữ liệu nội bộ. Checker phát lại các hành động; runner sẽ gọi thuật toán và lưu một file JSON tổng hợp cho mỗi lần chạy. Game engine và phần hiển thị 2D trên terminal được triển khai trước GUI 3D cuối cùng.
+## Thực nghiệm
 
-Các lệnh chạy thuật toán, kiểm tra và mở GUI:
+Bộ công bố ngày 28/10 gồm 33 original × 4 solver × 5 lượt = 660 lượt AC. [CSV dùng cho báo cáo](docs/exp/2026-10-28-weighted-ucs/paper-data.csv) và [năm bảng chi tiết](docs/exp/2026-10-28-weighted-ucs/paper-tables.md) giữ nguyên số liệu đã đo.
+
+Chạy bộ mới vào thư mục kết quả cục bộ chưa tồn tại:
 
 ```bash
-python algorithms/BFS.py < testcases/original/01.in.json > answer.json
-python checker.py --algorithm algorithms/BFS.py --all --timeout 10
-python run_tests.py --algorithm algorithms/ASTAR.py --all --require-optimal
-python run_tests.py --algorithm algorithms/ASTAR.py --test 06 --visualize_2d
-python play.py --stage testcases/original/01.in.json
+python tools/benchmark.py --algorithms BFS DFS UCS ASTAR --suite original --repeats 5 --timeout 60 --seed 20261028 --output results/benchmark-new
 ```
 
-## Cấu trúc repo
+Mỗi lượt chạy trong tiến trình mới; báo cáo median/IQR. Thời gian và bộ nhớ A* gồm tiền xử lý heuristic, counter expanded chỉ tính tìm kiếm chính. Peak memory đo bằng tracemalloc, không phải RSS. Chi tiết tại [quy trình thực nghiệm](docs/exp/protocol.md).
+
+Tùy chọn vẽ biểu đồ: cài `python -m pip install -r tools/requirements_plot.txt`, rồi chạy `python tools/plot_benchmark.py results/benchmark-new`. `benchmark_search.py` giữ tương thích với công cụ BFS/A* một lượt cũ, không dùng làm bộ benchmark chính.
+
+## Cấu trúc
 
 ```text
-docs/
-  problem-statement.md
-  runner-proposal.md
-  algorithm-guide.md
-  milestones.md
-  stage-sources.md
-  astar-design.md
-  astar-benchmark.md
-  assets/Bloxorz.gif
-checker.py                  # implemented replay checker
-tests/test_checker.py        # checker regression checks
-tests/test_solver_support.py # helper and output regression checks
-tests/test_astar.py          # heuristic and A* correctness tests
-testcases/
-  README.md
-  manifest.json             # provenance, reference lengths, verification
-  samples/                  # six .in.json / .out.json pairs
-  original/                 # 33 .in.json / .out.json pairs
-algorithms/
-  solver_support.py         # implemented measurement/JSON helper
-  template.py               # reusable solver scaffold
-  ASTAR.py                  # optimal A* with relaxed-graph heuristic
-  astar_heuristic.py        # relaxation, graph build and reverse BFS
-  BFS.py, DFS.py, UCS.py    # additional independent solvers
-game/                       # rules engine, terminal visualizer and Ursina 3D GUI
-run_tests.py                # batch checker/runner and JSON results
-benchmark_search.py         # repeatable per-stage BFS/A* CSV and Markdown
-results/                    # generated datetime.json files; ignored by Git
+algorithms/       BFS, DFS, UCS, A*, mô hình và metrics
+checker.py        kiểm tra lời giải; dùng chung với runner
+run_tests.py      chạy solver theo bộ testcase
+play.py           mở GUI 3D hoặc terminal 2D
+requirements.txt  thư viện chạy GUI
+game/             engine, GUI, tài nguyên và test giao diện
+testcases/        33 màn original + 6 samples, đáp án và manifest
+tests/            kiểm thử thuật toán, luật, runner và tích hợp
+tools/            benchmark, đối chiếu solver và tạo tài nguyên
+docs/             tài liệu và số liệu thực nghiệm tổng hợp
+results/          log/đầu ra cục bộ, không được Git theo dõi
 ```
 
-Xem [lập luận A*](docs/astar-design.md) và [kết quả benchmark](docs/astar-benchmark.md) để biết chi tiết về heuristic và cách tái lập phép đo.
+Log, replay sinh ra khi chạy, `game/progress.json`, cache và môi trường ảo không được đưa lên GitHub. Tiến độ chơi được tạo tự động khi chơi. Báo cáo PDF được phát hành riêng sau khi nhóm hoàn tất chỉnh sửa.
 
-Báo cáo được chỉnh sửa trên Prism trước. Bản nháp báo cáo cục bộ không nằm trong gói đưa lên GitHub. Phân công thành viên và phần trăm hoàn thành chỉ ghi trong báo cáo. Các mốc tiến độ được theo dõi tại đây và sau đó đồng bộ vào báo cáo.
+## Nguồn và ghi nhận
 
-Mỗi công việc triển khai đều phải có phần giải thích và bằng chứng kiểm chứng tương ứng trong báo cáo. Chưa đưa phân công nhiệm vụ lên GitHub.
-
-Kết quả runner lưu verdict, thời gian, số nút mở rộng, bộ nhớ Python và các số liệu riêng của A* trong JSON. Checker chấm đường đi độc lập với việc số liệu benchmark có đầy đủ hay không.
-
-## Ghi nhận nguồn
-
-Dữ liệu mã hóa stage và chuỗi hành động tham chiếu được chuyển đổi từ [tkoz0/bloxorz-solver](https://github.com/tkoz0/bloxorz-solver). Game gốc do Damien Clarke tạo ra. Phiên bản repo nguồn đã kiểm tra không nêu giấy phép; xem ghi chú nguồn để biết commit cụ thể, thông tin ghi nhận tác giả và bản sửa lời giải stage 15. GIF minh họa chuyển động do chủ dự án cung cấp; chưa xác định tác giả gốc và giấy phép của GIF trong tài liệu này.
-# Chạy A*
-
-Solver A* đọc JSON của một stage từ stdin và in câu trả lời JSON đã thống nhất:
-
-```bash
-python algorithms/ASTAR.py < testcases/samples/01.in.json
-python run_tests.py --algorithm algorithms/ASTAR.py --test 01 --require-optimal
-python run_tests.py --algorithm algorithms/ASTAR.py --all --require-optimal
-```
-
-Checker phát lại từng hành động; `--require-optimal` còn so sánh độ dài lời giải với số bước tham chiếu của testcase. Xem [thiết kế và chứng minh A*](docs/astar-design.md) cùng [kết quả BFS/A*](docs/astar-benchmark.md).
+Dữ liệu stage/lời giải tham chiếu chuyển đổi từ [tkoz0/bloxorz-solver](https://github.com/tkoz0/bloxorz-solver); game Bloxorz do Damien Clarke tạo ra, được giới thiệu tại [Coolmath Games](https://www.coolmathgames.com/0-bloxorz). Xem [nguồn dữ liệu và điều chỉnh stage15](docs/prj/stage-sources.md). Ghi nhận font và tài nguyên giao diện tại [credits](docs/assets/pixel/CREDITS.md). Không tự gán giấy phép cho dữ liệu/tài nguyên bên ngoài khi nguồn chưa công bố rõ.

@@ -11,7 +11,7 @@ Soạn ngày 15/10/2026; chuyển sang tiếng Việt ngày 17/10/2026.
 - [solver.py](https://github.com/tkoz0/bloxorz-solver/blob/d203a25170085054fb3f39bd81b3509ee8cd9e47/solver.py): tham khảo để hiểu tọa độ nguồn, trạng thái khối được chọn và cách mã hóa. Không sao chép phần triển khai tìm kiếm của nguồn vào dự án.
 - Game gốc: Damien Clarke; [hướng dẫn Coolmath](https://www.coolmathgames.com/0-bloxorz).
 
-Nội dung tải xuống đã được đối chiếu với Git blob ID của commit cố định. [Manifest](../testcases/manifest.json) ghi mã băm file, đường dẫn từng stage, mã truy cập màn chơi, đặc điểm, độ dài tham chiếu và trạng thái kiểm chứng.
+Nội dung tải xuống đã được đối chiếu với Git blob ID của commit cố định. [Manifest](../../testcases/manifest.json) ghi mã băm file, đường dẫn từng stage, mã truy cập màn chơi, đặc điểm, độ dài tham chiếu và trạng thái kiểm chứng.
 
 ## Chuyển đổi
 

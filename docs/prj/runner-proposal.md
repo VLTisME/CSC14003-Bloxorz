@@ -1,6 +1,6 @@
 # Runner và checker
 
-Đặc tả v1.1 — 16/10/2026; cập nhật trạng thái triển khai ngày 24/10/2026. Checker phát lại, checker chạy bài nộp, runner theo bộ và hiển thị 2D trên terminal đã được triển khai. GUI Ursina 3D cũng có nút chạy A* và phát lại lời giải.
+Checker phát lại, chạy solver, runner theo bộ và hiển thị terminal đã được triển khai. GUI 3D gọi trực tiếp BFS/DFS/UCS/A* và phát lại lời giải. Đầu ra tự sinh ghi trong `results/`, không được Git theo dõi.
 
 ## Quy trình một lần chạy
 
@@ -24,7 +24,7 @@ python checker.py --all
 
 Lệnh thứ hai phát lại mọi lời giải tham chiếu được cung cấp, bao gồm cả ví dụ mẫu.
 
-Để chạy trực tiếp một thuật toán sau khi đã triển khai:
+Chạy trực tiếp một thuật toán:
 
 ```bash
 python algorithms/DFS.py < testcases/original/01.in.json > answer.json
@@ -80,7 +80,7 @@ Cấu trúc minh họa (các con số là ví dụ, không phải số liệu đ
       "test_id": "stage01",
       "verdict": "AC",
       "message": "solved with 7 steps",
-      "actions": ["R", "D", "D", "R", "R", "D", "R"],
+      "actions": ["R", "R", "D", "R", "R", "R", "D"],
       "statistics": {
         "process_time_ms": 25.0,
         "search_time_ms": null,
@@ -104,7 +104,7 @@ Trong các lần chạy thực tế, ghi thêm giới hạn thời gian đã c�
 
 ```text
 stage01: AC — solved with 7 steps
-R D D R R D R
+R R D R R R D
 stage02: WA — actions end before the goal
 Passed 1/2 tests
 Saved results/2026-10-15_20-00-00-123456.json
@@ -116,7 +116,7 @@ Saved results/2026-10-15_20-00-00-123456.json
 
 Runner đo thời gian toàn tiến trình từ khi khởi chạy đến khi kết thúc. Thời gian này gồm khởi động, phân tích đầu vào, tìm kiếm và chuyển kết quả thành dữ liệu để in; đặt tên là `process_time_ms`, không gọi là thời gian riêng cho tìm kiếm.
 
-Runner tính `solution_length` và `cost` bằng số bước trong chuỗi hành động được chấp nhận. Với UCS có phụ phí, solver in thêm `metrics.weighted_cost` và runner sao chép sang `statistics.weighted_cost`; trường này phải là số nguyên không âm nếu có. Đây là giá trị solver báo cáo, cần kiểm chứng riêng bằng cộng chi phí từng bước khi phát lại. `--require-optimal` vẫn chỉ đối chiếu số bước tham chiếu, không dùng để đánh giá UCS mới. Xem [thiết kế UCS](ucs-design.md).
+Runner tính `solution_length` và `cost` bằng số bước trong chuỗi hành động được chấp nhận. Với UCS có phụ phí, solver in thêm `metrics.weighted_cost` và runner sao chép sang `statistics.weighted_cost`; trường này phải là số nguyên không âm nếu có. Đây là giá trị solver báo cáo, cần kiểm chứng riêng bằng cộng chi phí từng bước khi phát lại. `--require-optimal` vẫn chỉ đối chiếu số bước tham chiếu, không dùng để đánh giá UCS mới. Xem [thiết kế UCS](../algorithms/ucs-design.md).
 
 Runner không thể suy ra số nút mở rộng hay thời gian riêng cho tìm kiếm từ các hành động. Vì vậy, chương trình thuật toán in thêm đối tượng `metrics`:
 
@@ -135,9 +135,9 @@ Runner không thể suy ra số nút mở rộng hay thời gian riêng cho tìm
 
 Các con số chỉ minh họa trường dữ liệu. Các trường đầu ra benchmark cũng được mô tả trong phát biểu bài toán. Lời giải tham chiếu cố định và bài nộp chỉ kiểm tra tính đúng đắn có thể bỏ số liệu đo; bài nộp benchmark thực tế phải có. Không cần chuyển đổi các testcase hiện có.
 
-Dùng [solver_support.py](../algorithms/solver_support.py) và [template](../algorithms/template.py); xem [hướng dẫn thuật toán](algorithm-guide.md) để tích hợp. `SearchMetrics` đo một lần giải và in đối tượng kết hợp lời giải/số liệu đo. Nó không chứa thuật toán tìm kiếm và không phụ thuộc checker game. Người triển khai phải đếm mở rộng đúng chỗ và đặt toàn bộ khởi tạo tìm kiếm trong vùng được đo.
+Dùng [solver_support.py](../../algorithms/solver_support.py) và [template](../../algorithms/template.py); xem [hướng dẫn thuật toán](../algorithms/algorithm-guide.md) để tích hợp. `SearchMetrics` đo một lần giải và in đối tượng kết hợp lời giải/số liệu đo. Nó không chứa thuật toán tìm kiếm và không phụ thuộc checker game. Người triển khai phải đếm mở rộng đúng chỗ và đặt toàn bộ khởi tạo tìm kiếm trong vùng được đo.
 
-Đối với runner sau này, `metrics_issues(answer.get("metrics"))` trả về danh sách lỗi số liệu thiếu/không hợp lệ. Ghi chúng tách biệt với verdict phát lại, ví dụ bằng `metrics_complete` và `metrics_errors` trong kết quả từng testcase. Một đường đi thắng dù thiếu số liệu vẫn là AC, nhưng không tạo được bản ghi benchmark đầy đủ. Kiểm tra thời gian hữu hạn không âm, số lượng/byte là số nguyên không âm (không phải boolean) và phương pháp đo bộ nhớ đã thống nhất. Kiểm tra cấu trúc không chứng minh solver đếm đúng hay đặt ranh giới đo đúng; cần rà soát cách gắn bộ đo của từng thuật toán.
+Trong runner hiện tại, `metrics_issues(answer.get("metrics"))` trả về danh sách lỗi số liệu thiếu/không hợp lệ. Ghi chúng tách biệt với verdict phát lại, ví dụ bằng `metrics_complete` và `metrics_errors` trong kết quả từng testcase. Một đường đi thắng dù thiếu số liệu vẫn là AC, nhưng không tạo được bản ghi benchmark đầy đủ. Kiểm tra thời gian hữu hạn không âm, số lượng/byte là số nguyên không âm (không phải boolean) và phương pháp đo bộ nhớ đã thống nhất. Kiểm tra cấu trúc không chứng minh solver đếm đúng hay đặt ranh giới đo đúng; cần rà soát cách gắn bộ đo của từng thuật toán.
 
 Khi chương trình gặp lỗi hoặc hết thời gian, giữ thời gian đo từ bên ngoài và verdict. Số liệu nội bộ không có phải là null, không phải 0; không suy ra từ đầu ra chưa hoàn chỉnh hay thay bằng giá trị trong lời giải tham chiếu.
 
@@ -151,12 +151,8 @@ Dùng các định nghĩa nhất quán:
 
 Mặc định, `SearchMetrics()` đo thời gian và bộ nhớ cùng lúc. `search_time_ms` khi đó gồm chi phí theo dõi bộ nhớ. Dùng cùng phương pháp cơ sở cho cả bốn thuật toán; không so sánh thời gian có theo dõi với thời gian không theo dõi mà không ghi rõ khác biệt.
 
-Trong thực nghiệm cuối cùng, ưu tiên tách lần đo thời gian và lần đo bộ nhớ. `SearchMetrics(track_memory=False)` hỗ trợ đo thời gian không theo dõi cấp phát: các trường bộ nhớ là null, nên bản ghi riêng lẻ này cố ý chưa đủ cho benchmark đầy đủ. Ghép với một lần đo bộ nhớ mặc định được định danh riêng, dùng cùng stage, phiên bản thuật toán, cấu hình và thứ tự sinh trạng thái kế tiếp; giữ cả hai bản ghi thô và ghi chế độ đo trong cấu hình thực nghiệm. Template mặc định đo đầy đủ; runner hỗ trợ chạy theo cặp là công việc tương lai. Với tìm kiếm rất ngắn, chạy lặp lại và mô tả cách tổng hợp số liệu.
+Batch công bố đo thời gian và bộ nhớ cùng lúc bằng tracemalloc cho cả bốn thuật toán. GUI dùng `SearchMetrics(track_memory=False)` để tránh overhead tracing; dữ liệu GUI không thay thế benchmark đầy đủ. Khi cần thí nghiệm chỉ đo thời gian, ghi nhãn riêng và không trộn với batch công bố. Quy trình và cấu hình tại [protocol](../exp/protocol.md).
 
 ## Hiển thị trên terminal
 
-`--visualize_2d` phát lại hành động trả về sau khi tìm kiếm và chấm kết quả. Hiển thị bàn chơi, ID cả hai khối khi đang tách, trạng thái cầu, số bước và kết quả. Hiển thị terminal đủ cho giai đoạn 1; sản phẩm cuối vẫn cần GUI 3D và phát lại tự động theo yêu cầu.
-
-## Tiến độ báo cáo
-
-Triển khai runner/checker đóng góp vào phần thiết kế hệ thống và phương pháp thực nghiệm. Số liệu đã lưu phục vụ phần kết quả/thảo luận. Ghi rõ giả thiết bộ stage hiện có đã biết là giải được và việc kiểm tra stage tự sinh trong tương lai vào báo cáo chỉnh sửa trên Prism.
+`--visualize_2d` phát lại hành động trả về sau khi tìm kiếm và chấm kết quả. Hiển thị bàn chơi, ID cả hai khối khi đang tách, trạng thái cầu, số bước và kết quả. GUI 3D và phát lại tự động mở bằng `python play.py`; xem [hướng dẫn GUI](report-and-demo-guide.md).

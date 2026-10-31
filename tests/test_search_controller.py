@@ -62,6 +62,22 @@ class TestSearchController(unittest.TestCase):
                 verdict = check(stage, ans)
                 self.assertEqual(verdict["verdict"], "AC")
 
+    def test_ucs_reports_weighted_cost_separately_from_moves(self) -> None:
+        for stage_num, steps, cost in ((13, 49, 63), (16, 30, 55), (23, 76, 128), (25, 55, 66)):
+            with self.subTest(stage=stage_num):
+                stage = load_original(stage_num)
+                self.controller.start(stage, algorithm="UCS", generation=stage_num, timeout=10.0)
+                deadline = time.monotonic() + 10.0
+                result = None
+                while result is None and time.monotonic() < deadline:
+                    result = self.controller.poll()
+                    time.sleep(0.005)
+                self.assertIsNotNone(result)
+                self.assertEqual(result.status, SearchStatus.COMPLETED)
+                self.assertEqual(len(result.actions), steps)
+                self.assertEqual(result.metrics["weighted_cost"], cost)
+                self.assertEqual(check(stage, {"status": "solved", "actions": result.actions})["verdict"], "AC")
+
     def test_pause_and_resume_execution(self) -> None:
         """Kiểm tra Pause thực sự dừng tiến trình và Resume tiếp tục mà không lỗi."""
         stage = load_original(10)  # Stage 10 cần ~450ms giải BFS với 5883 nodes

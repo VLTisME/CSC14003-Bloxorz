@@ -20,8 +20,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--suite", choices=("original", "samples"), default="original")
     parser.add_argument("--timeout", type=float, default=30.0)
-    parser.add_argument("--csv", type=Path, default=ROOT / "docs" / "astar-benchmark.csv")
-    parser.add_argument("--markdown", type=Path, default=ROOT / "docs" / "astar-benchmark.md")
+    parser.add_argument("--csv", type=Path, default=ROOT / "results" / "legacy-bfs-astar" / "astar-benchmark.csv")
+    parser.add_argument("--markdown", type=Path, default=ROOT / "results" / "legacy-bfs-astar" / "astar-benchmark.md")
     return parser.parse_args()
 
 

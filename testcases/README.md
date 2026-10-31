@@ -41,7 +41,7 @@ Tổng cộng: 1.999 bước. Đây là các độ dài được nguồn công b
 
 ## Stage 15
 
-Đường đi tham chiếu ban đầu tắt cầu dưới khối đứng yên ở bước 27. Đã thay bằng đường đi hợp lệ khác gồm 57 bước. Xem [ghi chú nguồn](../docs/stage-sources.md) để biết phát hiện cụ thể và nguồn gốc.
+Đường đi tham chiếu ban đầu tắt cầu dưới khối đứng yên ở bước 27. Đã thay bằng đường đi hợp lệ khác gồm 57 bước. Xem [ghi chú nguồn](../docs/prj/stage-sources.md) để biết phát hiện cụ thể và nguồn gốc.
 
 ## Phạm vi bao phủ và giới hạn
 
@@ -51,4 +51,4 @@ Bộ testcase được xác nhận có lời giải vì mỗi đầu vào có m�
 
 ## Nguồn
 
-Dữ liệu stage và lời giải tham chiếu đã công bố: [tkoz0/bloxorz-solver](https://github.com/tkoz0/bloxorz-solver), commit d203a25170085054fb3f39bd81b3509ee8cd9e47. Game gốc: Damien Clarke. Phiên bản nguồn đã kiểm tra không nêu giấy phép. Xem [ghi chú nguồn](../docs/stage-sources.md) và manifest khi đưa dữ liệu lên repo.
+Dữ liệu stage và lời giải tham chiếu đã công bố: [tkoz0/bloxorz-solver](https://github.com/tkoz0/bloxorz-solver), commit d203a25170085054fb3f39bd81b3509ee8cd9e47. Game gốc: Damien Clarke. Phiên bản nguồn đã kiểm tra không nêu giấy phép. Xem [ghi chú nguồn](../docs/prj/stage-sources.md) và manifest khi đưa dữ liệu lên repo.

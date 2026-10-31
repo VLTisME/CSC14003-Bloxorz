@@ -1,0 +1,5 @@
+algorithm,runs,ac,complete,search_time_ms,peak_memory_bytes,expanded_nodes,solution_length,weighted_cost
+BFS,165,165,165,35.788651,228749,474,57,68
+DFS,165,165,165,18.844875,160743,282,98,110
+UCS,165,165,165,40.014761,219285,493,57,68
+ASTAR,165,165,165,47.182027,261753,265,57,68

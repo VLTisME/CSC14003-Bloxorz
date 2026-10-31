@@ -11,3 +11,21 @@ __pycache__/
 *.py[cod]
 .venv/
 game/progress.json
+# Local environments and generated evidence (fixtures in testcases stay tracked).
+venv/
+.env
+.env.*
+!.env.example
+*.log
+*.jsonl
+.pytest_cache/
+.cache/
+/docs/test_matrix_report.json
+/docs/exp/**/replays/
+/docs/exp/**/warmup.json
+/docs/exp/**/samples-validation.json
+/docs/exp/**/weighted-optimality-validation.json
+/docs/exp/**/gui-replay-check.json
+/main.pdf
+/Report.pdf
+/dist/

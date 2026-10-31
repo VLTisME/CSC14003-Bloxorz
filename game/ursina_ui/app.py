@@ -736,8 +736,13 @@ class BloxorzUrsinaApp(Entity):
 
             time_ms = res.metrics.get("search_time_ms", 0.0)
             expanded = res.metrics.get("expanded_nodes", 0)
-            cost = verdict.get("cost", len(res.actions))
             if res.algorithm == "UCS":
+                cost = res.metrics.get("weighted_cost")
+                if type(cost) is not int or cost < 0:
+                    self.ui.set_solver_state(
+                        SearchStatus.FAILED, "UCS: Thiếu weighted cost", failed=True
+                    )
+                    return
                 info_text = f"{res.algorithm}: {len(self.replay_actions)}b | cost {cost} ({time_ms:.1f}ms)"
             else:
                 info_text = f"{res.algorithm}: {len(self.replay_actions)} bước ({time_ms:.1f}ms)"

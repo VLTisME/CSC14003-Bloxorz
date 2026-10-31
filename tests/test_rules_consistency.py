@@ -23,7 +23,7 @@ from game.search_controller import SearchController, SearchStatus
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 TESTCASES_DIR = ROOT_DIR / "testcases"
-DOCS_DIR = ROOT_DIR / "docs"
+RESULTS_DIR = ROOT_DIR / "results" / "tests"
 
 
 class ThreeWayHarness:
@@ -96,8 +96,9 @@ class TestRulesConsistency(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        """Ghi báo cáo kết quả ma trận kiểm thử vào docs/test_matrix_report.json."""
-        report_path = DOCS_DIR / "test_matrix_report.json"
+        """Ghi báo cáo tự sinh vào results/tests, ngoài tài liệu được theo dõi."""
+        RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+        report_path = RESULTS_DIR / "test_matrix_report.json"
         report_data = {
             "summary": {
                 "total": len(cls._matrix_results),

@@ -5,7 +5,7 @@ Generates:
 1. logo_title.png ("BLOXORZ")
 2. logo_sub.png ("3D PUZZLE")
 
-Styling specifications from docs/pixel/palette.md:
+Styling specifications from docs/assets/pixel/palette.md:
 - 1px Outline: ink (#212123)
 - 2px Drop Shadow: tan (#d3a068)
 - Two-Tone Fill: Top brick (#80493a), Bottom plum_dark (#352b42) with pixel dither
@@ -310,7 +310,7 @@ def main() -> None:
     parser.add_argument(
         "--preview",
         action="store_true",
-        help="Generate preview contact sheet in docs/pixel/preview_logo.png.",
+        help="Generate preview contact sheet in docs/assets/pixel/preview_logo.png.",
     )
     args = parser.parse_args()
 
@@ -319,7 +319,7 @@ def main() -> None:
     print(f"[OK] Logo sprites generated in {args.output_dir}")
 
     if args.preview:
-        preview_path = PROJECT_ROOT / "docs" / "pixel" / "preview_logo.png"
+        preview_path = PROJECT_ROOT / "docs" / "assets" / "pixel" / "preview_logo.png"
         print("[GEN_LOGO] Generating preview contact sheet...")
         generate_preview_contact_sheet(title_sprite, sub_sprite, preview_path)
 
