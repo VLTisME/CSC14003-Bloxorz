@@ -82,14 +82,14 @@ class UIManager:
         on_replay_play_pause: Callable[[], None],
         on_replay_step_forward: Callable[[], None],
         on_replay_step_back: Callable[[], None],
-        on_replay_jump_start: Callable[[], None],
-        on_replay_jump_end: Callable[[], None],
-        on_replay_load_file: Callable[[str], None],
-        on_speed_change: Callable[[float], None],
-        on_solve_astar: Callable[[], None],
+        on_replay_jump_start: Callable[[], None] | None = None,
+        on_replay_jump_end: Callable[[], None] | None = None,
+        on_replay_load_file: Callable[[str], None] | None = None,
+        on_speed_change: Callable[[float], None] | None = None,
+        on_solve_astar: Callable[[], None] | None = None,
         on_cycle_algorithm: Callable[[], None] | None = None,
         on_solve: Callable[[], None] | None = None,
-        on_load_benchmark_solution: Callable[[list[str]], None] | None = None,
+        on_load_benchmark_solution: Callable[..., None] | None = None,
     ) -> None:
         self.catalog = catalog
         self.on_select_stage = on_select_stage
@@ -157,8 +157,8 @@ class UIManager:
             text="",
             font=FONT_NAME,
             scale=1.00,
-            origin=(-0.5, 0),
-            position=(-0.35, 0.46, -0.01),
+            origin=(-5.5, 0),
+            position=(0.65, -0.46, -0.01),
             color=color.hex(PALETTE["green"]),
         )
 
@@ -242,22 +242,13 @@ class UIManager:
             color=color.hex(PALETTE["ink"]),
         )
 
-        # Cụm nút tua Replay
-        self.btn_replay_start = PixelButton(
-            parent=self.ui_root,
-            text="Start",
-            color_ramp="orange",
-            scale=(0.1, 0.054),
-            position=(-0.27, -0.46, -0.01),
-            on_click=self.on_replay_jump_start,
-        )
-
+        # Cụm nút tua Replay (Prev, Play, Next, Speed)
         self.btn_replay_prev = PixelButton(
             parent=self.ui_root,
             text="Prev",
             color_ramp="orange",
-            scale=(0.075, 0.054),
-            position=(-0.165, -0.46, -0.01),
+            scale=(0.08, 0.054),
+            position=(-0.16, -0.46, -0.01),
             on_click=self.on_replay_step_back,
         )
 
@@ -266,7 +257,7 @@ class UIManager:
             text=LocalizedStr("Play", ["Phát"]),
             color_ramp="green",
             scale=(0.10, 0.054),
-            position=(-0.065, -0.46, -0.01),
+            position=(-0.06, -0.46, -0.01),
             on_click=self.on_replay_play_pause,
         )
 
@@ -274,18 +265,9 @@ class UIManager:
             parent=self.ui_root,
             text="Next",
             color_ramp="orange",
-            scale=(0.075, 0.054),
-            position=(0.035, -0.46, -0.01),
+            scale=(0.08, 0.054),
+            position=(0.04, -0.46, -0.01),
             on_click=self.on_replay_step_forward,
-        )
-
-        self.btn_replay_end = PixelButton(
-            parent=self.ui_root,
-            text="End",
-            color_ramp="orange",
-            scale=(0.075, 0.054),
-            position=(0.12, -0.46, -0.01),
-            on_click=self.on_replay_jump_end,
         )
 
         # Nút chuyển tốc độ
@@ -295,7 +277,7 @@ class UIManager:
             text="1x",
             color_ramp="orange",
             scale=(0.075, 0.054),
-            position=(0.205, -0.46, -0.01),
+            position=(0.135, -0.46, -0.01),
             on_click=self._cycle_speed,
         )
 
@@ -530,10 +512,13 @@ class UIManager:
             self.benchmark_modal = None
         self.is_benchmark_modal_open = False
 
-    def _handle_load_benchmark_solution(self, actions: list[str]) -> None:
+    def _handle_load_benchmark_solution(self, actions: list[str], stage_id: str | None = None) -> None:
         """Nạp lời giải từ Benchmark vào thanh Replay và đóng modal."""
         if self.on_load_benchmark_solution:
-            self.on_load_benchmark_solution(actions)
+            try:
+                self.on_load_benchmark_solution(actions, stage_id)
+            except TypeError:
+                self.on_load_benchmark_solution(actions)
         self.close_benchmark_modal()
 
     def close_algorithm_selector(self) -> None:
@@ -848,9 +833,7 @@ class UIManager:
             "• P: Pause / Resume replay\n\n"
             "• Tab or M: Open Stage Select modal (39 stages)\n\n"
             "• C: Reset Camera view to default\n\n"
-            "• V: Toggle Isometric / Perspective Camera\n\n"
-            "• Mouse Wheel: Zoom in / Zoom out\n\n"
-            "• Right Mouse Drag: Free 3D camera rotation"
+            "• Mouse Wheel: Zoom in / Zoom out"
         )
 
         Text(

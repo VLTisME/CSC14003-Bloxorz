@@ -215,15 +215,15 @@ class BenchmarkModal(PixelPanel):
                 color=color.hex(PALETTE["ink"]),
             )
 
-            # Load solution button
+            # Run solution button
             btn_load = PixelButton(
                 parent=self,
-                text="Replay",
-                color_ramp="orange",
+                text="Run",
+                color_ramp="green",
                 scale=(0.10, 0.052),
                 position=(0.46, ry, -0.02),
                 disabled=True,
-                on_click=lambda a=key: self._on_replay_solution(a),
+                on_click=lambda a=key: self._on_run_solution(a),
             )
 
             self._rows[key] = {
@@ -379,9 +379,14 @@ class BenchmarkModal(PixelPanel):
         self._worker_thread = threading.Thread(target=_worker, daemon=True)
         self._worker_thread.start()
 
-    def _on_replay_solution(self, algo: str) -> None:
-        """Load the chosen algorithm's solution into Replay and close benchmark modal."""
+    def _on_run_solution(self, algo: str) -> None:
+        """Run the chosen algorithm's solution on the stage and close benchmark modal."""
         res = self._results.get(algo)
         if res and res.get("actions") and self.on_load_solution:
-            self.on_load_solution(res["actions"])
+            try:
+                self.on_load_solution(res["actions"], self.stage_id)
+            except TypeError:
+                self.on_load_solution(res["actions"])
             self.close()
+
+    _on_replay_solution = _on_run_solution

@@ -406,17 +406,22 @@ class BloxorzUrsinaApp(Entity):
         else:
             print(f"[REPLAY] Không tìm thấy file: {p}")
 
-    def action_load_solution_actions(self, actions: list[str]) -> None:
-        """Nạp trực tiếp danh sách actions lời giải từ Benchmark vào hệ thống Replay."""
+    def action_load_solution_actions(self, actions: list[str], stage_id: str | None = None) -> None:
+        """Nạp trực tiếp danh sách actions lời giải từ Benchmark vào hệ thống Replay và tự động chạy."""
         if not actions:
             return
-        self.action_reset()
+        if stage_id and stage_id != getattr(self.catalog, "current_stage_id", None) and stage_id != self.engine.stage_id:
+            self.load_stage_by_id(stage_id)
+        else:
+            self.action_reset()
         self.replay_actions = list(actions)
         self.replay_index = 0
         self.current_replay_file = None
+        self.is_replay_playing = True
+        self.replay_timer = 0.0
         self.ui.update_replay_status(0, len(self.replay_actions))
         self._sync_replay_button()
-        print(f"[REPLAY] Đã nạp thành công {len(actions)} bước vào Replay từ Benchmark!")
+        print(f"[REPLAY] Đã nạp thành công {len(actions)} bước vào Replay từ Benchmark và bắt đầu chạy!")
 
     def _classify_fall_case(
         self,
@@ -1157,9 +1162,6 @@ class BloxorzUrsinaApp(Entity):
             self._menu_help()
         elif key == "c":
             self.camera_rig.reset_view()
-            self._update_background_scale()
-        elif key == "v":
-            self.camera_rig.toggle_projection()
             self._update_background_scale()
 
         # 6. Chuyển tiếp sự kiện zoom/cuộn chuột cho camera rig

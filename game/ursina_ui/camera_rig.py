@@ -3,16 +3,14 @@
 Tính năng:
 - Định vị góc nhìn Isometric chuẩn (pitch ~35.26°, yaw ~30°)
 - Tự động căn giữa toàn bộ bàn chơi theo kích thước màn (bounding box)
-- Hỗ trợ cả chế độ Orthographic (chiếu trục song song chuẩn Bloxorz) và Perspective
+- Chế độ Orthographic (chiếu trục song song chuẩn Bloxorz)
 - Zoom bằng con lăn chuột (scroll wheel)
-- Giữ chuột phải hoặc dùng phím mũi tên để xoay nhẹ góc nhìn
 - Phím 'C': Trả camera về vị trí và góc nhìn mặc định
-- Phím 'V': Chuyển đổi qua lại giữa Orthographic và Perspective
 """
 from __future__ import annotations
 
 import math
-from ursina import Entity, Vec3, camera, held_keys, mouse, time
+from ursina import Entity, Vec3, camera, time
 
 from game.theme import get_ursina_config
 
@@ -71,25 +69,13 @@ class CameraRig:
         camera.position = (0, 0, -self.distance)
         camera.fov = self.target_fov
 
-    def toggle_projection(self) -> bool:
-        """Chuyển đổi giữa chế độ Orthographic và Perspective."""
-        self.is_ortho = not self.is_ortho
-        camera.orthographic = self.is_ortho
-        if not self.is_ortho:
-            camera.fov = 40.0
-            self.target_fov = 40.0
-        else:
-            self.target_fov = self.default_fov
-            camera.fov = self.default_fov
-        return self.is_ortho
-
     def input(self, key: str) -> None:
         """Xử lý sự kiện phóng to / thu nhỏ bằng con lăn chuột."""
         if key == "scroll up":
-            zoom_delta = 1.2 if camera.orthographic else 2.5
+            zoom_delta = 1.2
             self.target_fov = max(6.0, min(45.0, self.target_fov - zoom_delta))
         elif key == "scroll down":
-            zoom_delta = 1.2 if camera.orthographic else 2.5
+            zoom_delta = 1.2
             self.target_fov = max(6.0, min(45.0, self.target_fov + zoom_delta))
 
     def update(self, dt: float) -> None:

@@ -341,17 +341,17 @@ class AnimationManager:
         # 5. Kịch bản 8: Chế độ tách 2 khối độc lập (SPLIT_CUBE_FALL)
         elif fall_type == "SPLIT_CUBE_FALL":
             self.crumbling_tile = None
-            drift_speed = FALL_DRIFT_SPEED * 0.7
+            drift_speed = FALL_DRIFT_SPEED * 0.8
             rot_deg = 220.0
             self.fall_vy = -1.5
             if direction == "R":
                 self.fall_vx = drift_speed
                 self.fall_vz = 0.0
-                self.fall_rot_speed = Vec3(10.0, 0.0, -rot_deg)
+                self.fall_rot_speed = Vec3(10.0, 0.0, rot_deg)
             elif direction == "L":
                 self.fall_vx = -drift_speed
                 self.fall_vz = 0.0
-                self.fall_rot_speed = Vec3(10.0, 0.0, rot_deg)
+                self.fall_rot_speed = Vec3(10.0, 0.0, -rot_deg)
             elif direction == "D":
                 self.fall_vx = 0.0
                 self.fall_vz = -drift_speed
@@ -368,17 +368,17 @@ class AnimationManager:
         # 6. Các trường hợp rơi tự do ra ngoài rìa bàn cờ (UPRIGHT_TOTAL_VOID, LATERAL_TOTAL_VOID, LONGITUDINAL_TIP_VOID)
         else:
             self.crumbling_tile = None
-            drift_speed = FALL_DRIFT_SPEED * 0.75
+            drift_speed = FALL_DRIFT_SPEED * 0.85
             rot_deg = 240.0
             self.fall_vy = -1.5
             if direction == "R":
                 self.fall_vx = drift_speed
                 self.fall_vz = 0.0
-                self.fall_rot_speed = Vec3(10.0, 0.0, -rot_deg)
+                self.fall_rot_speed = Vec3(10.0, 0.0, rot_deg)
             elif direction == "L":
                 self.fall_vx = -drift_speed
                 self.fall_vz = 0.0
-                self.fall_rot_speed = Vec3(10.0, 0.0, rot_deg)
+                self.fall_rot_speed = Vec3(10.0, 0.0, -rot_deg)
             elif direction == "D":
                 self.fall_vx = 0.0
                 self.fall_vz = -drift_speed
