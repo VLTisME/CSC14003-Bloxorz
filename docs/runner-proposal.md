@@ -116,7 +116,9 @@ Saved results/2026-10-15_20-00-00-123456.json
 
 Runner đo thời gian toàn tiến trình từ khi khởi chạy đến khi kết thúc. Thời gian này gồm khởi động, phân tích đầu vào, tìm kiếm và chuyển kết quả thành dữ liệu để in; đặt tên là `process_time_ms`, không gọi là thời gian riêng cho tìm kiếm.
 
-Runner tính độ dài lời giải và chi phí từ chuỗi hành động được chấp nhận. Nó không thể suy ra số nút mở rộng hay thời gian riêng cho tìm kiếm từ các hành động này. Vì vậy, chương trình thuật toán in thêm đối tượng `metrics`:
+Runner tính `solution_length` và `cost` bằng số bước trong chuỗi hành động được chấp nhận. Với UCS có phụ phí, solver in thêm `metrics.weighted_cost` và runner sao chép sang `statistics.weighted_cost`; trường này phải là số nguyên không âm nếu có. Đây là giá trị solver báo cáo, cần kiểm chứng riêng bằng cộng chi phí từng bước khi phát lại. `--require-optimal` vẫn chỉ đối chiếu số bước tham chiếu, không dùng để đánh giá UCS mới. Xem [thiết kế UCS](ucs-design.md).
+
+Runner không thể suy ra số nút mở rộng hay thời gian riêng cho tìm kiếm từ các hành động. Vì vậy, chương trình thuật toán in thêm đối tượng `metrics`:
 
 ```json
 {

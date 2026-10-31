@@ -16,7 +16,8 @@ Giao diện công khai:
 Quy ước cho người viết thuật toán:
 * State đã là immutable/hashable, nên dùng trực tiếp trong ``visited`` và
   làm khóa cho ``parents``.
-* ``next_states`` chỉ trả về nước đi không gây thua; mỗi action lăn có cost 1.
+* ``next_states`` chỉ trả về nước đi không gây thua; mỗi action là một bước.
+  Solver tự xác định chi phí: UCS cộng phụ phí, BFS/A* dùng chi phí đơn vị.
 * Khi khối đã tách, action có dạng ``1U`` ... ``2R``; thứ tự cube ID được giữ
   nguyên bởi checker.Replay.
 * Không sửa module này hoặc checker.py để phục vụ riêng một thuật toán nếu
