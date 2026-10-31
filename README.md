@@ -3,6 +3,7 @@
 Đồ án Cơ sở Trí tuệ Nhân tạo: chơi Bloxorz trên giao diện 3D/terminal, giải bằng BFS, DFS, UCS và A*, kiểm tra lời giải và so sánh thực nghiệm.
 
 - [Video demo](https://www.youtube.com/watch?v=HB6mtO96rz0)
+- [Báo cáo PDF](https://github.com/VLTisME/CSC14003-Bloxorz/blob/main/Report.pdf)
 - [Mã nguồn](https://github.com/VLTisME/CSC14003-Bloxorz)
 - [Mục lục tài liệu](docs/README.md)
 - [Benchmark bốn thuật toán, 660 lượt](docs/exp/2026-10-28-weighted-ucs/README.md)
@@ -88,7 +89,7 @@ docs/             tài liệu và số liệu thực nghiệm tổng hợp
 results/          log/đầu ra cục bộ, không được Git theo dõi
 ```
 
-Log, replay sinh ra khi chạy, `game/progress.json`, cache và môi trường ảo không được đưa lên GitHub. Tiến độ chơi được tạo tự động khi chơi. Báo cáo PDF được phát hành riêng sau khi nhóm hoàn tất chỉnh sửa.
+Log, replay sinh ra khi chạy, `game/progress.json`, cache và môi trường ảo không được đưa lên GitHub. Tiến độ chơi được tạo tự động khi chơi. Báo cáo hoàn thiện được lưu dưới tên `Report.pdf` ở gốc repository; trong gói nộp, `Report.pdf` nằm cùng cấp với thư mục `Source`.
 
 ## Nguồn và ghi nhận
 

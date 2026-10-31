@@ -27,5 +27,4 @@ venv/
 /docs/exp/**/weighted-optimality-validation.json
 /docs/exp/**/gui-replay-check.json
 /main.pdf
-/Report.pdf
 /dist/
